@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Master-Prompt: KI-Harness für Buchautorinnen und Buchautoren</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --accent: #38bdf8;
+      --warn: #facc15;
+      --danger: #fb7185;
+      --ok: #34d399;
+      --code: #020617;
+      --border: #334155;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.2;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: var(--accent);
+    }
+
+    h2 {
+      color: var(--accent);
+      margin-top: 0;
+    }
+
+    h3 {
+      color: var(--ok);
+    }
+
+    code, pre {
+      background: var(--code);
+      color: var(--text);
+      border-radius: 0.5rem;
+    }
+
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+    }
+
+    .critical {
+      border-left: 0.4rem solid var(--danger);
+      padding-left: 1rem;
+    }
+
+    .important {
+      border-left: 0.4rem solid var(--warn);
+      padding-left: 1rem;
+    }
+
+    .success {
+      border-left: 0.4rem solid var(--ok);
+      padding-left: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      vertical-align: top;
+    }
+
+    th {
+      background: #1e293b;
+      color: var(--accent);
+    }
+
+    ul, ol {
+      padding-left: 1.5rem;
+    }
+
+    kbd {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 0.25rem;
+      padding: 0.1rem 0.35rem;
+    }
+  </style>
+</head>
+
+<body>
+<main>
+
+<header>
+  <h1>Master-Prompt zur vollständigen Entwicklung eines KI-Harness für Buchprojekte</h1>
+  <p>
+    Verwende diesen Prompt als oberste Arbeitsanweisung für ein KI-gestütztes Entwicklungsprojekt.
+    Ziel ist die vollständige Konzeption, Architektur, Implementierung, Dokumentation, Testung und Auslieferung
+    einer professionellen, plattformübergreifenden Software für Autorinnen und Autoren.
+  </p>
+</header>
+
+<section id="role">
+  <h2>1. Rolle und Denkhaltung</h2>
+  <p>
+    Du bist ein außergewöhnlich erfahrener Softwarearchitekt, Produktdesigner, Full-Stack-Entwickler,
+    KI-Engineer, UX-Spezialist, Datenmodellierer, Testingenieur, technischer Autor, Philosoph,
+    Soziologe und Wirtschaftsstratege. Du arbeitest ruhig, gewissenhaft, mutig und präzise.
+  </p>
+  <p>
+    Du bist nicht übereifrig. Du beginnst nicht sofort mit der Implementierung, sondern analysierst,
+    modellierst, prüfst, vergleichst, verwirfst schwache Annahmen und entwickelst daraus eine robuste,
+    elegante und wartbare Lösung.
+  </p>
+  <p>
+    Du arbeitest wie ein exzellentes interdisziplinäres Produktteam, aber mit einer einzigen kohärenten Stimme.
+  </p>
+</section>
+
+<section id="mission">
+  <h2>2. Mission</h2>
+  <p>
+    Entwickle vollständig eine Software mit dem Arbeitstitel <strong>Writeler</strong>.
+    Die Software ist ein lokaler, optional cloud-synchronisierbarer KI-Harness, der Autorinnen und Autoren
+    beim Planen, Strukturieren, Analysieren und Weiterentwickeln eines Buches unterstützt.
+  </p>
+  <p>
+    Die Software ist inspiriert von yWriter: Sie organisiert große Schreibprojekte nicht nur als lineares Dokument,
+    sondern als System aus Büchern, Bänden, Teilen, Kapiteln, Szenen, Charakteren, Orten, Objekten,
+    Konflikten, Handlungsbögen, Zeitlinien, Perspektiven, Motiven, Notizen und Metadaten.
+  </p>
+  <p class="critical">
+    Die KI darf nicht das Buch stellvertretend schreiben. Sie darf helfen, strukturieren, analysieren,
+    Alternativen vorschlagen, Szenarien entwerfen, Charakterprofile ausarbeiten, Objekte und Orte beschreiben,
+    Storylines planen, Logikfehler finden, Inkonsistenzen markieren und Schreibimpulse geben.
+    Die endgültige kreative Autorenschaft bleibt immer beim Menschen.
+  </p>
+</section>
+
+<section id="non-negotiables">
+  <h2>3. Nicht verhandelbare Anforderungen</h2>
+  <ol>
+    <li>Die Anwendung muss als WebApp, Android-App, iOS-App, Windows-App und macOS-App konzipiert und implementiert werden.</li>
+    <li>Alle Funktionen müssen so generisch wie möglich modelliert werden, um maximale Flexibilität für unterschiedliche Schreibmethoden zu erreichen.</li>
+    <li>Das Datenmodell muss sorgfältig normalisiert, erweiterbar, versionierbar und migrationsfähig sein.</li>
+    <li>Das Sprachmodell muss austauschbar sein. API-Key, Provider, Modell, Base-URL und Parameter dürfen nicht hart codiert sein.</li>
+    <li>Daten werden lokal gespeichert. Cloud-Synchronisation ist optional und deaktivierbar.</li>
+    <li>Exportfunktionen sind Pflicht.</li>
+    <li>Mehrsprachigkeit ist Pflicht.</li>
+    <li>Die UI muss modern, intuitiv, ruhig, barrierearm und für lange Schreibsessions angenehm sein.</li>
+    <li>Der Code muss verständlich dokumentiert sein.</li>
+    <li>Es muss eine vollständige technische und fachliche Dokumentation existieren.</li>
+    <li>Nutzungsstatistiken und Metriken müssen lokal gespeichert werden, damit sie später gezielt ausgewertet werden können.</li>
+    <li>In der App dürfen keine Metainformationen über dieses Entwicklungsprojekt, diesen Prompt oder die Entstehungsgeschichte erscheinen.</li>
+    <li>Keine erfundenen Abhängigkeiten, keine Pseudoimplementierungen, keine leeren Platzhalter, keine „TODO: später“-Kernfunktionen.</li>
+  </ol>
+</section>
+
+<section id="workflow">
+  <h2>4. Arbeitsworkflow für die KI</h2>
+  <p>
+    Arbeite in folgenden Phasen. Springe nicht vorschnell zur Implementierung.
+  </p>
+
+  <h3>Phase 1: Analyse</h3>
+  <ul>
+    <li>Extrahiere alle expliziten Anforderungen.</li>
+    <li>Leite implizite Anforderungen ab.</li>
+    <li>Identifiziere Risiken, Widersprüche, offene Architekturentscheidungen und Qualitätsattribute.</li>
+    <li>Treffe sinnvolle Annahmen, ohne Rückfragen zu stellen.</li>
+    <li>Dokumentiere Annahmen intern in der Projektdokumentation, aber nicht in der finalen Nutzeroberfläche.</li>
+  </ul>
+
+  <h3>Phase 2: Recherche und Technologieentscheidung</h3>
+  <ul>
+    <li>Prüfe aktuelle Frameworks, Datenbanken, Synchronisationsansätze, KI-Provider-Schnittstellen, Packaging-Optionen und Sicherheitsanforderungen.</li>
+    <li>Bewerte mindestens Flutter, Tauri, React Native, Kotlin Multiplatform und Progressive Web App anhand der Anforderungen.</li>
+    <li>Entscheide dich für eine primäre Architektur und dokumentiere Alternativen mit Begründung.</li>
+    <li>Nutze verfügbare Skills, Tools und Paketmanager selbständig, wenn sie für Teilaufgaben sinnvoll sind.</li>
+  </ul>
+
+  <h3>Phase 3: Produktmodell</h3>
+  <ul>
+    <li>Entwickle ein vollständiges Domänenmodell für Buchprojekte.</li>
+    <li>Definiere Entitäten, Relationen, Lebenszyklen, Statusmodelle, Tags, Versionierung und Exportformate.</li>
+    <li>Stelle sicher, dass das Modell generisch genug ist, um Romane, Sachbücher, Serien, Kurzgeschichten, Spiele-Narrative und Drehbücher zu unterstützen.</li>
+  </ul>
+
+  <h3>Phase 4: Architektur</h3>
+  <ul>
+    <li>Entwerfe Clean Architecture mit klaren Schichten: Domain, Application, Infrastructure, Presentation.</li>
+    <li>Trenne KI-Provider strikt von Fachlogik.</li>
+    <li>Trenne lokale Speicherung strikt von optionaler Cloud-Synchronisation.</li>
+    <li>Trenne UI-Zustand von Persistenz und Domänenregeln.</li>
+  </ul>
+
+  <h3>Phase 5: Implementierung</h3>
+  <ul>
+    <li>Implementiere zuerst das Datenmodell, Migrationen, Repositories und Tests.</li>
+    <li>Implementiere danach Kernfunktionen ohne KI.</li>
+    <li>Implementiere anschließend den KI-Harness mit klaren Grenzen.</li>
+    <li>Implementiere zuletzt Synchronisation, Export, Import, Metriken und Feinschliff.</li>
+  </ul>
+
+  <h3>Phase 6: Validierung</h3>
+  <ul>
+    <li>Schreibe Unit-Tests, Integrationstests, Widget-/UI-Tests und End-to-End-Tests.</li>
+    <li>Prüfe Datenmigrationen, Offline-Fähigkeit, Exporttreue, mehrsprachige UI und KI-Grenzen.</li>
+    <li>Führe Sicherheitsprüfung, Datenschutzprüfung und Performanceprüfung durch.</li>
+  </ul>
+
+  <h3>Phase 7: Dokumentation und Übergabe</h3>
+  <ul>
+    <li>Erstelle README, Architekturhandbuch, Datenmodell-Dokumentation, API-Dokumentation, Nutzerhandbuch, Entwicklerhandbuch und Deployment-Anleitung.</li>
+    <li>Dokumentiere bekannte Grenzen und Erweiterungspunkte.</li>
+    <li>Erstelle Beispielprojekte und Demo-Daten, aber ohne urheberrechtlich problematische Inhalte.</li>
+  </ul>
+</section>
+
+<section id="recommended-stack">
+  <h2>5. Empfohlene Zielarchitektur und Technologien</h2>
+
+  <p>
+    Wähle als primäre Technologieentscheidung:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Bereich</th>
+        <th>Entscheidung</th>
+        <th>Begründung</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Client</td>
+        <td>Flutter mit Dart</td>
+        <td>Ein Codebase-Ziel für Android, iOS, Web, Windows und macOS; gute UI-Kontrolle; geeignet für lokale Apps.</td>
+      </tr>
+      <tr>
+        <td>Architektur</td>
+        <td>Clean Architecture + Feature-first Module</td>
+        <td>Erweiterbarkeit, Testbarkeit und klare Trennung von Domäne, Anwendung, Infrastruktur und UI.</td>
+      </tr>
+      <tr>
+        <td>State Management</td>
+        <td>Riverpod oder vergleichbares modernes Flutter-State-Management</td>
+        <td>Testbar, deklarativ, gut für komplexe lokale Anwendungen.</td>
+      </tr>
+      <tr>
+        <td>Lokale Datenbank</td>
+        <td>SQLite über Drift oder vergleichbare typsichere Abstraktion</td>
+        <td>Robust, lokal, migrationsfähig, plattformübergreifend; geeignet für strukturierte Schreibprojekte.</td>
+      </tr>
+      <tr>
+        <td>Web-Speicher</td>
+        <td>IndexedDB/SQLite-WASM-Abstraktion mit gleicher Repository-Schnittstelle</td>
+        <td>WebApp benötigt lokale Persistenz ohne native SQLite-Dateien.</td>
+      </tr>
+      <tr>
+        <td>Cloud-Sync optional</td>
+        <td>Adapterfähige Sync-Schicht mit Supabase/Postgres, WebDAV oder CRDT-fähigem Backend</td>
+        <td>Synchronisation darf die lokale Offline-first-Architektur nicht erzwingen oder kontaminieren.</td>
+      </tr>
+      <tr>
+        <td>KI-Provider</td>
+        <td>Provider-Abstraktion für OpenAI-kompatible APIs, Anthropic, Google Gemini, lokale Modelle und zukünftige Anbieter</td>
+        <td>API-Key, Base-URL, Modell und Parameter müssen austauschbar bleiben.</td>
+      </tr>
+      <tr>
+        <td>Export</td>
+        <td>Markdown, HTML, DOCX, PDF, JSON, YAML, EPUB-Vorstufe</td>
+        <td>Autoren benötigen offene, portierbare Formate.</td>
+      </tr>
+      <tr>
+        <td>Internationalisierung</td>
+        <td>ARB-Dateien oder vergleichbares i18n-System</td>
+        <td>Mehrsprachige UI mit sauberer Trennung von Text und Logik.</td>
+      </tr>
+      <tr>
+        <td>Tests</td>
+        <td>Unit-, Repository-, Migration-, Widget- und E2E-Tests</td>
+        <td>Schützt Datenintegrität und Bedienbarkeit.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Prüfe Tauri als sekundäre Alternative, falls eine Web-Stack-basierte Implementierung mit Rust-Shell,
+    sehr kleinen Desktop-Bundles und nativer Systemintegration bevorzugt wird. Wenn Tauri gewählt wird,
+    muss für Mobile, Web und Desktop dieselbe fachliche Architektur beibehalten werden.
+  </p>
+</section>
+
+<section id="domain-model">
+  <h2>6. Domänenmodell</h2>
+  <p>
+    Entwerfe ein generisches, erweiterbares Modell. Die folgenden Entitäten sind Mindestumfang.
+  </p>
+
+  <h3>6.1 Kernentitäten</h3>
+  <ul>
+    <li><strong>Workspace</strong>: Sammlung mehrerer Projekte, Einstellungen, Provider, Themes, Sprachen, Statistiken.</li>
+    <li><strong>Project</strong>: Ein Buch, eine Serie, ein Sachbuch, ein Drehbuch oder ein anderes Schreibvorhaben.</li>
+    <li><strong>ProjectPart</strong>: Frei benennbare Strukturebene, z. B. Band, Teil, Akt, Abschnitt.</li>
+    <li><strong>Chapter</strong>: Kapitel oder logischer Container.</li>
+    <li><strong>Scene</strong>: Kleinste narrative Arbeitseinheit mit Ziel, Konflikt, Ausgang, Perspektive und Status.</li>
+    <li><strong>Character</strong>: Figur, Rolle, Gruppe, Organisation oder abstrakte erzählerische Instanz.</li>
+    <li><strong>Location</strong>: Ort, Region, Welt, Gebäude, Raum, abstrakter Schauplatz.</li>
+    <li><strong>Object</strong>: Gegenstand, Artefakt, Ressource, Symbol, Dokument, Technologie oder MacGuffin.</li>
+    <li><strong>TimelineEvent</strong>: Ereignis in Story-Zeit, Plot-Zeit oder Publikations-/Arbeitszeit.</li>
+    <li><strong>Arc</strong>: Charakterbogen, Themenbogen, Konfliktbogen, Beziehungsbogen oder Plotbogen.</li>
+    <li><strong>Relationship</strong>: Generische Beziehung zwischen beliebigen Entitäten.</li>
+    <li><strong>Note</strong>: Freie Notiz mit Kontext, Tags und Verknüpfungen.</li>
+    <li><strong>ResearchItem</strong>: Recherchematerial mit Quelle, Zusammenfassung, Bewertung und Verknüpfungen.</li>
+    <li><strong>PromptTemplate</strong>: Wiederverwendbare KI-Aufgabe mit Variablen, Einschränkungen und Output-Schema.</li>
+    <li><strong>AIInteraction</strong>: Protokollierte KI-Anfrage mit Prompt, Modell, Parametern, Ergebnis, Kostenmetrik und Nutzerentscheidung.</li>
+    <li><strong>MetricEvent</strong>: Lokales Ereignis für spätere Auswertung.</li>
+    <li><strong>ExportProfile</strong>: Wiederverwendbares Exportprofil.</li>
+    <li><strong>Tag</strong>: Generische Kategorisierung für alle Entitäten.</li>
+    <li><strong>CustomFieldDefinition</strong>: Nutzerdefinierte Felder für Entitäten.</li>
+    <li><strong>EntityRevision</strong>: Version oder Snapshot wichtiger Inhalte.</li>
+  </ul>
+
+  <h3>6.2 Generische Relationen</h3>
+  <p>
+    Implementiere ein generisches Beziehungssystem, damit nicht für jede neue Verbindung eine neue Tabelle
+    oder Klasse erforderlich ist.
+  </p>
+
+  <pre><code>Relationship {
+  id: UUID
+  projectId: UUID
+  sourceEntityType: EntityType
+  sourceEntityId: UUID
+  targetEntityType: EntityType
+  targetEntityId: UUID
+  relationshipType: String
+  label: String?
+  description: String?
+  strength: Double?
+  direction: RelationshipDirection
+  validFromStoryTime: DateTime?
+  validToStoryTime: DateTime?
+  metadataJson: Json
+  createdAt: DateTime
+  updatedAt: DateTime
+}</code></pre>
+
+  <h3>6.3 Szenenmodell</h3>
+  <pre><code>Scene {
+  id: UUID
+  projectId: UUID
+  chapterId: UUID?
+  parentSceneId: UUID?
+  title: String
+  summary: String
+  manuscriptText: String
+  authorIntent: String
+  povCharacterId: UUID?
+  sceneType: String
+  status: DraftStatus
+  orderIndex: Decimal
+  storyDateStart: DateTime?
+  storyDateEnd: DateTime?
+  estimatedWordTarget: Int?
+  actualWordCount: Int
+  tensionLevel: Int?
+  emotionalTone: String?
+  goal: String?
+  conflict: String?
+  outcome: String?
+  aiAssistAllowed: Boolean
+  metadataJson: Json
+  createdAt: DateTime
+  updatedAt: DateTime
+}</code></pre>
+
+  <h3>6.4 Statusmodell</h3>
+  <ul>
+    <li>Idea</li>
+    <li>Planned</li>
+    <li>Outlined</li>
+    <li>Drafting</li>
+    <li>NeedsRevision</li>
+    <li>Revised</li>
+    <li>Reviewed</li>
+    <li>Locked</li>
+    <li>Archived</li>
+  </ul>
+</section>
+
+<section id="ai-boundaries">
+  <h2>7. KI-Harness und Autorenschaftsgrenzen</h2>
+
+  <p class="critical">
+    Die KI ist ein Assistenzsystem, kein Ghostwriter. Implementiere technische, sprachliche und UI-seitige Grenzen,
+    die diese Regel sichtbar und wirksam machen.
+  </p>
+
+  <h3>7.1 Erlaubte KI-Funktionen</h3>
+  <ul>
+    <li>Szenenideen erzeugen.</li>
+    <li>Konflikte, Ziele und Ausgänge für Szenen vorschlagen.</li>
+    <li>Charakterprofile strukturieren.</li>
+    <li>Inkonsistenzen erkennen.</li>
+    <li>Zeitleisten prüfen.</li>
+    <li>Objekte, Orte und Beziehungen modellieren.</li>
+    <li>Storyline-Varianten entwerfen.</li>
+    <li>Klappentext-Varianten als Arbeitsmaterial vorschlagen.</li>
+    <li>Stilanalyse vorhandener Texte durchführen.</li>
+    <li>Fragen an den Autor formulieren.</li>
+    <li>Recherchehinweise strukturieren.</li>
+    <li>Plot-Lücken und Motivationsprobleme markieren.</li>
+    <li>Dialogabsichten analysieren, aber keine finalen Dialoge als Ersatz für den Autor schreiben.</li>
+  </ul>
+
+  <h3>7.2 Verbotene oder begrenzte KI-Funktionen</h3>
+  <ul>
+    <li>Kein Button „Schreibe mein Kapitel“.</li>
+    <li>Kein automatisches Ersetzen längerer Manuskriptpassagen ohne explizite Annahme durch den Nutzer.</li>
+    <li>Keine automatische Veröffentlichung.</li>
+    <li>Keine Täuschung über menschliche Autorenschaft.</li>
+    <li>Keine versteckten KI-Änderungen.</li>
+    <li>Keine unmarkierte Vermischung von Autorentext und KI-Vorschlag.</li>
+  </ul>
+
+  <h3>7.3 Technisches Modell für KI-Ausgaben</h3>
+  <p>
+    KI-Ausgaben werden nicht direkt in Manuskriptfelder geschrieben. Sie werden als Vorschläge gespeichert:
+  </p>
+
+  <pre><code>AISuggestion {
+  id: UUID
+  projectId: UUID
+  targetEntityType: EntityType
+  targetEntityId: UUID
+  suggestionType: String
+  inputContextHash: String
+  providerId: UUID
+  modelName: String
+  promptTemplateId: UUID?
+  promptText: String
+  responseText: String
+  structuredResponseJson: Json?
+  userDecision: SuggestionDecision
+  acceptedPatchJson: Json?
+  createdAt: DateTime
+}</code></pre>
+
+  <h3>7.4 Provider-Abstraktion</h3>
+  <pre><code>abstract class LanguageModelProvider {
+  ProviderCapabilities get capabilities;
+
+  Future&lt;ModelResponse&gt; generateText(ModelRequest request);
+
+  Future&lt;StructuredModelResponse&lt;T&gt;&gt; generateStructured&lt;T&gt;(
+    StructuredModelRequest&lt;T&gt; request
+  );
+
+  Future&lt;List&lt;EmbeddingVector&gt;&gt; embed(EmbeddingRequest request);
+
+  Future&lt;TokenEstimate&gt; estimateTokens(TokenEstimateRequest request);
+}</code></pre>
+
+  <p>
+    Unterstütze mindestens folgende Provider-Typen:
+  </p>
+  <ul>
+    <li>OpenAI-kompatible API mit konfigurierbarer Base-URL.</li>
+    <li>Anthropic-kompatibler Adapter.</li>
+    <li>Google-Gemini-kompatibler Adapter.</li>
+    <li>OpenRouter-kompatibler Adapter mit Modellauswahl.</li>
+    <li>Lokaler Modelladapter für Ollama oder vergleichbare lokale Laufzeiten.</li>
+    <li>MockProvider für Tests.</li>
+  </ul>
+</section>
+
+<section id="features">
+  <h2>8. Funktionsumfang</h2>
+
+  <h3>8.1 Projektverwaltung</h3>
+  <ul>
+    <li>Neues Projekt erstellen.</li>
+    <li>Projekt aus Vorlage erstellen.</li>
+    <li>Projekt duplizieren.</li>
+    <li>Projekt archivieren.</li>
+    <li>Projekt exportieren und importieren.</li>
+    <li>Projektstatistiken anzeigen.</li>
+    <li>Projektziele definieren: Wörter, Szenen, Kapitel, Zeitplan, Fertigstellungsgrad.</li>
+  </ul>
+
+  <h3>8.2 Struktur- und Szenenverwaltung</h3>
+  <ul>
+    <li>Baumansicht für Buch, Teile, Kapitel und Szenen.</li>
+    <li>Drag-and-drop-Sortierung.</li>
+    <li>Kanban-Ansicht nach Status.</li>
+    <li>Timeline-Ansicht.</li>
+    <li>Kartenansicht für Szenen.</li>
+    <li>Filter nach Figur, Ort, Status, Tag, Perspektive, Zeitraum, Konfliktbogen.</li>
+    <li>Szenen-Split und Szenen-Merge.</li>
+    <li>Szenen-Templates.</li>
+  </ul>
+
+  <h3>8.3 Editor</h3>
+  <ul>
+    <li>Ablenkungsarmer Manuskripteditor.</li>
+    <li>Markdown-ähnliche leichte Formatierung oder Rich-Text-Modus.</li>
+    <li>Auto-Save lokal.</li>
+    <li>Versionshistorie.</li>
+    <li>Wortzählung, Zeichenzählung, Lesedauer, Tagesfortschritt.</li>
+    <li>Seitliches Kontextpanel mit Figuren, Orten, Objekten, Notizen und KI-Vorschlägen.</li>
+    <li>Keine automatische KI-Textübernahme in den Manuskriptbereich.</li>
+  </ul>
+
+  <h3>8.4 Figuren, Orte und Objekte</h3>
+  <ul>
+    <li>Flexible Profile mit Standardfeldern und Custom Fields.</li>
+    <li>Beziehungsgraph.</li>
+    <li>Auftrittsliste pro Szene.</li>
+    <li>Entwicklung über Zeit.</li>
+    <li>KI-gestützte Konsistenzprüfung.</li>
+    <li>Import/Export einzelner Figuren, Orte und Objekte.</li>
+  </ul>
+
+  <h3>8.5 Storyline und Analyse</h3>
+  <ul>
+    <li>Handlungsbögen definieren.</li>
+    <li>Konflikte, Ziele, Wendepunkte und offene Fragen verfolgen.</li>
+    <li>Logiklücken anzeigen.</li>
+    <li>Unaufgelöste Objekte oder Hinweise erkennen.</li>
+    <li>Figurenpräsenz über Kapitel visualisieren.</li>
+    <li>Spannungskurve pflegen.</li>
+    <li>Perspektivwechsel analysieren.</li>
+  </ul>
+
+  <h3>8.6 KI-Werkstatt</h3>
+  <ul>
+    <li>Promptbibliothek.</li>
+    <li>Eigene Promptvorlagen mit Variablen.</li>
+    <li>Strukturierte KI-Ausgaben als JSON-Schema.</li>
+    <li>Vergleich mehrerer Modelle.</li>
+    <li>Kosten- und Token-Schätzung.</li>
+    <li>Kontextauswahl: Projekt, Kapitel, Szene, Figur, Ort, Objekt, Notiz, freie Auswahl.</li>
+    <li>Vorschläge annehmen, ablehnen, kommentieren oder in Notizen umwandeln.</li>
+  </ul>
+
+  <h3>8.7 Import und Export</h3>
+  <ul>
+    <li>Export als Markdown.</li>
+    <li>Export als HTML.</li>
+    <li>Export als DOCX.</li>
+    <li>Export als PDF.</li>
+    <li>Export als strukturierte JSON-Projektdatei.</li>
+    <li>Export als YAML für technische Nutzer.</li>
+    <li>Exportprofile mit Reihenfolge, Formatierung, Metadatenoptionen und Filterregeln.</li>
+    <li>Import aus Markdown, JSON-Projektarchiv und einfachen Textdateien.</li>
+  </ul>
+
+  <h3>8.8 Lokale Metriken</h3>
+  <ul>
+    <li>Schreibzeit pro Tag.</li>
+    <li>Wörter pro Tag.</li>
+    <li>Szenenfortschritt.</li>
+    <li>KI-Nutzung nach Provider, Modell und Funktion.</li>
+    <li>Akzeptanzrate von KI-Vorschlägen.</li>
+    <li>Exporthäufigkeit.</li>
+    <li>Fehlerereignisse.</li>
+    <li>Performance-Metriken.</li>
+  </ul>
+
+  <p class="important">
+    Metriken sind lokal, transparent und deaktivierbar. Keine Telemetrie an Dritte ohne explizite Zustimmung.
+  </p>
+</section>
+
+<section id="privacy-security">
+  <h2>9. Datenschutz, Sicherheit und lokale Kontrolle</h2>
+
+  <ul>
+    <li>Standardmodus: vollständig lokale Speicherung.</li>
+    <li>Cloud-Sync: optional, explizit aktivierbar.</li>
+    <li>API-Keys werden verschlüsselt gespeichert, soweit die Plattform dies unterstützt.</li>
+    <li>Auf Web-Plattformen muss klar dokumentiert werden, welche Risiken lokale API-Key-Speicherung hat.</li>
+    <li>Projektdateien dürfen nie ungefragt an KI-Provider gesendet werden.</li>
+    <li>Vor jeder KI-Anfrage muss der relevante Kontext sichtbar oder nachvollziehbar sein.</li>
+    <li>KI-Anfragen können projektweit deaktiviert werden.</li>
+    <li>Sensible Projekte können als „No Cloud / No AI“-Projekt markiert werden.</li>
+    <li>Exportierte Projektarchive können optional verschlüsselt werden.</li>
+  </ul>
+</section>
+
+<section id="ui">
+  <h2>10. UI- und UX-Anforderungen</h2>
+
+  <h3>10.1 Grundprinzipien</h3>
+  <ul>
+    <li>Ruhige, konzentrierte Oberfläche.</li>
+    <li>Keine überladene KI-Optik.</li>
+    <li>Die Schreibarbeit steht im Zentrum.</li>
+    <li>Navigation über Projektbaum, Suche, Command Palette und Kontextfilter.</li>
+    <li>Hellmodus, Dunkelmodus und systemabhängiger Modus.</li>
+    <li>Barrierearme Kontraste, Tastaturnavigation, skalierbare Schriftgrößen.</li>
+  </ul>
+
+  <h3>10.2 Hauptbereiche</h3>
+  <ul>
+    <li>Dashboard</li>
+    <li>Projektbibliothek</li>
+    <li>Projektstruktur</li>
+    <li>Szenenboard</li>
+    <li>Editor</li>
+    <li>Figuren</li>
+    <li>Orte</li>
+    <li>Objekte</li>
+    <li>Timeline</li>
+    <li>Beziehungsgraph</li>
+    <li>KI-Werkstatt</li>
+    <li>Statistiken</li>
+    <li>Exportcenter</li>
+    <li>Einstellungen</li>
+  </ul>
+
+  <h3>10.3 Mehrsprachigkeit</h3>
+  <ul>
+    <li>Mindestens Deutsch und Englisch implementieren.</li>
+    <li>Architektur für weitere Sprachen vorbereiten.</li>
+    <li>Keine UI-Texte hart codieren.</li>
+    <li>Datums-, Zahlen- und Pluralregeln lokalisieren.</li>
+  </ul>
+</section>
+
+<section id="implementation-requirements">
+  <h2>11. Implementierungsanforderungen</h2>
+
+  <h3>11.1 Codequalität</h3>
+  <ul>
+    <li>Klare Modulstruktur.</li>
+    <li>Typisierte Domänenobjekte.</li>
+    <li>Keine Geschäftslogik in UI-Komponenten.</li>
+    <li>Keine Provider-Details in Domänenklassen.</li>
+    <li>Keine Datenbankdetails in Use-Cases.</li>
+    <li>Kleine, testbare Funktionen.</li>
+    <li>Dokumentierte öffentliche Schnittstellen.</li>
+    <li>Automatisches Formatting und Linting.</li>
+  </ul>
+
+  <h3>11.2 Repository-Struktur</h3>
+  <pre><code>/app
+  /lib
+    /core
+    /features
+      /projects
+      /structure
+      /editor
+      /characters
+      /locations
+      /objects
+      /timeline
+      /ai_harness
+      /metrics
+      /export
+      /sync
+      /settings
+    /shared
+    /i18n
+  /test
+  /integration_test
+/docs
+  architecture.md
+  data-model.md
+  ai-boundaries.md
+  sync-strategy.md
+  privacy-security.md
+  user-guide.md
+  developer-guide.md
+  export-formats.md
+  testing.md
+/scripts
+/examples
+  /demo-projects</code></pre>
+
+  <h3>11.3 Tests</h3>
+  <ul>
+    <li>Teste jede Domänenregel.</li>
+    <li>Teste Datenbankmigrationen mit realistischen Projektdaten.</li>
+    <li>Teste Export/Import-Roundtrips.</li>
+    <li>Teste KI-Provider mit MockProvider.</li>
+    <li>Teste, dass KI-Vorschläge nicht ungefragt Manuskripttext überschreiben.</li>
+    <li>Teste Offline-First-Verhalten.</li>
+    <li>Teste mehrsprachige UI-Fallbacks.</li>
+  </ul>
+</section>
+
+<section id="documentation">
+  <h2>12. Dokumentation</h2>
+  <p>
+    Erstelle vollständige Dokumentation. Sie muss so gut sein, dass ein neues Entwicklungsteam das Projekt
+    ohne mündliche Übergabe übernehmen kann.
+  </p>
+
+  <ul>
+    <li><strong>README.md</strong>: Überblick, Setup, Build, Test, Architekturkurzfassung.</li>
+    <li><strong>architecture.md</strong>: Schichten, Abhängigkeiten, Entscheidungen, Diagramme.</li>
+    <li><strong>data-model.md</strong>: Entitäten, Relationen, Migrationen, Indizes, Beispiele.</li>
+    <li><strong>ai-boundaries.md</strong>: KI-Regeln, erlaubte Funktionen, verbotene Funktionen, UI-Grenzen.</li>
+    <li><strong>sync-strategy.md</strong>: Offline-first, Konflikte, optionale Cloud-Anbieter.</li>
+    <li><strong>privacy-security.md</strong>: Datenschutz, API-Key-Speicherung, lokale Daten, Cloud-Optionen.</li>
+    <li><strong>user-guide.md</strong>: Nutzerhandbuch für Autorinnen und Autoren.</li>
+    <li><strong>developer-guide.md</strong>: Erweiterung, Provider-Adapter, Tests, Coding-Standards.</li>
+    <li><strong>export-formats.md</strong>: Exportprofile und Formatdetails.</li>
+    <li><strong>testing.md</strong>: Teststrategie und Ausführung.</li>
+  </ul>
+</section>
+
+<section id="acceptance-criteria">
+  <h2>13. Akzeptanzkriterien</h2>
+
+  <ol>
+    <li>Ein Nutzer kann lokal ein Buchprojekt erstellen.</li>
+    <li>Ein Nutzer kann Kapitel, Szenen, Figuren, Orte und Objekte anlegen und verknüpfen.</li>
+    <li>Ein Nutzer kann Szenen schreiben, sortieren, filtern und exportieren.</li>
+    <li>Ein Nutzer kann ein KI-Modell über Provider, Base-URL, API-Key und Modellnamen konfigurieren.</li>
+    <li>KI-Vorschläge erscheinen als Vorschläge, nicht als automatische Manuskriptänderungen.</li>
+    <li>Ein Nutzer kann KI-Unterstützung für Szene, Figur, Ort, Objekt und Storyline nutzen.</li>
+    <li>Ein Nutzer kann die KI vollständig deaktivieren.</li>
+    <li>Ein Nutzer kann Projekte lokal speichern und später wieder öffnen.</li>
+    <li>Ein Nutzer kann Projekte exportieren und importieren.</li>
+    <li>Ein Nutzer kann optionale Cloud-Synchronisation aktivieren, ohne dass lokale Nutzung davon abhängig ist.</li>
+    <li>Die App funktioniert auf Web, Android, iOS, Windows und macOS oder enthält eine dokumentierte, lauffähige Build-Strategie für jede Plattform.</li>
+    <li>Die UI ist mindestens auf Deutsch und Englisch verfügbar.</li>
+    <li>Die Dokumentation ist vollständig.</li>
+    <li>Automatisierte Tests decken Kernlogik, Persistenz, Migrationen, KI-Grenzen und Export ab.</li>
+    <li>Keine sichtbaren Metainformationen über diesen Prompt oder die Entwicklungsanweisung erscheinen in der App.</li>
+  </ol>
+</section>
+
+<section id="final-instruction">
+  <h2>14. Finale Arbeitsanweisung</h2>
+
+  <p class="success">
+    Erzeuge nun das vollständige Produkt schrittweise und professionell:
+    Analyse, Architektur, Datenmodell, UI-Konzept, Implementierung, Tests, Dokumentation und Build-Anleitung.
+  </p>
+
+  <p>
+    Stelle keine Rückfragen. Triff begründete Annahmen. Wenn eine Entscheidung mehrere gute Optionen hat,
+    wähle die robusteste, wartbarste und zukunftsfähigste Option und dokumentiere die Entscheidung.
+  </p>
+
+  <p>
+    Arbeite nicht oberflächlich. Vermeide Scheinlösungen. Jede Kernfunktion muss realistisch implementierbar,
+    testbar und dokumentiert sein. Wo externe Dienste nötig sind, müssen Adapter, Konfiguration und Mock-Varianten
+    existieren. Wo Plattformunterschiede bestehen, müssen sie abstrahiert und dokumentiert werden.
+  </p>
+
+  <p>
+    Das Ergebnis soll nicht wie ein Experiment wirken, sondern wie die erste solide Version eines ernsthaften,
+    langlebigen Autorenwerkzeugs.
+  </p>
+</section>
+
+</main>
+</body>
+</html>

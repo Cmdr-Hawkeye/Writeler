@@ -1,0 +1,41 @@
+name: writeler
+description: Offline-first writing project harness for authors.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  drift: ^2.34.0
+  drift_flutter: ^0.3.0
+  flutter_secure_storage: ^9.2.2
+  http: ^1.2.2
+  sqlite3_flutter_libs: ^0.6.0+eol
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  test: ^1.25.8
+  build_runner: ^2.15.0
+  drift_dev: ^2.34.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700

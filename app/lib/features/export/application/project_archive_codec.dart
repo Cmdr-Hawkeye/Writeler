@@ -1,0 +1,124 @@
+import 'dart:convert';
+
+import '../../../core/domain/domain_failure.dart';
+import '../../../core/domain/json_map.dart';
+import '../../catalog/domain/catalog_item.dart';
+import '../../catalog/domain/relationship.dart';
+import '../../projects/domain/project.dart';
+import '../../structure/domain/chapter.dart';
+import '../../structure/domain/scene.dart';
+
+final class ProjectArchive {
+  const ProjectArchive({
+    required this.project,
+    required this.chapters,
+    required this.scenes,
+    required this.catalogItems,
+    required this.relationships,
+  });
+
+  final Project project;
+  final List<Chapter> chapters;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+}
+
+final class ProjectArchivePreview {
+  const ProjectArchivePreview({
+    required this.schema,
+    required this.projectTitle,
+    required this.chapterCount,
+    required this.sceneCount,
+    required this.catalogItemCount,
+    required this.relationshipCount,
+  });
+
+  final String schema;
+  final String projectTitle;
+  final int chapterCount;
+  final int sceneCount;
+  final int catalogItemCount;
+  final int relationshipCount;
+}
+
+final class ProjectArchiveCodec {
+  const ProjectArchiveCodec();
+
+  String encode(ProjectArchive archive) {
+    return const JsonEncoder.withIndent('  ').convert({
+      'schema': 'writeler.project.v2',
+      'project': archive.project.toJson(),
+      'chapters': archive.chapters.map((chapter) => chapter.toJson()).toList(),
+      'scenes': archive.scenes.map((scene) => scene.toJson()).toList(),
+      'catalogItems': archive.catalogItems.map((item) => item.toJson()).toList(),
+      'relationships': archive.relationships.map((relationship) => relationship.toJson()).toList(),
+    });
+  }
+
+  ProjectArchive decode(String source) {
+    final decoded = jsonDecode(source);
+    if (decoded is! Map) {
+      throw const DomainFailure('Project archive must be a JSON object.');
+    }
+
+    final json = Map<String, Object?>.from(decoded);
+    final schema = json['schema'] as String?;
+    if (schema != 'writeler.project.v1' && schema != 'writeler.project.v2') {
+      throw DomainFailure('Unsupported project archive schema: ${schema ?? 'missing'}.');
+    }
+
+    final projectJson = _object(json['project'], 'project');
+    final chapterJson = _list(json['chapters'] ?? const [], 'chapters');
+    final sceneJson = _list(json['scenes'], 'scenes');
+    final catalogJson = _list(json['catalogItems'] ?? const [], 'catalogItems');
+    final relationshipJson = _list(json['relationships'] ?? const [], 'relationships');
+
+    return ProjectArchive(
+      project: Project.fromJson(projectJson),
+      chapters: chapterJson.map(Chapter.fromJson).toList(),
+      scenes: sceneJson.map(Scene.fromJson).toList(),
+      catalogItems: catalogJson.map(CatalogItem.fromJson).toList(),
+      relationships: relationshipJson.map(Relationship.fromJson).toList(),
+    );
+  }
+
+  ProjectArchivePreview preview(String source) {
+    final decoded = jsonDecode(source);
+    if (decoded is! Map) {
+      throw const DomainFailure('Project archive must be a JSON object.');
+    }
+
+    final json = Map<String, Object?>.from(decoded);
+    final schema = json['schema'] as String?;
+    if (schema != 'writeler.project.v1' && schema != 'writeler.project.v2') {
+      throw DomainFailure('Unsupported project archive schema: ${schema ?? 'missing'}.');
+    }
+
+    final projectJson = _object(json['project'], 'project');
+    return ProjectArchivePreview(
+      schema: schema!,
+      projectTitle: projectJson['title'] as String? ?? 'Untitled Project',
+      chapterCount: _list(json['chapters'] ?? const [], 'chapters').length,
+      sceneCount: _list(json['scenes'], 'scenes').length,
+      catalogItemCount: _list(json['catalogItems'] ?? const [], 'catalogItems').length,
+      relationshipCount: _list(json['relationships'] ?? const [], 'relationships').length,
+    );
+  }
+
+  JsonMap _object(Object? value, String fieldName) {
+    if (value is! Map) {
+      throw DomainFailure('Project archive field "$fieldName" must be an object.');
+    }
+    return Map<String, Object?>.from(value);
+  }
+
+  List<JsonMap> _list(Object? value, String fieldName) {
+    if (value is! List) {
+      throw DomainFailure('Project archive field "$fieldName" must be a list.');
+    }
+    return [
+      for (final item in value) _object(item, fieldName),
+    ];
+  }
+}

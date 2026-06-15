@@ -1,0 +1,198 @@
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:writeler/core/domain/draft_status.dart';
+import 'package:writeler/core/domain/entity_ref.dart';
+import 'package:writeler/core/domain/entity_type.dart';
+import 'package:writeler/core/infrastructure/database/app_database.dart';
+import 'package:writeler/features/catalog/domain/relationship.dart';
+import 'package:writeler/features/catalog/infrastructure/drift_relationship_repository.dart';
+import 'package:writeler/features/metrics/application/record_metric.dart';
+import 'package:writeler/features/metrics/infrastructure/drift_metric_repository.dart';
+import 'package:writeler/features/projects/application/create_project.dart';
+import 'package:writeler/features/projects/infrastructure/drift_project_repository.dart';
+import 'package:writeler/features/settings/domain/ai_provider_config.dart';
+import 'package:writeler/features/settings/infrastructure/drift_ai_provider_config_repository.dart';
+import 'package:writeler/features/structure/application/create_chapter.dart';
+import 'package:writeler/features/structure/application/create_scene.dart';
+import 'package:writeler/features/structure/infrastructure/drift_chapter_repository.dart';
+import 'package:writeler/features/structure/infrastructure/drift_scene_repository.dart';
+
+void main() {
+  late AppDatabase database;
+  late DriftProjectRepository projectRepository;
+  late DriftChapterRepository chapterRepository;
+  late DriftSceneRepository sceneRepository;
+  late DriftRelationshipRepository relationshipRepository;
+  late DriftMetricRepository metricRepository;
+  late DriftAIProviderConfigRepository providerConfigRepository;
+
+  setUp(() {
+    database = AppDatabase(NativeDatabase.memory());
+    projectRepository = DriftProjectRepository(database);
+    chapterRepository = DriftChapterRepository(database);
+    sceneRepository = DriftSceneRepository(database);
+    relationshipRepository = DriftRelationshipRepository(database);
+    metricRepository = DriftMetricRepository(database);
+    providerConfigRepository = DriftAIProviderConfigRepository(database);
+  });
+
+  tearDown(() async {
+    await database.close();
+  });
+
+  test('database schema creates core local-first tables', () async {
+    expect(database.schemaVersion, 6);
+
+    final rows = await database
+        .customSelect(
+          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'catalog_items', 'chapters', 'metric_events', 'projects', 'relationships', 'scenes') order by name",
+        )
+        .get();
+
+    expect(rows.map((row) => row.read<String>('name')).toList(), [
+      'a_i_provider_configs',
+      'a_i_suggestions',
+      'catalog_items',
+      'chapters',
+      'metric_events',
+      'projects',
+      'relationships',
+      'scenes',
+    ]);
+  });
+
+  test('project repository persists and filters active projects', () async {
+    final createProject = CreateProject(projectRepository);
+    final project = await createProject(
+      const CreateProjectCommand(
+        title: 'Persisted Novel',
+        wordTarget: 90000,
+      ),
+    );
+
+    final loaded = await projectRepository.findById(project.id);
+    expect(loaded?.title, 'Persisted Novel');
+    expect(loaded?.wordTarget, 90000);
+
+    await projectRepository.save(project.copyWith(status: DraftStatus.archived));
+
+    final activeProjects = await projectRepository.listActive();
+    expect(activeProjects, isEmpty);
+  });
+
+  test('scene repository persists manuscript text and returns project order', () async {
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Structured Book'),
+    );
+    final createScene = CreateScene(sceneRepository);
+
+    final laterScene = await createScene(
+      CreateSceneCommand(
+        projectId: project.id,
+        title: 'Later Scene',
+        orderIndex: 2000,
+      ),
+    );
+    final firstScene = await createScene(
+      CreateSceneCommand(
+        projectId: project.id,
+        title: 'First Scene',
+        orderIndex: 1000,
+      ),
+    );
+
+    await sceneRepository.save(laterScene.withAuthorText('Second in reading order.'));
+    await sceneRepository.save(firstScene.withAuthorText('First in reading order.'));
+
+    final scenes = await sceneRepository.listByProject(project.id);
+
+    expect(scenes.map((scene) => scene.title).toList(), ['First Scene', 'Later Scene']);
+    expect(scenes.first.actualWordCount, 4);
+  });
+
+  test('chapter repository persists project structure order', () async {
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Chaptered Book'),
+    );
+    final createChapter = CreateChapter(chapterRepository);
+
+    await createChapter(
+      CreateChapterCommand(projectId: project.id, title: 'Second', orderIndex: 2000),
+    );
+    await createChapter(
+      CreateChapterCommand(projectId: project.id, title: 'First', orderIndex: 1000),
+    );
+
+    final chapters = await chapterRepository.listByProject(project.id);
+    expect(chapters.map((chapter) => chapter.title).toList(), ['First', 'Second']);
+  });
+
+  test('provider config repository persists model configuration', () async {
+    const config = AIProviderConfig(
+      id: 'default',
+      kind: AIProviderKind.openAICompatible,
+      displayName: 'OpenAI Compatible',
+      modelName: 'story-structure-model',
+      baseUrl: 'https://api.example.test/v1',
+      encryptedApiKeyRef: 'local-ref',
+    );
+
+    await providerConfigRepository.save(config);
+
+    final loaded = await providerConfigRepository.findById('default');
+    expect(loaded?.kind, AIProviderKind.openAICompatible);
+    expect(loaded?.modelName, 'story-structure-model');
+    expect(loaded?.encryptedApiKeyRef, 'local-ref');
+  });
+
+  test('relationship repository links scenes to catalog targets', () async {
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Linked Book'),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(projectId: project.id, title: 'Meeting'),
+    );
+    final now = DateTime.now().toUtc();
+    final relationship = Relationship(
+      id: 'relationship-1',
+      projectId: project.id,
+      source: EntityRef(type: EntityType.scene, id: scene.id),
+      target: const EntityRef(type: EntityType.character, id: 'character-1'),
+      relationshipType: 'appearsIn',
+      direction: RelationshipDirection.directed,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await relationshipRepository.save(relationship);
+
+    final links = await relationshipRepository.listForSource(
+      EntityRef(type: EntityType.scene, id: scene.id),
+    );
+    expect(links.single.target.id, 'character-1');
+
+    await relationshipRepository.delete(relationship.id);
+    expect(
+      await relationshipRepository.listForSource(EntityRef(type: EntityType.scene, id: scene.id)),
+      isEmpty,
+    );
+  });
+
+  test('metric repository records local project events', () async {
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Measured Book'),
+    );
+
+    await RecordMetric(metricRepository)(
+      projectId: project.id,
+      eventType: 'scene.saved',
+      value: 42,
+      metadata: {'sceneId': 'scene-1'},
+    );
+
+    final events = await metricRepository.listForProject(project.id);
+    expect(events.single.eventType, 'scene.saved');
+    expect(events.single.value, 42);
+    expect(events.single.metadata['sceneId'], 'scene-1');
+  });
+}

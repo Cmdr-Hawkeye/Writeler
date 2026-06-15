@@ -1,0 +1,47 @@
+{
+  "schema": "writeler.project.v1",
+  "project": {
+    "id": "project-demo-local-novel",
+    "title": "The Clockmaker's Map",
+    "description": "A public-domain-safe demo project for exercising structure and export workflows.",
+    "projectType": "novel",
+    "languageCode": "en",
+    "status": "planned",
+    "wordTarget": 80000,
+    "aiEnabled": true,
+    "cloudSyncEnabled": false,
+    "noAiNoCloud": false,
+    "metadata": {},
+    "createdAt": "2026-05-22T00:00:00Z",
+    "updatedAt": "2026-05-22T00:00:00Z"
+  },
+  "scenes": [
+    {
+      "id": "scene-demo-opening",
+      "projectId": "project-demo-local-novel",
+      "chapterId": null,
+      "parentSceneId": null,
+      "title": "Opening",
+      "summary": "The protagonist finds a map hidden in a repaired clock.",
+      "manuscriptText": "The repaired clock began ticking before Mara touched the key.",
+      "authorIntent": "Introduce mystery without revealing the map's origin.",
+      "povCharacterId": null,
+      "sceneType": "scene",
+      "status": "drafting",
+      "orderIndex": 1000,
+      "storyDateStart": null,
+      "storyDateEnd": null,
+      "estimatedWordTarget": 1200,
+      "actualWordCount": 10,
+      "tensionLevel": 4,
+      "emotionalTone": "curious",
+      "goal": "Mara wants to finish the repair quietly.",
+      "conflict": "The clock behaves as if it knows her.",
+      "outcome": "She discovers the hidden map.",
+      "aiAssistAllowed": true,
+      "metadata": {},
+      "createdAt": "2026-05-22T00:00:00Z",
+      "updatedAt": "2026-05-22T00:00:00Z"
+    }
+  ]
+}
