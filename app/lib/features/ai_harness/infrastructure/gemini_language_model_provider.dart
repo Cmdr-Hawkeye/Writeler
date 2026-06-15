@@ -93,14 +93,17 @@ final class GeminiLanguageModelProvider implements LanguageModelProvider {
         .join('\n')
         .trim();
     if (text.isEmpty) {
-      throw const DomainFailure('Gemini response did not include text content.');
+      throw const DomainFailure(
+          'Gemini response did not include text content.');
     }
 
     final usage = json['usageMetadata'];
     return ModelResponse(
       text: text,
-      estimatedInputTokens: usage is Map ? _asInt(usage['promptTokenCount']) : null,
-      estimatedOutputTokens: usage is Map ? _asInt(usage['candidatesTokenCount']) : null,
+      estimatedInputTokens:
+          usage is Map ? _asInt(usage['promptTokenCount']) : null,
+      estimatedOutputTokens:
+          usage is Map ? _asInt(usage['candidatesTokenCount']) : null,
     );
   }
 
@@ -122,7 +125,10 @@ final class GeminiLanguageModelProvider implements LanguageModelProvider {
     return {
       'systemInstruction': {
         'parts': [
-          {'text': 'You are an analysis assistant for authors. Do not write manuscript prose.'},
+          {
+            'text':
+                'You are an analysis assistant for authors. Do not write manuscript prose.'
+          },
         ],
       },
       'contents': [

@@ -18,7 +18,8 @@ final class LazyCatalogItemRepository implements CatalogItemRepository {
       _repository.listByProject(projectId);
 
   @override
-  Future<List<CatalogItem>> listByProjectAndType(String projectId, EntityType type) =>
+  Future<List<CatalogItem>> listByProjectAndType(
+          String projectId, EntityType type) =>
       _repository.listByProjectAndType(projectId, type);
 
   @override

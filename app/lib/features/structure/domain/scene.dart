@@ -98,8 +98,9 @@ final class Scene {
       orderIndex: orderIndex ?? this.orderIndex,
       storyDateStart: storyDateStart ?? this.storyDateStart,
       storyDateEnd: storyDateEnd ?? this.storyDateEnd,
-      estimatedWordTarget:
-          clearEstimatedWordTarget ? null : estimatedWordTarget ?? this.estimatedWordTarget,
+      estimatedWordTarget: clearEstimatedWordTarget
+          ? null
+          : estimatedWordTarget ?? this.estimatedWordTarget,
       tensionLevel: tensionLevel ?? this.tensionLevel,
       emotionalTone: emotionalTone ?? this.emotionalTone,
       goal: goal ?? this.goal,

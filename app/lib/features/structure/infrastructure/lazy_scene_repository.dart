@@ -13,7 +13,8 @@ final class LazySceneRepository implements SceneRepository {
   Future<Scene?> findById(String id) => _repository.findById(id);
 
   @override
-  Future<List<Scene>> listByProject(String projectId) => _repository.listByProject(projectId);
+  Future<List<Scene>> listByProject(String projectId) =>
+      _repository.listByProject(projectId);
 
   @override
   Future<void> save(Scene scene) => _repository.save(scene);

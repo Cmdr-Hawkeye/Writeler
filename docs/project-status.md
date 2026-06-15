@@ -15,6 +15,7 @@ Last updated: 2026-06-15
 - Provider settings with secure API key storage.
 - Provider adapters for mock, OpenAI-compatible APIs, OpenRouter, Anthropic, Gemini, and Ollama.
 - Import/export for Markdown, HTML, TXT manuscript, outline, and Writeler JSON archives.
+- Manual sync checkpoints with envelope metadata, fingerprint validation, clipboard handoff, import support, and local sync metrics.
 - Local metrics for project, scene, chapter, catalog, relationship, AI, import, and export events.
 
 ## Verified Locally
@@ -30,7 +31,7 @@ Current test count: 22 passing tests.
 
 ## Known Gaps
 
-- Sync is still a design-level feature and needs a concrete adapter implementation.
+- Cloud-backed sync providers such as WebDAV, Supabase/Postgres, or CRDT services are not connected yet.
 - Native platform release polish is pending for Windows, Android, iOS, and macOS.
 - `flutter_secure_storage_web` works for regular web builds but is not compatible with Flutter's current WASM dry run.
 - DOCX, PDF, and EPUB export adapters are planned but not implemented.

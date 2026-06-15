@@ -32,10 +32,13 @@ final class DriftCatalogItemRepository implements CatalogItemRepository {
   }
 
   @override
-  Future<List<CatalogItem>> listByProjectAndType(String projectId, EntityType type) async {
+  Future<List<CatalogItem>> listByProjectAndType(
+      String projectId, EntityType type) async {
     final rows = await (database.select(database.catalogItems)
           ..where(
-            (table) => table.projectId.equals(projectId) & table.type.equals(type.wireName),
+            (table) =>
+                table.projectId.equals(projectId) &
+                table.type.equals(type.wireName),
           )
           ..orderBy([(table) => OrderingTerm.asc(table.name)]))
         .get();
@@ -44,7 +47,9 @@ final class DriftCatalogItemRepository implements CatalogItemRepository {
 
   @override
   Future<void> save(CatalogItem item) async {
-    await database.into(database.catalogItems).insertOnConflictUpdate(_toCompanion(item));
+    await database
+        .into(database.catalogItems)
+        .insertOnConflictUpdate(_toCompanion(item));
   }
 
   CatalogItemsCompanion _toCompanion(CatalogItem item) {

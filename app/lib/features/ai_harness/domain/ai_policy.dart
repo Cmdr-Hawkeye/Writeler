@@ -37,7 +37,8 @@ final class AIPolicy {
     required AITaskKind kind,
     required EntityType targetType,
   }) {
-    if (targetType == EntityType.scene && kind == AITaskKind.dialogueIntentAnalysis) {
+    if (targetType == EntityType.scene &&
+        kind == AITaskKind.dialogueIntentAnalysis) {
       return;
     }
     if (kind == AITaskKind.sceneIdeas ||

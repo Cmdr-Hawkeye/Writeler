@@ -79,7 +79,8 @@ final class AISuggestion {
     return AISuggestion(
       id: json['id'] as String,
       projectId: json['projectId'] as String,
-      target: EntityRef.fromJson(Map<String, Object?>.from(json['target'] as Map)),
+      target:
+          EntityRef.fromJson(Map<String, Object?>.from(json['target'] as Map)),
       suggestionType: json['suggestionType'] as String,
       inputContextHash: json['inputContextHash'] as String,
       providerId: json['providerId'] as String,
@@ -100,5 +101,4 @@ final class AISuggestion {
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
-
 }

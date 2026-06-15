@@ -10,13 +10,16 @@ final class InMemoryCatalogItemRepository implements CatalogItemRepository {
 
   @override
   Future<List<CatalogItem>> listByProject(String projectId) async {
-    final items = _items.values.where((item) => item.projectId == projectId).toList()
+    final items = _items.values
+        .where((item) => item.projectId == projectId)
+        .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
     return items;
   }
 
   @override
-  Future<List<CatalogItem>> listByProjectAndType(String projectId, EntityType type) async {
+  Future<List<CatalogItem>> listByProjectAndType(
+      String projectId, EntityType type) async {
     final items = _items.values
         .where((item) => item.projectId == projectId && item.type == type)
         .toList()

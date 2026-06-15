@@ -16,7 +16,8 @@ extension DraftStatusWire on DraftStatus {
   static DraftStatus parse(String value) {
     return DraftStatus.values.firstWhere(
       (status) => status.name == value,
-      orElse: () => throw ArgumentError.value(value, 'value', 'Unknown draft status'),
+      orElse: () =>
+          throw ArgumentError.value(value, 'value', 'Unknown draft status'),
     );
   }
 }

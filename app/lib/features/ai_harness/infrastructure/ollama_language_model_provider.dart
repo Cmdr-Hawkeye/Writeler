@@ -73,7 +73,8 @@ final class OllamaLanguageModelProvider implements LanguageModelProvider {
     final message = json['message'];
     final content = message is Map ? message['content'] : json['response'];
     if (content is! String || content.trim().isEmpty) {
-      throw const DomainFailure('Ollama response did not include text content.');
+      throw const DomainFailure(
+          'Ollama response did not include text content.');
     }
 
     return ModelResponse(
@@ -88,7 +89,8 @@ final class OllamaLanguageModelProvider implements LanguageModelProvider {
         ? baseUrl.path.substring(0, baseUrl.path.length - 1)
         : baseUrl.path;
     final alreadyChat = normalized.endsWith('/api/chat');
-    return baseUrl.replace(path: alreadyChat ? normalized : '$normalized/api/chat');
+    return baseUrl.replace(
+        path: alreadyChat ? normalized : '$normalized/api/chat');
   }
 
   JsonMap _requestBody(ModelRequest request) {
@@ -98,7 +100,8 @@ final class OllamaLanguageModelProvider implements LanguageModelProvider {
       'messages': [
         {
           'role': 'system',
-          'content': 'You are an analysis assistant for authors. Do not write manuscript prose.',
+          'content':
+              'You are an analysis assistant for authors. Do not write manuscript prose.',
         },
         {'role': 'user', 'content': request.prompt},
       ],

@@ -43,7 +43,8 @@ final class DriftAISuggestionRepository implements AISuggestionRepository {
       promptTemplateId: Value(suggestion.promptTemplateId),
       promptText: suggestion.promptText,
       responseText: suggestion.responseText,
-      structuredResponseJson: Value(_encodeNullable(suggestion.structuredResponse)),
+      structuredResponseJson:
+          Value(_encodeNullable(suggestion.structuredResponse)),
       userDecision: suggestion.userDecision.name,
       acceptedPatchJson: Value(_encodeNullable(suggestion.acceptedPatch)),
       createdAt: suggestion.createdAt,

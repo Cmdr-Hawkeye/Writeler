@@ -16,7 +16,9 @@ final class DriftRelationshipRepository implements RelationshipRepository {
 
   @override
   Future<void> delete(String id) async {
-    await (database.delete(database.relationships)..where((table) => table.id.equals(id))).go();
+    await (database.delete(database.relationships)
+          ..where((table) => table.id.equals(id)))
+        .go();
   }
 
   @override
@@ -73,8 +75,10 @@ final class DriftRelationshipRepository implements RelationshipRepository {
     return Relationship(
       id: row.id,
       projectId: row.projectId,
-      source: EntityRef(type: EntityTypeWire.parse(row.sourceType), id: row.sourceId),
-      target: EntityRef(type: EntityTypeWire.parse(row.targetType), id: row.targetId),
+      source: EntityRef(
+          type: EntityTypeWire.parse(row.sourceType), id: row.sourceId),
+      target: EntityRef(
+          type: EntityTypeWire.parse(row.targetType), id: row.targetId),
       relationshipType: row.relationshipType,
       label: row.label,
       description: row.description,

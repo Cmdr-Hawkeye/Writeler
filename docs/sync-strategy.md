@@ -15,6 +15,14 @@ Writeler is offline-first. Local use must work without an account, backend, or n
 - WebDAV for user-controlled file sync.
 - CRDT-capable backend for collaborative future modes.
 
-## First Milestone
+## Implemented Baseline
 
-The first local milestone should persist to SQLite/IndexedDB and export complete project archives. Sync adapters should be added after the archive format and migration rules are stable.
+Writeler includes a manual archive sync adapter:
+
+- It wraps the complete Writeler project archive in a `writeler.sync.v1` envelope.
+- The envelope records adapter name, creation timestamp, byte length, and a stable fingerprint.
+- Users can copy the checkpoint from the Export workspace and paste it back into the import field.
+- The import flow accepts both raw `writeler.project.v2` archives and sync envelopes.
+- Sync events are recorded in local metrics.
+
+This baseline is intentionally cloud-free. WebDAV, Supabase/Postgres, or CRDT-capable backends can implement the same adapter boundary later without making local writing depend on network availability.

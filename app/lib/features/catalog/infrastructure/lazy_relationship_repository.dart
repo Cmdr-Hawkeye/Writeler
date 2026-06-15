@@ -22,5 +22,6 @@ final class LazyRelationshipRepository implements RelationshipRepository {
       _repository.listForSource(source);
 
   @override
-  Future<void> save(Relationship relationship) => _repository.save(relationship);
+  Future<void> save(Relationship relationship) =>
+      _repository.save(relationship);
 }

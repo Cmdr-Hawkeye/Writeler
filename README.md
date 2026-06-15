@@ -14,6 +14,7 @@ This repository contains a working Flutter implementation of the local-first Wri
 - AI provider adapters for OpenAI-compatible APIs, OpenRouter, Anthropic, Gemini, Ollama, and a local mock provider
 - secure API key storage through a vault abstraction backed by `flutter_secure_storage`
 - import/export for Markdown, HTML, TXT manuscript, outline, and full Writeler JSON archives
+- manual sync checkpoints that wrap full project archives with adapter metadata and fingerprint validation
 - German and English UI copy
 - Drift/SQLite local persistence for native and web, including SQLite WASM assets
 - architecture, privacy, sync, export, testing, user, and developer documentation

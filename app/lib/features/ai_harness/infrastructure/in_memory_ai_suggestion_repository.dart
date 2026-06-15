@@ -6,7 +6,9 @@ final class InMemoryAISuggestionRepository implements AISuggestionRepository {
 
   @override
   Future<List<AISuggestion>> listForProject(String projectId) async {
-    return _items.where((suggestion) => suggestion.projectId == projectId).toList();
+    return _items
+        .where((suggestion) => suggestion.projectId == projectId)
+        .toList();
   }
 
   @override

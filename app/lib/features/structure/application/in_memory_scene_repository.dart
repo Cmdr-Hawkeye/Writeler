@@ -9,7 +9,9 @@ final class InMemorySceneRepository implements SceneRepository {
 
   @override
   Future<List<Scene>> listByProject(String projectId) async {
-    final scenes = _scenes.values.where((scene) => scene.projectId == projectId).toList()
+    final scenes = _scenes.values
+        .where((scene) => scene.projectId == projectId)
+        .toList()
       ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     return scenes;
   }

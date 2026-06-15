@@ -7,7 +7,8 @@ import '../domain/language_model_provider.dart';
 import '../domain/model_http_transport.dart';
 import '../domain/model_request.dart';
 
-final class OpenAICompatibleLanguageModelProvider implements LanguageModelProvider {
+final class OpenAICompatibleLanguageModelProvider
+    implements LanguageModelProvider {
   const OpenAICompatibleLanguageModelProvider({
     required this.id,
     required this.displayName,
@@ -76,7 +77,8 @@ final class OpenAICompatibleLanguageModelProvider implements LanguageModelProvid
     final json = _decodeObject(response.body);
     final choices = json['choices'];
     if (choices is! List || choices.isEmpty) {
-      throw const DomainFailure('Provider response did not include any choices.');
+      throw const DomainFailure(
+          'Provider response did not include any choices.');
     }
 
     final firstChoice = choices.first;
@@ -87,14 +89,17 @@ final class OpenAICompatibleLanguageModelProvider implements LanguageModelProvid
     final message = firstChoice['message'];
     final content = message is Map ? message['content'] : firstChoice['text'];
     if (content is! String || content.trim().isEmpty) {
-      throw const DomainFailure('Provider response did not include text content.');
+      throw const DomainFailure(
+          'Provider response did not include text content.');
     }
 
     final usage = json['usage'];
     return ModelResponse(
       text: content.trim(),
-      estimatedInputTokens: usage is Map ? _asInt(usage['prompt_tokens']) : null,
-      estimatedOutputTokens: usage is Map ? _asInt(usage['completion_tokens']) : null,
+      estimatedInputTokens:
+          usage is Map ? _asInt(usage['prompt_tokens']) : null,
+      estimatedOutputTokens:
+          usage is Map ? _asInt(usage['completion_tokens']) : null,
     );
   }
 
@@ -104,7 +109,8 @@ final class OpenAICompatibleLanguageModelProvider implements LanguageModelProvid
         : baseUrl.path;
     final alreadyChatCompletions = normalized.endsWith('/chat/completions');
     return baseUrl.replace(
-      path: alreadyChatCompletions ? normalized : '$normalized/chat/completions',
+      path:
+          alreadyChatCompletions ? normalized : '$normalized/chat/completions',
     );
   }
 
@@ -126,7 +132,8 @@ final class OpenAICompatibleLanguageModelProvider implements LanguageModelProvid
       'messages': [
         {
           'role': 'system',
-          'content': 'You are an analysis assistant for authors. Do not write manuscript prose.',
+          'content':
+              'You are an analysis assistant for authors. Do not write manuscript prose.',
         },
         {
           'role': 'user',

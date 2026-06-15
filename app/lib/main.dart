@@ -51,6 +51,8 @@ import 'features/settings/domain/secret_vault.dart';
 import 'features/settings/infrastructure/drift_ai_provider_config_repository.dart';
 import 'features/settings/infrastructure/flutter_secure_secret_vault.dart';
 import 'features/settings/infrastructure/lazy_ai_provider_config_repository.dart';
+import 'features/sync/application/manual_sync_adapter.dart';
+import 'features/sync/domain/sync_checkpoint.dart';
 import 'core/infrastructure/database/app_database.dart';
 import 'features/structure/application/create_chapter.dart';
 import 'features/structure/application/create_scene.dart';
@@ -197,28 +199,37 @@ final class WritelerShell extends StatefulWidget {
 }
 
 final class _WritelerShellState extends State<WritelerShell> {
-  late final CreateProject _createProject = CreateProject(widget.projectRepository);
-  late final CreateChapter _createChapter = CreateChapter(widget.chapterRepository);
+  late final CreateProject _createProject =
+      CreateProject(widget.projectRepository);
+  late final CreateChapter _createChapter =
+      CreateChapter(widget.chapterRepository);
   late final CreateScene _createScene = CreateScene(widget.sceneRepository);
   late final CreateCatalogItem _createCatalogItem =
       CreateCatalogItem(widget.catalogItemRepository);
   late final RecordMetric _recordMetric = RecordMetric(widget.metricRepository);
   late final ProjectExporter _projectExporter = const ProjectExporter();
   late final ProjectArchiveCodec _archiveCodec = const ProjectArchiveCodec();
-  late final TextEditingController _manuscriptController = TextEditingController();
+  late final ManualSyncAdapter _syncAdapter = const ManualSyncAdapter();
+  late final TextEditingController _manuscriptController =
+      TextEditingController();
   late final TextEditingController _summaryController = TextEditingController();
   late final TextEditingController _goalController = TextEditingController();
-  late final TextEditingController _conflictController = TextEditingController();
+  late final TextEditingController _conflictController =
+      TextEditingController();
   late final TextEditingController _outcomeController = TextEditingController();
-  late final TextEditingController _wordTargetController = TextEditingController();
-  late final TextEditingController _aiPromptController = TextEditingController();
+  late final TextEditingController _wordTargetController =
+      TextEditingController();
+  late final TextEditingController _aiPromptController =
+      TextEditingController();
   late final TextEditingController _providerNameController =
       TextEditingController(text: 'MockProvider');
   late final TextEditingController _modelNameController =
       TextEditingController(text: 'mock-structure-v1');
   late final TextEditingController _baseUrlController = TextEditingController();
-  late final TextEditingController _apiKeyRefController = TextEditingController();
-  late final TextEditingController _importArchiveController = TextEditingController();
+  late final TextEditingController _apiKeyRefController =
+      TextEditingController();
+  late final TextEditingController _importArchiveController =
+      TextEditingController();
 
   List<Project> _projects = const [];
   List<Chapter> _chapters = const [];
@@ -239,6 +250,8 @@ final class _WritelerShellState extends State<WritelerShell> {
   String? _lastAiError;
   ProjectArchivePreview? _importPreview;
   String? _importPreviewError;
+  SyncCheckpoint? _lastSyncCheckpoint;
+  SyncEnvelopePreview? _syncImportPreview;
   AIProviderKind _selectedProviderKind = AIProviderKind.mock;
   AIProviderConfig? _activeProviderConfig;
   bool _providerEnabled = true;
@@ -299,7 +312,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<AIProviderConfig?> _normalizeProviderConfigSecrets(AIProviderConfig? config) async {
+  Future<AIProviderConfig?> _normalizeProviderConfigSecrets(
+      AIProviderConfig? config) async {
     final apiKeyRef = config?.encryptedApiKeyRef;
     if (config == null || apiKeyRef == null || _isSecretVaultRef(apiKeyRef)) {
       return config;
@@ -392,7 +406,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     if (ref == null) return null;
     final secret = await widget.secretVault.read(ref);
     if (secret == null || secret.isEmpty) {
-      throw const DomainFailure('The configured API key could not be found in secure storage.');
+      throw const DomainFailure(
+          'The configured API key could not be found in secure storage.');
     }
     return secret;
   }
@@ -401,9 +416,11 @@ final class _WritelerShellState extends State<WritelerShell> {
     final scenesFuture = widget.sceneRepository.listByProject(projectId);
     final chaptersFuture = widget.chapterRepository.listByProject(projectId);
     final catalogFuture = widget.catalogItemRepository.listByProject(projectId);
-    final relationshipsFuture = widget.relationshipRepository.listByProject(projectId);
+    final relationshipsFuture =
+        widget.relationshipRepository.listByProject(projectId);
     final metricsFuture = widget.metricRepository.listForProject(projectId);
-    final suggestionsFuture = widget.aiSuggestionRepository.listForProject(projectId);
+    final suggestionsFuture =
+        widget.aiSuggestionRepository.listForProject(projectId);
     final scenes = await scenesFuture;
     final chapters = await chaptersFuture;
     final catalogItems = await catalogFuture;
@@ -509,7 +526,9 @@ final class _WritelerShellState extends State<WritelerShell> {
 
     final project = await _createProject(
       CreateProjectCommand(
-        title: normalizedTitle.isEmpty ? copy.t('untitledProject') : normalizedTitle,
+        title: normalizedTitle.isEmpty
+            ? copy.t('untitledProject')
+            : normalizedTitle,
         languageCode: Localizations.localeOf(context).languageCode,
       ),
     );
@@ -581,7 +600,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     final scene = await _createScene(
       CreateSceneCommand(
         projectId: project.id,
-        title: normalizedTitle.isEmpty ? copy.t('untitledScene') : normalizedTitle,
+        title:
+            normalizedTitle.isEmpty ? copy.t('untitledScene') : normalizedTitle,
         orderIndex: (_scenes.length + 1) * 1000,
       ),
     );
@@ -622,7 +642,8 @@ final class _WritelerShellState extends State<WritelerShell> {
               children: [
                 TextField(
                   autofocus: true,
-                  decoration: InputDecoration(labelText: copy.t('chapterTitle')),
+                  decoration:
+                      InputDecoration(labelText: copy.t('chapterTitle')),
                   textInputAction: TextInputAction.next,
                   onChanged: (value) => draftTitle = value,
                 ),
@@ -714,7 +735,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _showCreateCatalogItemDialog(WritelerCopy copy, EntityType type) async {
+  Future<void> _showCreateCatalogItemDialog(
+      WritelerCopy copy, EntityType type) async {
     final project = _selectedProject;
     if (project == null) return;
 
@@ -821,12 +843,17 @@ final class _WritelerShellState extends State<WritelerShell> {
       }
     }
 
-    final relationships = await widget.relationshipRepository.listByProject(project.id);
+    final relationships =
+        await widget.relationshipRepository.listByProject(project.id);
     if (!mounted) return;
     setState(() => _relationships = relationships);
     await _recordProjectMetric(
       eventType: selected ? 'relationship.linked' : 'relationship.unlinked',
-      metadata: {'sceneId': scene.id, 'targetType': item.type.wireName, 'targetId': item.id},
+      metadata: {
+        'sceneId': scene.id,
+        'targetType': item.type.wireName,
+        'targetId': item.id
+      },
     );
   }
 
@@ -834,7 +861,9 @@ final class _WritelerShellState extends State<WritelerShell> {
     final project = _selectedProject;
     if (project == null) return;
 
-    final ordered = _scenes.where((item) => item.chapterId == scene.chapterId).toList()
+    final ordered = _scenes
+        .where((item) => item.chapterId == scene.chapterId)
+        .toList()
       ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     final index = ordered.indexWhere((item) => item.id == scene.id);
     final targetIndex = index + direction;
@@ -842,8 +871,10 @@ final class _WritelerShellState extends State<WritelerShell> {
 
     final moving = ordered[index];
     final target = ordered[targetIndex];
-    await widget.sceneRepository.save(moving.copyWith(orderIndex: target.orderIndex));
-    await widget.sceneRepository.save(target.copyWith(orderIndex: moving.orderIndex));
+    await widget.sceneRepository
+        .save(moving.copyWith(orderIndex: target.orderIndex));
+    await widget.sceneRepository
+        .save(target.copyWith(orderIndex: moving.orderIndex));
 
     final scenes = await widget.sceneRepository.listByProject(project.id);
     final selected = scenes.firstWhere(
@@ -884,7 +915,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _requestSceneSuggestion(WritelerCopy copy, AITaskKind task) async {
+  Future<void> _requestSceneSuggestion(
+      WritelerCopy copy, AITaskKind task) async {
     final project = _selectedProject;
     final scene = _selectedScene ?? _scenes.firstOrNull;
     if (project == null || scene == null || _isRequestingAi) return;
@@ -900,7 +932,8 @@ final class _WritelerShellState extends State<WritelerShell> {
             ? copy.t('defaultAiPrompt')
             : _aiPromptController.text.trim(),
       );
-      final suggestions = await widget.aiSuggestionRepository.listForProject(project.id);
+      final suggestions =
+          await widget.aiSuggestionRepository.listForProject(project.id);
       if (!mounted) return;
       setState(() {
         _suggestions = suggestions;
@@ -932,12 +965,25 @@ final class _WritelerShellState extends State<WritelerShell> {
     return error.toString().replaceFirst('Exception: ', '');
   }
 
-  Future<void> _decideSuggestion(AISuggestion suggestion, SuggestionDecision decision) async {
+  ProjectArchive _currentArchive(Project project) {
+    return ProjectArchive(
+      project: project,
+      chapters: _chapters,
+      scenes: _scenes,
+      catalogItems: _catalogItems,
+      relationships: _relationships,
+    );
+  }
+
+  Future<void> _decideSuggestion(
+      AISuggestion suggestion, SuggestionDecision decision) async {
     final project = _selectedProject;
     if (project == null) return;
 
-    await widget.aiSuggestionRepository.save(suggestion.copyWith(userDecision: decision));
-    final suggestions = await widget.aiSuggestionRepository.listForProject(project.id);
+    await widget.aiSuggestionRepository
+        .save(suggestion.copyWith(userDecision: decision));
+    final suggestions =
+        await widget.aiSuggestionRepository.listForProject(project.id);
     if (!mounted) return;
     setState(() => _suggestions = suggestions);
   }
@@ -973,26 +1019,54 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<void> _copySyncCheckpoint(WritelerCopy copy) async {
+    final project = _selectedProject;
+    if (project == null) return;
+
+    final checkpoint = _syncAdapter.createCheckpoint(_currentArchive(project));
+    await Clipboard.setData(ClipboardData(text: checkpoint.payload));
+    if (!mounted) return;
+    setState(() => _lastSyncCheckpoint = checkpoint);
+    await _recordProjectMetric(
+      eventType: 'sync.checkpoint.copied',
+      value: checkpoint.byteLength,
+      metadata: {
+        'adapter': checkpoint.adapterName,
+        'fingerprint': checkpoint.fingerprint,
+        'scenes': checkpoint.sceneCount,
+        'chapters': checkpoint.chapterCount,
+      },
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('syncCheckpointCopied'))),
+    );
+  }
+
   void _refreshImportPreview() {
     final source = _importArchiveController.text.trim();
     if (source.isEmpty) {
       setState(() {
         _importPreview = null;
         _importPreviewError = null;
+        _syncImportPreview = null;
       });
       return;
     }
 
     try {
-      final preview = _archiveCodec.preview(source);
+      final inspection = _syncAdapter.inspectPayload(source);
+      final preview = _archiveCodec.preview(inspection.archiveSource);
       setState(() {
         _importPreview = preview;
         _importPreviewError = null;
+        _syncImportPreview = inspection.envelope;
       });
     } catch (error) {
       setState(() {
         _importPreview = null;
         _importPreviewError = _providerErrorMessage(error);
+        _syncImportPreview = null;
       });
     }
   }
@@ -1002,7 +1076,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     if (source.isEmpty) return;
 
     try {
-      final archive = _archiveCodec.decode(source);
+      final inspection = _syncAdapter.inspectPayload(source);
+      final archive = _archiveCodec.decode(inspection.archiveSource);
       await widget.projectRepository.save(archive.project);
       for (final chapter in archive.chapters) {
         await widget.chapterRepository.save(chapter);
@@ -1018,7 +1093,8 @@ final class _WritelerShellState extends State<WritelerShell> {
       }
 
       final projects = await widget.projectRepository.listActive();
-      final suggestions = await widget.aiSuggestionRepository.listForProject(archive.project.id);
+      final suggestions = await widget.aiSuggestionRepository
+          .listForProject(archive.project.id);
       if (!mounted) return;
       setState(() {
         _projects = projects;
@@ -1033,17 +1109,22 @@ final class _WritelerShellState extends State<WritelerShell> {
         _importArchiveController.clear();
         _importPreview = null;
         _importPreviewError = null;
+        _syncImportPreview = null;
       });
       await _recordMetric(
         projectId: archive.project.id,
-        eventType: 'project.imported',
+        eventType: inspection.isEnvelope
+            ? 'sync.checkpoint.imported'
+            : 'project.imported',
         metadata: {
           'scenes': archive.scenes.length,
           'catalogItems': archive.catalogItems.length,
           'relationships': archive.relationships.length,
+          if (inspection.envelope != null) ...inspection.envelope!.toJson(),
         },
       );
-      final metrics = await widget.metricRepository.listForProject(archive.project.id);
+      final metrics =
+          await widget.metricRepository.listForProject(archive.project.id);
       if (mounted) {
         setState(() => _metrics = metrics);
       }
@@ -1102,7 +1183,9 @@ final class _WritelerShellState extends State<WritelerShell> {
       modelName: _modelNameController.text.trim().isEmpty
           ? copy.t('modelNameFallback')
           : _modelNameController.text.trim(),
-      baseUrl: _baseUrlController.text.trim().isEmpty ? null : _baseUrlController.text.trim(),
+      baseUrl: _baseUrlController.text.trim().isEmpty
+          ? null
+          : _baseUrlController.text.trim(),
       encryptedApiKeyRef: apiKeyRef,
       enabled: _providerEnabled,
     );
@@ -1146,7 +1229,8 @@ final class _WritelerShellState extends State<WritelerShell> {
         children: [
           NavigationRail(
             selectedIndex: _selectedRailIndex,
-            onDestinationSelected: (index) => setState(() => _selectedRailIndex = index),
+            onDestinationSelected: (index) =>
+                setState(() => _selectedRailIndex = index),
             labelType: NavigationRailLabelType.all,
             destinations: [
               NavigationRailDestination(
@@ -1208,9 +1292,10 @@ final class _WritelerShellState extends State<WritelerShell> {
                       children: [
                         Text(
                           copy.t('appTitle'),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
                         ),
                         const Spacer(),
                         FilledButton.icon(
@@ -1299,20 +1384,29 @@ final class _WritelerShellState extends State<WritelerShell> {
       3 => _CatalogWorkspace(
           copy: copy,
           type: EntityType.character,
-          items: _catalogItems.where((item) => item.type == EntityType.character).toList(),
-          onCreateItem: () => _showCreateCatalogItemDialog(copy, EntityType.character),
+          items: _catalogItems
+              .where((item) => item.type == EntityType.character)
+              .toList(),
+          onCreateItem: () =>
+              _showCreateCatalogItemDialog(copy, EntityType.character),
         ),
       4 => _CatalogWorkspace(
           copy: copy,
           type: EntityType.location,
-          items: _catalogItems.where((item) => item.type == EntityType.location).toList(),
-          onCreateItem: () => _showCreateCatalogItemDialog(copy, EntityType.location),
+          items: _catalogItems
+              .where((item) => item.type == EntityType.location)
+              .toList(),
+          onCreateItem: () =>
+              _showCreateCatalogItemDialog(copy, EntityType.location),
         ),
       5 => _CatalogWorkspace(
           copy: copy,
           type: EntityType.object,
-          items: _catalogItems.where((item) => item.type == EntityType.object).toList(),
-          onCreateItem: () => _showCreateCatalogItemDialog(copy, EntityType.object),
+          items: _catalogItems
+              .where((item) => item.type == EntityType.object)
+              .toList(),
+          onCreateItem: () =>
+              _showCreateCatalogItemDialog(copy, EntityType.object),
         ),
       6 => _AIWorkshop(
           copy: copy,
@@ -1323,9 +1417,10 @@ final class _WritelerShellState extends State<WritelerShell> {
           promptController: _aiPromptController,
           isRequesting: _isRequestingAi,
           lastError: _lastAiError,
-          onRequestSceneIdeas: () => _requestSceneSuggestion(copy, AITaskKind.sceneIdeas),
-          onRequestStructure: () =>
-              _requestSceneSuggestion(copy, AITaskKind.sceneGoalConflictOutcome),
+          onRequestSceneIdeas: () =>
+              _requestSceneSuggestion(copy, AITaskKind.sceneIdeas),
+          onRequestStructure: () => _requestSceneSuggestion(
+              copy, AITaskKind.sceneGoalConflictOutcome),
           onAcceptSuggestion: (suggestion) =>
               _decideSuggestion(suggestion, SuggestionDecision.accepted),
           onRejectSuggestion: (suggestion) =>
@@ -1347,10 +1442,16 @@ final class _WritelerShellState extends State<WritelerShell> {
           importController: _importArchiveController,
           importPreview: _importPreview,
           importPreviewError: _importPreviewError,
-          onFormatChanged: (format) => setState(() => _selectedExportFormat = format),
-          onIncludeSceneTitlesChanged: (value) => setState(() => _includeSceneTitles = value),
-          onIncludeMetadataChanged: (value) => setState(() => _includeExportMetadata = value),
+          lastSyncCheckpoint: _lastSyncCheckpoint,
+          syncImportPreview: _syncImportPreview,
+          onFormatChanged: (format) =>
+              setState(() => _selectedExportFormat = format),
+          onIncludeSceneTitlesChanged: (value) =>
+              setState(() => _includeSceneTitles = value),
+          onIncludeMetadataChanged: (value) =>
+              setState(() => _includeExportMetadata = value),
           onCopyExport: () => _copyExport(copy),
+          onCopySyncCheckpoint: () => _copySyncCheckpoint(copy),
           onImportSourceChanged: _refreshImportPreview,
           onImportArchive: () => _importArchive(copy),
         ),
@@ -1366,10 +1467,12 @@ final class _WritelerShellState extends State<WritelerShell> {
           providerHasStoredApiKey: _providerHasStoredApiKey,
           activeProviderConfig: _activeProviderConfig,
           onProviderKindChanged: _selectProviderKind,
-          onProviderEnabledChanged: (enabled) => setState(() => _providerEnabled = enabled),
+          onProviderEnabledChanged: (enabled) =>
+              setState(() => _providerEnabled = enabled),
           onSaveProviderConfig: () => _saveProviderConfig(copy),
           onDeleteProviderApiKey: () => _deleteProviderApiKey(copy),
           onSavePrivacySettings: _saveProjectPrivacySettings,
+          syncAdapterName: _syncAdapter.adapterName,
         ),
     };
   }
@@ -1543,9 +1646,12 @@ final class _ProjectOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final words = scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
-    final pendingSuggestions =
-        suggestions.where((suggestion) => suggestion.userDecision == SuggestionDecision.pending).length;
+    final words =
+        scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
+    final pendingSuggestions = suggestions
+        .where((suggestion) =>
+            suggestion.userDecision == SuggestionDecision.pending)
+        .length;
     final today = DateTime.now().toLocal();
     final todaySaves = metrics
         .where(
@@ -1556,8 +1662,10 @@ final class _ProjectOverview extends StatelessWidget {
               event.occurredAt.toLocal().day == today.day,
         )
         .length;
-    final aiEvents = metrics.where((event) => event.eventType.startsWith('ai.')).length;
-    final exportEvents = metrics.where((event) => event.eventType.startsWith('export.')).length;
+    final aiEvents =
+        metrics.where((event) => event.eventType.startsWith('ai.')).length;
+    final exportEvents =
+        metrics.where((event) => event.eventType.startsWith('export.')).length;
 
     return Row(
       children: [
@@ -1588,22 +1696,37 @@ final class _ProjectOverview extends StatelessWidget {
                   spacing: 16,
                   runSpacing: 16,
                   children: [
-                    _MetricTile(label: copy.t('scenes'), value: scenes.length.toString()),
-                    _MetricTile(label: copy.t('chapters'), value: chapters.length.toString()),
-                    _MetricTile(label: copy.t('words'), value: words.toString()),
-                    _MetricTile(label: copy.t('catalog'), value: catalogItems.length.toString()),
+                    _MetricTile(
+                        label: copy.t('scenes'),
+                        value: scenes.length.toString()),
+                    _MetricTile(
+                        label: copy.t('chapters'),
+                        value: chapters.length.toString()),
+                    _MetricTile(
+                        label: copy.t('words'), value: words.toString()),
+                    _MetricTile(
+                        label: copy.t('catalog'),
+                        value: catalogItems.length.toString()),
                     _MetricTile(
                       label: copy.t('openSuggestions'),
                       value: pendingSuggestions.toString(),
                     ),
-                    _MetricTile(label: copy.t('metricEvents'), value: metrics.length.toString()),
-                    _MetricTile(label: copy.t('todaySaves'), value: todaySaves.toString()),
-                    _MetricTile(label: copy.t('aiUses'), value: aiEvents.toString()),
-                    _MetricTile(label: copy.t('exports'), value: exportEvents.toString()),
+                    _MetricTile(
+                        label: copy.t('metricEvents'),
+                        value: metrics.length.toString()),
+                    _MetricTile(
+                        label: copy.t('todaySaves'),
+                        value: todaySaves.toString()),
+                    _MetricTile(
+                        label: copy.t('aiUses'), value: aiEvents.toString()),
+                    _MetricTile(
+                        label: copy.t('exports'),
+                        value: exportEvents.toString()),
                   ],
                 ),
                 const SizedBox(height: 28),
-                Text(copy.t('recentMetrics'), style: Theme.of(context).textTheme.titleMedium),
+                Text(copy.t('recentMetrics'),
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 SizedBox(
                   height: 120,
@@ -1614,21 +1737,27 @@ final class _ProjectOverview extends StatelessWidget {
                         )
                       : ListView.separated(
                           itemCount: metrics.take(5).length,
-                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final event = metrics[index];
                             return ListTile(
                               dense: true,
                               leading: const Icon(Icons.insights_outlined),
-                              title: Text(_metricEventLabel(event.eventType, copy.languageCode)),
-                              subtitle: Text(event.occurredAt.toLocal().toString()),
-                              trailing: event.value == null ? null : Text('${event.value}'),
+                              title: Text(_metricEventLabel(
+                                  event.eventType, copy.languageCode)),
+                              subtitle:
+                                  Text(event.occurredAt.toLocal().toString()),
+                              trailing: event.value == null
+                                  ? null
+                                  : Text('${event.value}'),
                             );
                           },
                         ),
                 ),
                 const SizedBox(height: 20),
-                Text(copy.t('recentScenes'), style: Theme.of(context).textTheme.titleMedium),
+                Text(copy.t('recentScenes'),
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Expanded(
                   child: scenes.isEmpty
@@ -1638,7 +1767,8 @@ final class _ProjectOverview extends StatelessWidget {
                         )
                       : ListView.separated(
                           itemCount: scenes.length,
-                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final scene = scenes[index];
                             return ListTile(
@@ -1727,7 +1857,8 @@ final class _SceneBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orderedChapters = [...chapters]..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    final orderedChapters = [...chapters]
+      ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     final groups = <_SceneStructureGroup>[
       for (final chapter in orderedChapters)
         _SceneStructureGroup(
@@ -1771,8 +1902,9 @@ final class _SceneBoard extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
                 final chapter = orderedChapters[index];
-                final sceneCount =
-                    scenes.where((scene) => scene.chapterId == chapter.id).length;
+                final sceneCount = scenes
+                    .where((scene) => scene.chapterId == chapter.id)
+                    .length;
                 return Chip(
                   avatar: const Icon(Icons.folder_outlined, size: 18),
                   label: Text('${chapter.title} · $sceneCount'),
@@ -1827,7 +1959,8 @@ final class _SceneBoard extends StatelessWidget {
   }
 
   List<Scene> _scenesForChapter(String? chapterId) {
-    final filtered = scenes.where((scene) => scene.chapterId == chapterId).toList();
+    final filtered =
+        scenes.where((scene) => scene.chapterId == chapterId).toList();
     filtered.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     return filtered;
   }
@@ -1923,8 +2056,10 @@ final class _SceneStructureColumn extends StatelessWidget {
                 final selected = selectedScene?.id == scene.id;
                 return ListTile(
                   selected: selected,
-                  selectedTileColor: color.primaryContainer.withValues(alpha: 0.38),
-                  title: Text(scene.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  selectedTileColor:
+                      color.primaryContainer.withValues(alpha: 0.38),
+                  title: Text(scene.title,
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
                   subtitle: Text(
                     '${_draftStatusLabel(scene.status, copy.languageCode)} - '
                     '${scene.actualWordCount} ${copy.t('words')}',
@@ -1935,9 +2070,11 @@ final class _SceneStructureColumn extends StatelessWidget {
                     chapters: chapters,
                     onMoveUp: () => onMoveSceneUp(scene),
                     onMoveDown: () => onMoveSceneDown(scene),
-                    onMoveToChapter: (chapterId) => onMoveSceneToChapter(scene, chapterId),
+                    onMoveToChapter: (chapterId) =>
+                        onMoveSceneToChapter(scene, chapterId),
                   ),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                   onTap: () => onSelectScene(scene),
                 );
               },
@@ -1984,11 +2121,13 @@ final class _SceneStructureMenu extends StatelessWidget {
       itemBuilder: (context) {
         return [
           PopupMenuItem(
-            value: const _SceneStructureAction(_SceneStructureActionKind.moveUp),
+            value:
+                const _SceneStructureAction(_SceneStructureActionKind.moveUp),
             child: Text(copy.t('moveSceneUp')),
           ),
           PopupMenuItem(
-            value: const _SceneStructureAction(_SceneStructureActionKind.moveDown),
+            value:
+                const _SceneStructureAction(_SceneStructureActionKind.moveDown),
             child: Text(copy.t('moveSceneDown')),
           ),
           const PopupMenuDivider(),
@@ -2058,18 +2197,22 @@ final class _CatalogWorkspace extends StatelessWidget {
               : ListView.separated(
                   padding: const EdgeInsets.all(20),
                   itemCount: items.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final item = items[index];
                     return ListTile(
                       leading: Icon(_catalogIcon(type), color: color.primary),
                       title: Text(item.name),
                       subtitle: Text(
-                        item.summary.isEmpty ? copy.t('noSummary') : item.summary,
+                        item.summary.isEmpty
+                            ? copy.t('noSummary')
+                            : item.summary,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: Text(_draftStatusLabel(item.status, copy.languageCode)),
+                      trailing: Text(
+                          _draftStatusLabel(item.status, copy.languageCode)),
                     );
                   },
                 ),
@@ -2114,7 +2257,9 @@ final class _AIWorkshop extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
     final scene = selectedScene ?? scenes.firstOrNull;
-    final aiAvailable = project?.aiEnabled == true && project?.noAiNoCloud == false && scene != null;
+    final aiAvailable = project?.aiEnabled == true &&
+        project?.noAiNoCloud == false &&
+        scene != null;
 
     return Column(
       children: [
@@ -2148,12 +2293,16 @@ final class _AIWorkshop extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     FilledButton.icon(
-                      onPressed: aiAvailable && !isRequesting ? onRequestSceneIdeas : null,
+                      onPressed: aiAvailable && !isRequesting
+                          ? onRequestSceneIdeas
+                          : null,
                       icon: const Icon(Icons.lightbulb_outline),
                       label: Text(copy.t('requestSceneIdeas')),
                     ),
                     OutlinedButton.icon(
-                      onPressed: aiAvailable && !isRequesting ? onRequestStructure : null,
+                      onPressed: aiAvailable && !isRequesting
+                          ? onRequestStructure
+                          : null,
                       icon: const Icon(Icons.account_tree_outlined),
                       label: Text(copy.t('requestStructure')),
                     ),
@@ -2168,18 +2317,22 @@ final class _AIWorkshop extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 24),
-                Text(copy.t('suggestions'), style: Theme.of(context).textTheme.titleMedium),
+                Text(copy.t('suggestions'),
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Expanded(
                   child: suggestions.isEmpty
-                      ? Text(copy.t('noSuggestions'), style: TextStyle(color: color.onSurfaceVariant))
+                      ? Text(copy.t('noSuggestions'),
+                          style: TextStyle(color: color.onSurfaceVariant))
                       : ListView.separated(
                           itemCount: suggestions.length,
-                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final suggestion = suggestions[index];
                             return ListTile(
-                              leading: const Icon(Icons.psychology_alt_outlined),
+                              leading:
+                                  const Icon(Icons.psychology_alt_outlined),
                               title: Text(suggestion.suggestionType),
                               subtitle: Text(
                                 suggestion.responseText,
@@ -2191,17 +2344,21 @@ final class _AIWorkshop extends StatelessWidget {
                                 children: [
                                   IconButton(
                                     tooltip: copy.t('accept'),
-                                    onPressed: () => onAcceptSuggestion(suggestion),
+                                    onPressed: () =>
+                                        onAcceptSuggestion(suggestion),
                                     icon: const Icon(Icons.check),
                                   ),
                                   IconButton(
                                     tooltip: copy.t('convertToNote'),
-                                    onPressed: () => onConvertSuggestion(suggestion),
-                                    icon: const Icon(Icons.sticky_note_2_outlined),
+                                    onPressed: () =>
+                                        onConvertSuggestion(suggestion),
+                                    icon: const Icon(
+                                        Icons.sticky_note_2_outlined),
                                   ),
                                   IconButton(
                                     tooltip: copy.t('reject'),
-                                    onPressed: () => onRejectSuggestion(suggestion),
+                                    onPressed: () =>
+                                        onRejectSuggestion(suggestion),
                                     icon: const Icon(Icons.close),
                                   ),
                                 ],
@@ -2262,9 +2419,13 @@ final class _AIRequestStatus extends StatelessWidget {
             const SizedBox(width: 10),
             Flexible(
               child: Text(
-                isRequesting ? copy.t('aiRequestInProgress') : message ?? copy.t('aiRequestFailed'),
+                isRequesting
+                    ? copy.t('aiRequestInProgress')
+                    : message ?? copy.t('aiRequestFailed'),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: hasError ? color.onErrorContainer : color.onSecondaryContainer,
+                      color: hasError
+                          ? color.onErrorContainer
+                          : color.onSecondaryContainer,
                     ),
               ),
             ),
@@ -2290,10 +2451,13 @@ final class _ExportCenter extends StatelessWidget {
     required this.importController,
     required this.importPreview,
     required this.importPreviewError,
+    required this.lastSyncCheckpoint,
+    required this.syncImportPreview,
     required this.onFormatChanged,
     required this.onIncludeSceneTitlesChanged,
     required this.onIncludeMetadataChanged,
     required this.onCopyExport,
+    required this.onCopySyncCheckpoint,
     required this.onImportSourceChanged,
     required this.onImportArchive,
   });
@@ -2311,10 +2475,13 @@ final class _ExportCenter extends StatelessWidget {
   final TextEditingController importController;
   final ProjectArchivePreview? importPreview;
   final String? importPreviewError;
+  final SyncCheckpoint? lastSyncCheckpoint;
+  final SyncEnvelopePreview? syncImportPreview;
   final ValueChanged<ExportFormat> onFormatChanged;
   final ValueChanged<bool> onIncludeSceneTitlesChanged;
   final ValueChanged<bool> onIncludeMetadataChanged;
   final VoidCallback onCopyExport;
+  final VoidCallback onCopySyncCheckpoint;
   final VoidCallback onImportSourceChanged;
   final VoidCallback onImportArchive;
 
@@ -2366,7 +2533,8 @@ final class _ExportCenter extends StatelessWidget {
                         for (final item in ExportFormat.values)
                           DropdownMenuItem(
                             value: item,
-                            child: Text(_exportFormatLabel(item, copy.languageCode)),
+                            child: Text(
+                                _exportFormatLabel(item, copy.languageCode)),
                           ),
                       ],
                       onChanged: (value) {
@@ -2385,7 +2553,29 @@ final class _ExportCenter extends StatelessWidget {
                       onChanged: onIncludeMetadataChanged,
                     ),
                     const Divider(height: 28),
-                    Text(copy.t('importArchive'), style: Theme.of(context).textTheme.titleSmall),
+                    Text(copy.t('syncCheckpoint'),
+                        style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 6),
+                    Text(
+                      copy.t('syncCheckpointBody'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (lastSyncCheckpoint != null) ...[
+                      const SizedBox(height: 10),
+                      _SyncStatusPanel(
+                        copy: copy,
+                        checkpoint: lastSyncCheckpoint!,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: project == null ? null : onCopySyncCheckpoint,
+                      icon: const Icon(Icons.sync_outlined),
+                      label: Text(copy.t('copySyncCheckpoint')),
+                    ),
+                    const Divider(height: 28),
+                    Text(copy.t('importArchive'),
+                        style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 8),
                     TextField(
                       controller: importController,
@@ -2398,8 +2588,16 @@ final class _ExportCenter extends StatelessWidget {
                         alignLabelWithHint: true,
                       ),
                     ),
-                    if (importPreview != null || importPreviewError != null) ...[
+                    if (importPreview != null ||
+                        importPreviewError != null) ...[
                       const SizedBox(height: 12),
+                      if (syncImportPreview != null) ...[
+                        _SyncEnvelopePanel(
+                          copy: copy,
+                          preview: syncImportPreview!,
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       _ImportArchivePreview(
                         copy: copy,
                         preview: importPreview,
@@ -2433,6 +2631,88 @@ final class _ExportCenter extends StatelessWidget {
   }
 }
 
+final class _SyncStatusPanel extends StatelessWidget {
+  const _SyncStatusPanel({
+    required this.copy,
+    required this.checkpoint,
+  });
+
+  final WritelerCopy copy;
+  final SyncCheckpoint checkpoint;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              copy.t('lastSyncCheckpoint'),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${copy.t('syncFingerprint')}: ${checkpoint.fingerprint}\n'
+              '${copy.t('syncAdapter')}: ${checkpoint.adapterName}\n'
+              '${copy.t('syncPayloadSize')}: ${checkpoint.byteLength} B',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _SyncEnvelopePanel extends StatelessWidget {
+  const _SyncEnvelopePanel({
+    required this.copy,
+    required this.preview,
+  });
+
+  final WritelerCopy copy;
+  final SyncEnvelopePreview preview;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.tertiaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.verified_outlined,
+                color: color.onTertiaryContainer, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '${copy.t('syncPayloadDetected')}\n'
+                '${copy.t('syncFingerprint')}: ${preview.fingerprint}\n'
+                '${copy.t('syncAdapter')}: ${preview.adapterName}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.onTertiaryContainer,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 final class _ImportArchivePreview extends StatelessWidget {
   const _ImportArchivePreview({
     required this.copy,
@@ -2460,7 +2740,8 @@ final class _ImportArchivePreview extends StatelessWidget {
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.error_outline, color: color.onErrorContainer, size: 18),
+                  Icon(Icons.error_outline,
+                      color: color.onErrorContainer, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -2515,6 +2796,7 @@ final class _SettingsWorkspace extends StatelessWidget {
     required this.onSaveProviderConfig,
     required this.onDeleteProviderApiKey,
     required this.onSavePrivacySettings,
+    required this.syncAdapterName,
   });
 
   final WritelerCopy copy;
@@ -2531,6 +2813,7 @@ final class _SettingsWorkspace extends StatelessWidget {
   final ValueChanged<bool> onProviderEnabledChanged;
   final VoidCallback onSaveProviderConfig;
   final VoidCallback onDeleteProviderApiKey;
+  final String syncAdapterName;
   final Future<void> Function({
     required bool aiEnabled,
     required bool cloudSyncEnabled,
@@ -2551,7 +2834,8 @@ final class _SettingsWorkspace extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(copy.t('settings'), style: Theme.of(context).textTheme.headlineSmall),
+        Text(copy.t('settings'),
+            style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 20),
         SwitchListTile(
           value: project.aiEnabled,
@@ -2573,6 +2857,13 @@ final class _SettingsWorkspace extends StatelessWidget {
                     noAiNoCloud: project.noAiNoCloud,
                   ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+          child: Text(
+            '${copy.t('syncAdapter')}: $syncAdapterName. ${copy.t('syncAdapterHint')}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
         SwitchListTile(
           value: project.noAiNoCloud,
           title: Text(copy.t('noAiNoCloud')),
@@ -2583,7 +2874,8 @@ final class _SettingsWorkspace extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        Text(copy.t('providerConfig'), style: Theme.of(context).textTheme.titleMedium),
+        Text(copy.t('providerConfig'),
+            style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
         DropdownButtonFormField<AIProviderKind>(
           initialValue: providerKind,
@@ -2790,7 +3082,8 @@ final class _ProjectLibrary extends StatelessWidget {
             title: Text(project.title),
             subtitle: Text('${copy.t('localOnly')} - ${project.projectType}'),
             trailing: Text(project.status.name),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onTap: () => onSelect(project),
           );
         },
@@ -2911,9 +3204,10 @@ final class _ProjectWorkspace extends StatelessWidget {
                     ? Center(
                         child: Text(
                           copy.t('selectScene'),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: color.onSurfaceVariant,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: color.onSurfaceVariant,
+                                  ),
                         ),
                       )
                     : _SceneEditor(
@@ -2964,7 +3258,8 @@ final class _NoScenes extends StatelessWidget {
         children: [
           Icon(Icons.auto_awesome_motion_outlined, color: color.primary),
           const SizedBox(height: 16),
-          Text(copy.t('noScenesTitle'), style: Theme.of(context).textTheme.titleMedium),
+          Text(copy.t('noScenesTitle'),
+              style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             copy.t('noScenesBody'),
@@ -3013,7 +3308,8 @@ final class _SceneList extends StatelessWidget {
             Icons.notes_outlined,
             color: selected ? color.primary : color.onSurfaceVariant,
           ),
-          title: Text(scene.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+          title:
+              Text(scene.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text('${scene.actualWordCount} ${copy.t('words')}'),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           onTap: () => onSelectScene(scene),
@@ -3145,7 +3441,8 @@ final class _SceneEditorState extends State<_SceneEditor> {
                 focusMode: _focusMode,
                 searchOpen: _showSearch,
                 onToggleFocus: () => setState(() => _focusMode = !_focusMode),
-                onToggleSearch: () => setState(() => _showSearch = !_showSearch),
+                onToggleSearch: () =>
+                    setState(() => _showSearch = !_showSearch),
               );
             },
           ),
@@ -3171,7 +3468,8 @@ final class _SceneEditorState extends State<_SceneEditor> {
                 labelText: copy.t('manuscript'),
                 alignLabelWithHint: true,
                 filled: true,
-                fillColor: color.surfaceContainerHighest.withValues(alpha: 0.28),
+                fillColor:
+                    color.surfaceContainerHighest.withValues(alpha: 0.28),
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -3207,7 +3505,8 @@ final class _ManuscriptToolbar extends StatelessWidget {
     final words = _countWords(text);
     final characters = text.characters.length;
     final target = int.tryParse(targetText);
-    final progress = target == null || target <= 0 ? null : (words / target).clamp(0.0, 1.0);
+    final progress =
+        target == null || target <= 0 ? null : (words / target).clamp(0.0, 1.0);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -3250,11 +3549,13 @@ final class _ManuscriptToolbar extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Tooltip(
-              message: focusMode ? copy.t('exitFocusMode') : copy.t('focusMode'),
+              message:
+                  focusMode ? copy.t('exitFocusMode') : copy.t('focusMode'),
               child: IconButton.outlined(
                 isSelected: focusMode,
                 onPressed: onToggleFocus,
-                icon: Icon(focusMode ? Icons.fullscreen_exit : Icons.fullscreen),
+                icon:
+                    Icon(focusMode ? Icons.fullscreen_exit : Icons.fullscreen),
               ),
             ),
           ],
@@ -3319,7 +3620,8 @@ final class _ManuscriptSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final matchCount = _countMatches(manuscriptController.text, searchController.text);
+    final matchCount =
+        _countMatches(manuscriptController.text, searchController.text);
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 760;
@@ -3399,7 +3701,8 @@ final class _ManuscriptSearchBar extends StatelessWidget {
       from: manuscriptController.selection.end,
     );
     if (range == null) return;
-    manuscriptController.selection = TextSelection(baseOffset: range.start, extentOffset: range.end);
+    manuscriptController.selection =
+        TextSelection(baseOffset: range.start, extentOffset: range.end);
     onChanged();
   }
 
@@ -3411,7 +3714,8 @@ final class _ManuscriptSearchBar extends StatelessWidget {
     var start = selection.start;
     var end = selection.end;
     if (start < 0 || end < 0 || start == end) {
-      final range = _nextMatchRange(text: text, query: query, from: selection.end);
+      final range =
+          _nextMatchRange(text: text, query: query, from: selection.end);
       if (range == null) return;
       start = range.start;
       end = range.end;
@@ -3656,7 +3960,8 @@ final class _SceneContextLinks extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(copy.t('sceneContext'), style: Theme.of(context).textTheme.titleSmall),
+        Text(copy.t('sceneContext'),
+            style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -3780,8 +4085,10 @@ String _exportFormatLabel(ExportFormat format, String languageCode) {
     ExportFormat.markdown => 'Markdown',
     ExportFormat.html => 'HTML',
     ExportFormat.plainText => german ? 'TXT / Manuskript' : 'TXT / manuscript',
-    ExportFormat.outline => german ? 'Outline / Struktur' : 'Outline / structure',
-    ExportFormat.json => german ? 'Writeler-Archiv JSON' : 'Writeler archive JSON',
+    ExportFormat.outline =>
+      german ? 'Outline / Struktur' : 'Outline / structure',
+    ExportFormat.json =>
+      german ? 'Writeler-Archiv JSON' : 'Writeler archive JSON',
   };
 }
 
@@ -3795,10 +4102,12 @@ String _metricEventLabel(String eventType, String languageCode) {
     'scene.saved' => german ? 'Szene gespeichert' : 'Scene saved',
     'scene.reordered' => german ? 'Szene sortiert' : 'Scene reordered',
     'scene.moved' => german ? 'Szene verschoben' : 'Scene moved',
-    'catalog.created' => german ? 'Katalogeintrag angelegt' : 'Catalog item created',
+    'catalog.created' =>
+      german ? 'Katalogeintrag angelegt' : 'Catalog item created',
     'relationship.linked' => german ? 'Kontext verknuepft' : 'Context linked',
     'relationship.unlinked' => german ? 'Kontext geloest' : 'Context unlinked',
-    'ai.suggestion.created' => german ? 'KI-Vorschlag erzeugt' : 'AI suggestion created',
+    'ai.suggestion.created' =>
+      german ? 'KI-Vorschlag erzeugt' : 'AI suggestion created',
     'export.copied' => german ? 'Export kopiert' : 'Export copied',
     _ => eventType,
   };

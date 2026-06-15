@@ -32,7 +32,9 @@ final class DriftChapterRepository implements ChapterRepository {
 
   @override
   Future<void> save(Chapter chapter) async {
-    await database.into(database.chapters).insertOnConflictUpdate(_toCompanion(chapter));
+    await database
+        .into(database.chapters)
+        .insertOnConflictUpdate(_toCompanion(chapter));
   }
 
   ChaptersCompanion _toCompanion(Chapter chapter) {

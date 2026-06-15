@@ -9,7 +9,9 @@ final class InMemoryChapterRepository implements ChapterRepository {
 
   @override
   Future<List<Chapter>> listByProject(String projectId) async {
-    final chapters = _chapters.values.where((chapter) => chapter.projectId == projectId).toList()
+    final chapters = _chapters.values
+        .where((chapter) => chapter.projectId == projectId)
+        .toList()
       ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     return chapters;
   }

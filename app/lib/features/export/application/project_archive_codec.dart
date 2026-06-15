@@ -51,8 +51,11 @@ final class ProjectArchiveCodec {
       'project': archive.project.toJson(),
       'chapters': archive.chapters.map((chapter) => chapter.toJson()).toList(),
       'scenes': archive.scenes.map((scene) => scene.toJson()).toList(),
-      'catalogItems': archive.catalogItems.map((item) => item.toJson()).toList(),
-      'relationships': archive.relationships.map((relationship) => relationship.toJson()).toList(),
+      'catalogItems':
+          archive.catalogItems.map((item) => item.toJson()).toList(),
+      'relationships': archive.relationships
+          .map((relationship) => relationship.toJson())
+          .toList(),
     });
   }
 
@@ -65,14 +68,16 @@ final class ProjectArchiveCodec {
     final json = Map<String, Object?>.from(decoded);
     final schema = json['schema'] as String?;
     if (schema != 'writeler.project.v1' && schema != 'writeler.project.v2') {
-      throw DomainFailure('Unsupported project archive schema: ${schema ?? 'missing'}.');
+      throw DomainFailure(
+          'Unsupported project archive schema: ${schema ?? 'missing'}.');
     }
 
     final projectJson = _object(json['project'], 'project');
     final chapterJson = _list(json['chapters'] ?? const [], 'chapters');
     final sceneJson = _list(json['scenes'], 'scenes');
     final catalogJson = _list(json['catalogItems'] ?? const [], 'catalogItems');
-    final relationshipJson = _list(json['relationships'] ?? const [], 'relationships');
+    final relationshipJson =
+        _list(json['relationships'] ?? const [], 'relationships');
 
     return ProjectArchive(
       project: Project.fromJson(projectJson),
@@ -92,7 +97,8 @@ final class ProjectArchiveCodec {
     final json = Map<String, Object?>.from(decoded);
     final schema = json['schema'] as String?;
     if (schema != 'writeler.project.v1' && schema != 'writeler.project.v2') {
-      throw DomainFailure('Unsupported project archive schema: ${schema ?? 'missing'}.');
+      throw DomainFailure(
+          'Unsupported project archive schema: ${schema ?? 'missing'}.');
     }
 
     final projectJson = _object(json['project'], 'project');
@@ -101,14 +107,17 @@ final class ProjectArchiveCodec {
       projectTitle: projectJson['title'] as String? ?? 'Untitled Project',
       chapterCount: _list(json['chapters'] ?? const [], 'chapters').length,
       sceneCount: _list(json['scenes'], 'scenes').length,
-      catalogItemCount: _list(json['catalogItems'] ?? const [], 'catalogItems').length,
-      relationshipCount: _list(json['relationships'] ?? const [], 'relationships').length,
+      catalogItemCount:
+          _list(json['catalogItems'] ?? const [], 'catalogItems').length,
+      relationshipCount:
+          _list(json['relationships'] ?? const [], 'relationships').length,
     );
   }
 
   JsonMap _object(Object? value, String fieldName) {
     if (value is! Map) {
-      throw DomainFailure('Project archive field "$fieldName" must be an object.');
+      throw DomainFailure(
+          'Project archive field "$fieldName" must be an object.');
     }
     return Map<String, Object?>.from(value);
   }

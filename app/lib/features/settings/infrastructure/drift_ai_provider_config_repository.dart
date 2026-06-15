@@ -7,7 +7,8 @@ import '../../../core/infrastructure/database/app_database.dart';
 import '../domain/ai_provider_config.dart';
 import '../domain/ai_provider_config_repository.dart';
 
-final class DriftAIProviderConfigRepository implements AIProviderConfigRepository {
+final class DriftAIProviderConfigRepository
+    implements AIProviderConfigRepository {
   const DriftAIProviderConfigRepository(this.database);
 
   final AppDatabase database;

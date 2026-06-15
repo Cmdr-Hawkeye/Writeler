@@ -15,7 +15,9 @@ final class DriftSceneRepository implements SceneRepository {
 
   @override
   Future<Scene?> findById(String id) async {
-    final row = await (database.select(database.scenes)..where((table) => table.id.equals(id))).getSingleOrNull();
+    final row = await (database.select(database.scenes)
+          ..where((table) => table.id.equals(id)))
+        .getSingleOrNull();
     return row == null ? null : _fromRow(row);
   }
 
@@ -30,7 +32,9 @@ final class DriftSceneRepository implements SceneRepository {
 
   @override
   Future<void> save(Scene scene) async {
-    await database.into(database.scenes).insertOnConflictUpdate(_toCompanion(scene));
+    await database
+        .into(database.scenes)
+        .insertOnConflictUpdate(_toCompanion(scene));
   }
 
   ScenesCompanion _toCompanion(Scene scene) {

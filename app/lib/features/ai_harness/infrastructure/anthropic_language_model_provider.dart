@@ -84,14 +84,16 @@ final class AnthropicLanguageModelProvider implements LanguageModelProvider {
         .join('\n')
         .trim();
     if (text.isEmpty) {
-      throw const DomainFailure('Anthropic response did not include text content.');
+      throw const DomainFailure(
+          'Anthropic response did not include text content.');
     }
 
     final usage = json['usage'];
     return ModelResponse(
       text: text,
       estimatedInputTokens: usage is Map ? _asInt(usage['input_tokens']) : null,
-      estimatedOutputTokens: usage is Map ? _asInt(usage['output_tokens']) : null,
+      estimatedOutputTokens:
+          usage is Map ? _asInt(usage['output_tokens']) : null,
     );
   }
 
@@ -100,7 +102,8 @@ final class AnthropicLanguageModelProvider implements LanguageModelProvider {
         ? baseUrl.path.substring(0, baseUrl.path.length - 1)
         : baseUrl.path;
     final alreadyMessages = normalized.endsWith('/v1/messages');
-    return baseUrl.replace(path: alreadyMessages ? normalized : '$normalized/v1/messages');
+    return baseUrl.replace(
+        path: alreadyMessages ? normalized : '$normalized/v1/messages');
   }
 
   Map<String, String> _headers() {
@@ -119,7 +122,8 @@ final class AnthropicLanguageModelProvider implements LanguageModelProvider {
       'max_tokens': request.parameters.maxTokens,
       'temperature': request.parameters.temperature,
       'top_p': request.parameters.topP,
-      'system': 'You are an analysis assistant for authors. Do not write manuscript prose.',
+      'system':
+          'You are an analysis assistant for authors. Do not write manuscript prose.',
       'messages': [
         {'role': 'user', 'content': request.prompt},
       ],

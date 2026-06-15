@@ -8,5 +8,6 @@ abstract interface class CatalogItemRepository {
 
   Future<List<CatalogItem>> listByProject(String projectId);
 
-  Future<List<CatalogItem>> listByProjectAndType(String projectId, EntityType type);
+  Future<List<CatalogItem>> listByProjectAndType(
+      String projectId, EntityType type);
 }

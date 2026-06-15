@@ -26,7 +26,8 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
   @override
   Future<ModelResponse> generateText(ModelRequest request) async {
     return ModelResponse(
-      text: 'Suggestion: clarify the scene goal, pressure point, and consequence. '
+      text:
+          'Suggestion: clarify the scene goal, pressure point, and consequence. '
           'Keep all final manuscript wording under author control.',
       structured: {
         'questions': [

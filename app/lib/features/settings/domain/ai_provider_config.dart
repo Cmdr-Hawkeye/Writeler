@@ -1,6 +1,13 @@
 import '../../../core/domain/json_map.dart';
 
-enum AIProviderKind { openAICompatible, anthropic, gemini, openRouter, ollama, mock }
+enum AIProviderKind {
+  openAICompatible,
+  anthropic,
+  gemini,
+  openRouter,
+  ollama,
+  mock
+}
 
 final class AIProviderConfig {
   const AIProviderConfig({
@@ -66,7 +73,8 @@ final class AIProviderConfig {
       modelName: json['modelName'] as String,
       baseUrl: json['baseUrl'] as String?,
       encryptedApiKeyRef: json['encryptedApiKeyRef'] as String?,
-      parameters: Map<String, Object?>.from(json['parameters'] as Map? ?? const {}),
+      parameters:
+          Map<String, Object?>.from(json['parameters'] as Map? ?? const {}),
       enabled: json['enabled'] as bool? ?? true,
     );
   }

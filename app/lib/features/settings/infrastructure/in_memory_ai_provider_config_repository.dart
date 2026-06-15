@@ -1,7 +1,8 @@
 import '../domain/ai_provider_config.dart';
 import '../domain/ai_provider_config_repository.dart';
 
-final class InMemoryAIProviderConfigRepository implements AIProviderConfigRepository {
+final class InMemoryAIProviderConfigRepository
+    implements AIProviderConfigRepository {
   final Map<String, AIProviderConfig> _configs = {};
 
   @override

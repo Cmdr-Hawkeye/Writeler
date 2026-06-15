@@ -36,7 +36,8 @@ final class ProjectExporter {
       case ExportFormat.plainText:
         return _toPlainText(project, scenes, profile);
       case ExportFormat.outline:
-        return _toOutline(project, chapters, scenes, catalogItems, relationships, profile);
+        return _toOutline(
+            project, chapters, scenes, catalogItems, relationships, profile);
       case ExportFormat.json:
         return archiveCodec.encode(
           ProjectArchive(
@@ -71,7 +72,8 @@ final class ProjectExporter {
       ..writeln('# ${project.title}')
       ..writeln();
     if (profile.includeMetadata) {
-      _writeMarkdownMetadata(buffer, project, scenes, catalogItems, relationships);
+      _writeMarkdownMetadata(
+          buffer, project, scenes, catalogItems, relationships);
     }
 
     for (final group in _chapterGroups(chapters, scenes)) {
@@ -83,7 +85,9 @@ final class ProjectExporter {
       for (final scene in group.scenes) {
         if (profile.includeSceneTitles) {
           buffer
-            ..writeln(group.chapter == null ? '## ${scene.title}' : '### ${scene.title}')
+            ..writeln(group.chapter == null
+                ? '## ${scene.title}'
+                : '### ${scene.title}')
             ..writeln();
         }
         if (scene.manuscriptText.trim().isNotEmpty) {
@@ -96,7 +100,8 @@ final class ProjectExporter {
     return buffer.toString();
   }
 
-  String _toPlainText(Project project, List<Scene> scenes, ExportProfile profile) {
+  String _toPlainText(
+      Project project, List<Scene> scenes, ExportProfile profile) {
     final buffer = StringBuffer();
     for (final scene in scenes) {
       if (profile.includeSceneTitles) {
@@ -126,7 +131,8 @@ final class ProjectExporter {
       ..writeln('# ${project.title} - Outline')
       ..writeln();
     if (profile.includeMetadata) {
-      _writeMarkdownMetadata(buffer, project, scenes, catalogItems, relationships);
+      _writeMarkdownMetadata(
+          buffer, project, scenes, catalogItems, relationships);
     }
 
     for (final group in _chapterGroups(chapters, scenes)) {
@@ -141,8 +147,11 @@ final class ProjectExporter {
         }
       }
       for (final scene in group.scenes) {
-        buffer.writeln('- ${scene.title} (${scene.status.name}, ${scene.actualWordCount} words)');
-        if (scene.summary.trim().isNotEmpty) buffer.writeln('  - Summary: ${scene.summary.trim()}');
+        buffer.writeln(
+            '- ${scene.title} (${scene.status.name}, ${scene.actualWordCount} words)');
+        if (scene.summary.trim().isNotEmpty) {
+          buffer.writeln('  - Summary: ${scene.summary.trim()}');
+        }
         _writeOptionalOutlineField(buffer, 'Goal', scene.goal);
         _writeOptionalOutlineField(buffer, 'Conflict', scene.conflict);
         _writeOptionalOutlineField(buffer, 'Outcome', scene.outcome);
@@ -164,8 +173,10 @@ final class ProjectExporter {
     final buffer = StringBuffer()
       ..write('<!doctype html><html><head><meta charset="utf-8">')
       ..write('<title>${escape(project.title)}</title>')
-      ..write('<style>body{font-family:serif;max-width:760px;margin:48px auto;line-height:1.65;padding:0 24px;}')
-      ..write('h1,h2,h3{line-height:1.2;} .meta{font-family:sans-serif;color:#555;border-bottom:1px solid #ddd;padding-bottom:16px;margin-bottom:28px;}')
+      ..write(
+          '<style>body{font-family:serif;max-width:760px;margin:48px auto;line-height:1.65;padding:0 24px;}')
+      ..write(
+          'h1,h2,h3{line-height:1.2;} .meta{font-family:sans-serif;color:#555;border-bottom:1px solid #ddd;padding-bottom:16px;margin-bottom:28px;}')
       ..write('</style></head><body>')
       ..write('<h1>${escape(project.title)}</h1>');
 
@@ -183,7 +194,9 @@ final class ProjectExporter {
       }
       for (final scene in group.scenes) {
         if (profile.includeSceneTitles) {
-          buffer.write(group.chapter == null ? '<h2>${escape(scene.title)}</h2>' : '<h3>${escape(scene.title)}</h3>');
+          buffer.write(group.chapter == null
+              ? '<h2>${escape(scene.title)}</h2>'
+              : '<h3>${escape(scene.title)}</h3>');
         }
         for (final paragraph in _paragraphs(scene.manuscriptText)) {
           buffer.write('<p>${escape(paragraph)}</p>');
@@ -204,25 +217,31 @@ final class ProjectExporter {
     buffer
       ..writeln('Project type: ${project.projectType}')
       ..writeln('Scenes: ${scenes.length}')
-      ..writeln('Words: ${scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount)}')
+      ..writeln(
+          'Words: ${scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount)}')
       ..writeln('Catalog items: ${catalogItems.length}')
       ..writeln('Relationships: ${relationships.length}')
       ..writeln();
   }
 
-  List<_ChapterSceneGroup> _chapterGroups(List<Chapter> chapters, List<Scene> scenes) {
+  List<_ChapterSceneGroup> _chapterGroups(
+      List<Chapter> chapters, List<Scene> scenes) {
     final grouped = <_ChapterSceneGroup>[
       for (final chapter in chapters)
         _ChapterSceneGroup(
           chapter: chapter,
-          scenes: scenes.where((scene) => scene.chapterId == chapter.id).toList(),
+          scenes:
+              scenes.where((scene) => scene.chapterId == chapter.id).toList(),
         ),
     ];
-    final unchaptered = scenes.where((scene) => scene.chapterId == null).toList();
+    final unchaptered =
+        scenes.where((scene) => scene.chapterId == null).toList();
     if (unchaptered.isNotEmpty || grouped.isEmpty) {
       grouped.add(_ChapterSceneGroup(chapter: null, scenes: unchaptered));
     }
-    return grouped.where((group) => group.scenes.isNotEmpty || group.chapter != null).toList();
+    return grouped
+        .where((group) => group.scenes.isNotEmpty || group.chapter != null)
+        .toList();
   }
 
   List<String> _paragraphs(String text) {
@@ -233,7 +252,8 @@ final class ProjectExporter {
         .toList();
   }
 
-  void _writeOptionalOutlineField(StringBuffer buffer, String label, String? value) {
+  void _writeOptionalOutlineField(
+      StringBuffer buffer, String label, String? value) {
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) return;
     buffer.writeln('  - $label: $trimmed');

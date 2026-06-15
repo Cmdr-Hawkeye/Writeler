@@ -1,7 +1,8 @@
 import '../domain/ai_provider_config.dart';
 import '../domain/ai_provider_config_repository.dart';
 
-final class LazyAIProviderConfigRepository implements AIProviderConfigRepository {
+final class LazyAIProviderConfigRepository
+    implements AIProviderConfigRepository {
   LazyAIProviderConfigRepository(this._create);
 
   final AIProviderConfigRepository Function() _create;

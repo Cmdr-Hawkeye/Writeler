@@ -13,7 +13,8 @@ final class LazyChapterRepository implements ChapterRepository {
   Future<Chapter?> findById(String id) => _repository.findById(id);
 
   @override
-  Future<List<Chapter>> listByProject(String projectId) => _repository.listByProject(projectId);
+  Future<List<Chapter>> listByProject(String projectId) =>
+      _repository.listByProject(projectId);
 
   @override
   Future<void> save(Chapter chapter) => _repository.save(chapter);

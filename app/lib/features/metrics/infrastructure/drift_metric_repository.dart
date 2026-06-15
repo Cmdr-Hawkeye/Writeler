@@ -23,7 +23,9 @@ final class DriftMetricRepository implements MetricRepository {
 
   @override
   Future<void> record(MetricEvent event) async {
-    await database.into(database.metricEvents).insertOnConflictUpdate(_toCompanion(event));
+    await database
+        .into(database.metricEvents)
+        .insertOnConflictUpdate(_toCompanion(event));
   }
 
   MetricEventsCompanion _toCompanion(MetricEvent event) {

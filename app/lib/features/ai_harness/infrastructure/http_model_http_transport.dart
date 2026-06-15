@@ -31,8 +31,9 @@ final class HttpModelHttpTransport implements ModelHttpTransport {
 
     for (var attempt = 1; attempt <= attempts; attempt++) {
       try {
-        final response = await _post(uri, headers: headers, body: jsonEncode(body))
-            .timeout(timeout);
+        final response =
+            await _post(uri, headers: headers, body: jsonEncode(body))
+                .timeout(timeout);
         final result = ModelHttpResponse(
           statusCode: response.statusCode,
           body: response.body,
@@ -52,7 +53,8 @@ final class HttpModelHttpTransport implements ModelHttpTransport {
     }
 
     if (lastError is TimeoutException) {
-      throw DomainFailure('Provider request timed out after ${timeout.inSeconds} seconds.');
+      throw DomainFailure(
+          'Provider request timed out after ${timeout.inSeconds} seconds.');
     }
     throw DomainFailure('Provider request failed: $lastError');
   }

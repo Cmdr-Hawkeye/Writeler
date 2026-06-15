@@ -57,8 +57,10 @@ final class Relationship {
     return Relationship(
       id: json['id'] as String,
       projectId: json['projectId'] as String,
-      source: EntityRef.fromJson(Map<String, Object?>.from(json['source'] as Map)),
-      target: EntityRef.fromJson(Map<String, Object?>.from(json['target'] as Map)),
+      source:
+          EntityRef.fromJson(Map<String, Object?>.from(json['source'] as Map)),
+      target:
+          EntityRef.fromJson(Map<String, Object?>.from(json['target'] as Map)),
       relationshipType: json['relationshipType'] as String,
       label: json['label'] as String?,
       description: json['description'] as String?,

@@ -24,7 +24,8 @@ final class InMemoryRelationshipRepository implements RelationshipRepository {
     final items = _relationships.values
         .where(
           (relationship) =>
-              relationship.source.type == source.type && relationship.source.id == source.id,
+              relationship.source.type == source.type &&
+              relationship.source.id == source.id,
         )
         .toList()
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));

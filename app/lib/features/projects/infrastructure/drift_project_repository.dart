@@ -15,14 +15,17 @@ final class DriftProjectRepository implements ProjectRepository {
 
   @override
   Future<Project?> findById(String id) async {
-    final row = await (database.select(database.projects)..where((table) => table.id.equals(id))).getSingleOrNull();
+    final row = await (database.select(database.projects)
+          ..where((table) => table.id.equals(id)))
+        .getSingleOrNull();
     return row == null ? null : _fromRow(row);
   }
 
   @override
   Future<List<Project>> listActive() async {
     final rows = await (database.select(database.projects)
-          ..where((table) => table.status.isNotValue(DraftStatus.archived.wireName))
+          ..where(
+              (table) => table.status.isNotValue(DraftStatus.archived.wireName))
           ..orderBy([(table) => OrderingTerm.desc(table.updatedAt)]))
         .get();
     return rows.map(_fromRow).toList();
@@ -30,7 +33,9 @@ final class DriftProjectRepository implements ProjectRepository {
 
   @override
   Future<void> save(Project project) async {
-    await database.into(database.projects).insertOnConflictUpdate(_toCompanion(project));
+    await database
+        .into(database.projects)
+        .insertOnConflictUpdate(_toCompanion(project));
   }
 
   ProjectsCompanion _toCompanion(Project project) {

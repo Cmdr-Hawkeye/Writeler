@@ -28,7 +28,8 @@ extension EntityTypeWire on EntityType {
   static EntityType parse(String value) {
     return EntityType.values.firstWhere(
       (type) => type.name == value,
-      orElse: () => throw ArgumentError.value(value, 'value', 'Unknown entity type'),
+      orElse: () =>
+          throw ArgumentError.value(value, 'value', 'Unknown entity type'),
     );
   }
 }
