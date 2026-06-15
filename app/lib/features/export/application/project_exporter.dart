@@ -1,19 +1,24 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import '../../catalog/domain/catalog_item.dart';
 import '../../catalog/domain/relationship.dart';
 import '../../projects/domain/project.dart';
 import '../../structure/domain/chapter.dart';
 import '../../structure/domain/scene.dart';
+import '../domain/export_artifact.dart';
 import 'project_archive_codec.dart';
+import 'document_package_exporter.dart';
 import '../domain/export_profile.dart';
 
 final class ProjectExporter {
   const ProjectExporter({
     this.archiveCodec = const ProjectArchiveCodec(),
+    this.documentPackageExporter = const DocumentPackageExporter(),
   });
 
   final ProjectArchiveCodec archiveCodec;
+  final DocumentPackageExporter documentPackageExporter;
 
   String exportProject({
     required Project project,
@@ -57,7 +62,105 @@ final class ProjectExporter {
           relationships: relationships,
           profile: profile,
         );
+      case ExportFormat.pdf:
+      case ExportFormat.epub:
+      case ExportFormat.docx:
+        return _toPackagedPreview(
+          project: project,
+          chapters: chapters,
+          scenes: scenes,
+          catalogItems: catalogItems,
+          relationships: relationships,
+          profile: profile,
+        );
     }
+  }
+
+  ExportArtifact exportArtifact({
+    required Project project,
+    required List<Scene> scenes,
+    required ExportProfile profile,
+    List<Chapter> chapters = const [],
+    List<CatalogItem> catalogItems = const [],
+    List<Relationship> relationships = const [],
+  }) {
+    final previewText = exportProject(
+      project: project,
+      scenes: scenes,
+      profile: profile,
+      chapters: chapters,
+      catalogItems: catalogItems,
+      relationships: relationships,
+    );
+    final slug = _fileSlug(project.title);
+    switch (profile.format) {
+      case ExportFormat.markdown:
+        return _textArtifact(
+            '$slug.md', 'text/markdown; charset=utf-8', previewText);
+      case ExportFormat.html:
+        return _textArtifact(
+            '$slug.html', 'text/html; charset=utf-8', previewText);
+      case ExportFormat.plainText:
+        return _textArtifact(
+            '$slug.txt', 'text/plain; charset=utf-8', previewText);
+      case ExportFormat.outline:
+        return _textArtifact(
+            '$slug-outline.md', 'text/markdown; charset=utf-8', previewText);
+      case ExportFormat.json:
+        return _textArtifact('$slug.writeler.json',
+            'application/json; charset=utf-8', previewText);
+      case ExportFormat.pdf:
+        return ExportArtifact(
+          fileName: '$slug.pdf',
+          mimeType: 'application/pdf',
+          bytes: documentPackageExporter.toPdf(
+            project: project,
+            chapters: chapters,
+            scenes: scenes,
+            includeSceneTitles: profile.includeSceneTitles,
+          ),
+          previewText: previewText,
+        );
+      case ExportFormat.epub:
+        return ExportArtifact(
+          fileName: '$slug.epub',
+          mimeType: 'application/epub+zip',
+          bytes: documentPackageExporter.toEpub(
+            project: project,
+            chapters: chapters,
+            scenes: scenes,
+            includeSceneTitles: profile.includeSceneTitles,
+          ),
+          previewText: previewText,
+        );
+      case ExportFormat.docx:
+        return ExportArtifact(
+          fileName: '$slug.docx',
+          mimeType:
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          bytes: documentPackageExporter.toDocx(
+            project: project,
+            chapters: chapters,
+            scenes: scenes,
+            catalogItems: catalogItems,
+            relationships: relationships,
+            includeMetadata: profile.includeMetadata,
+            includeSceneTitles: profile.includeSceneTitles,
+          ),
+          previewText: previewText,
+        );
+    }
+  }
+
+  ExportArtifact _textArtifact(
+      String fileName, String mimeType, String source) {
+    return ExportArtifact(
+      fileName: fileName,
+      mimeType: mimeType,
+      bytes: Uint8List.fromList(utf8.encode(source)),
+      previewText: source,
+      isText: true,
+    );
   }
 
   String _toMarkdown({
@@ -207,6 +310,37 @@ final class ProjectExporter {
     return '${buffer.toString()}</body></html>';
   }
 
+  String _toPackagedPreview({
+    required Project project,
+    required List<Chapter> chapters,
+    required List<Scene> scenes,
+    required List<CatalogItem> catalogItems,
+    required List<Relationship> relationships,
+    required ExportProfile profile,
+  }) {
+    final extension = switch (profile.format) {
+      ExportFormat.pdf => 'PDF',
+      ExportFormat.epub => 'EPUB',
+      ExportFormat.docx => 'DOCX',
+      _ => profile.format.name,
+    };
+    final words =
+        scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
+    final buffer = StringBuffer()
+      ..writeln('$extension export')
+      ..writeln()
+      ..writeln('Project: ${project.title}')
+      ..writeln('Chapters: ${chapters.length}')
+      ..writeln('Scenes: ${scenes.length}')
+      ..writeln('Words: $words')
+      ..writeln('Catalog items: ${catalogItems.length}')
+      ..writeln('Relationships: ${relationships.length}')
+      ..writeln()
+      ..writeln(
+          'Use the download action to save the generated .$extension file.');
+    return buffer.toString();
+  }
+
   void _writeMarkdownMetadata(
     StringBuffer buffer,
     Project project,
@@ -257,6 +391,14 @@ final class ProjectExporter {
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) return;
     buffer.writeln('  - $label: $trimmed');
+  }
+
+  String _fileSlug(String title) {
+    final slug = title
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+    return slug.isEmpty ? 'writeler-export' : slug;
   }
 }
 

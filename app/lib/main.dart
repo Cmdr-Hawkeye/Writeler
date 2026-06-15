@@ -31,6 +31,7 @@ import 'features/catalog/infrastructure/drift_catalog_item_repository.dart';
 import 'features/catalog/infrastructure/drift_relationship_repository.dart';
 import 'features/catalog/infrastructure/lazy_catalog_item_repository.dart';
 import 'features/catalog/infrastructure/lazy_relationship_repository.dart';
+import 'features/export/application/download_export.dart';
 import 'features/export/application/project_archive_codec.dart';
 import 'features/export/application/project_exporter.dart';
 import 'features/export/domain/export_profile.dart';
@@ -992,7 +993,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     final project = _selectedProject;
     if (project == null) return;
 
-    final output = _projectExporter.exportProject(
+    final artifact = _projectExporter.exportArtifact(
       project: project,
       chapters: _chapters,
       scenes: _scenes,
@@ -1007,15 +1008,61 @@ final class _WritelerShellState extends State<WritelerShell> {
         includeSceneTitles: _includeSceneTitles,
       ),
     );
-    await Clipboard.setData(ClipboardData(text: output));
+    await Clipboard.setData(ClipboardData(text: artifact.clipboardText));
     if (!mounted) return;
     await _recordProjectMetric(
       eventType: 'export.copied',
-      metadata: {'format': _selectedExportFormat.name},
+      value: artifact.bytes.length,
+      metadata: {
+        'format': _selectedExportFormat.name,
+        'fileName': artifact.fileName,
+        'mimeType': artifact.mimeType,
+      },
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(copy.t('exportCopied'))),
+    );
+  }
+
+  Future<void> _downloadExport(WritelerCopy copy) async {
+    final project = _selectedProject;
+    if (project == null) return;
+
+    final artifact = _projectExporter.exportArtifact(
+      project: project,
+      chapters: _chapters,
+      scenes: _scenes,
+      catalogItems: _catalogItems,
+      relationships: _relationships,
+      profile: ExportProfile(
+        id: 'ui-download',
+        projectId: project.id,
+        name: copy.t('exportPreview'),
+        format: _selectedExportFormat,
+        includeMetadata: _includeExportMetadata,
+        includeSceneTitles: _includeSceneTitles,
+      ),
+    );
+    final downloaded = await downloadExportArtifact(artifact);
+    if (!downloaded) {
+      await Clipboard.setData(ClipboardData(text: artifact.clipboardText));
+    }
+    if (!mounted) return;
+    await _recordProjectMetric(
+      eventType: downloaded ? 'export.downloaded' : 'export.copied',
+      value: artifact.bytes.length,
+      metadata: {
+        'format': _selectedExportFormat.name,
+        'fileName': artifact.fileName,
+        'mimeType': artifact.mimeType,
+      },
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content:
+              Text(copy.t(downloaded ? 'exportDownloaded' : 'exportCopied'))),
     );
   }
 
@@ -1451,6 +1498,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           onIncludeMetadataChanged: (value) =>
               setState(() => _includeExportMetadata = value),
           onCopyExport: () => _copyExport(copy),
+          onDownloadExport: () => _downloadExport(copy),
           onCopySyncCheckpoint: () => _copySyncCheckpoint(copy),
           onImportSourceChanged: _refreshImportPreview,
           onImportArchive: () => _importArchive(copy),
@@ -2457,6 +2505,7 @@ final class _ExportCenter extends StatelessWidget {
     required this.onIncludeSceneTitlesChanged,
     required this.onIncludeMetadataChanged,
     required this.onCopyExport,
+    required this.onDownloadExport,
     required this.onCopySyncCheckpoint,
     required this.onImportSourceChanged,
     required this.onImportArchive,
@@ -2481,6 +2530,7 @@ final class _ExportCenter extends StatelessWidget {
   final ValueChanged<bool> onIncludeSceneTitlesChanged;
   final ValueChanged<bool> onIncludeMetadataChanged;
   final VoidCallback onCopyExport;
+  final VoidCallback onDownloadExport;
   final VoidCallback onCopySyncCheckpoint;
   final VoidCallback onImportSourceChanged;
   final VoidCallback onImportArchive;
@@ -2551,6 +2601,12 @@ final class _ExportCenter extends StatelessWidget {
                       value: includeMetadata,
                       title: Text(copy.t('includeMetadata')),
                       onChanged: onIncludeMetadataChanged,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: project == null ? null : onDownloadExport,
+                      icon: const Icon(Icons.download_outlined),
+                      label: Text(copy.t('downloadExport')),
                     ),
                     const Divider(height: 28),
                     Text(copy.t('syncCheckpoint'),
@@ -4089,6 +4145,9 @@ String _exportFormatLabel(ExportFormat format, String languageCode) {
       german ? 'Outline / Struktur' : 'Outline / structure',
     ExportFormat.json =>
       german ? 'Writeler-Archiv JSON' : 'Writeler archive JSON',
+    ExportFormat.pdf => 'PDF',
+    ExportFormat.epub => 'EPUB',
+    ExportFormat.docx => 'DOCX',
   };
 }
 
@@ -4109,6 +4168,12 @@ String _metricEventLabel(String eventType, String languageCode) {
     'ai.suggestion.created' =>
       german ? 'KI-Vorschlag erzeugt' : 'AI suggestion created',
     'export.copied' => german ? 'Export kopiert' : 'Export copied',
+    'export.downloaded' =>
+      german ? 'Export heruntergeladen' : 'Export downloaded',
+    'sync.checkpoint.copied' =>
+      german ? 'Sync-Checkpoint kopiert' : 'Sync checkpoint copied',
+    'sync.checkpoint.imported' =>
+      german ? 'Sync-Checkpoint importiert' : 'Sync checkpoint imported',
     _ => eventType,
   };
 }

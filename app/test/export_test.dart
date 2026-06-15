@@ -29,7 +29,8 @@ void main() {
       CreateChapterCommand(projectId: project.id, title: 'Opening'),
     );
     final scene = (await CreateScene(sceneRepository)(
-      CreateSceneCommand(projectId: project.id, chapterId: chapter.id, title: 'Scene One'),
+      CreateSceneCommand(
+          projectId: project.id, chapterId: chapter.id, title: 'Scene One'),
     ))
         .withAuthorText('A short authored paragraph.');
     final character = await CreateCatalogItem(catalogRepository)(
@@ -134,6 +135,51 @@ void main() {
     expect(html, contains('<h1>Exportable Book</h1>'));
     expect(html, contains('<div class="meta">'));
     expect(html, contains('<p>A short authored paragraph.</p>'));
+
+    final pdf = exporter.exportArtifact(
+      project: project,
+      chapters: [chapter],
+      scenes: [scene],
+      profile: ExportProfile(
+        id: 'pdf',
+        projectId: project.id,
+        name: 'PDF',
+        format: ExportFormat.pdf,
+      ),
+    );
+    expect(pdf.fileName, 'exportable-book.pdf');
+    expect(utf8.decode(pdf.bytes.take(8).toList()), startsWith('%PDF'));
+
+    final epub = exporter.exportArtifact(
+      project: project,
+      chapters: [chapter],
+      scenes: [scene],
+      profile: ExportProfile(
+        id: 'epub',
+        projectId: project.id,
+        name: 'EPUB',
+        format: ExportFormat.epub,
+      ),
+    );
+    expect(epub.mimeType, 'application/epub+zip');
+    expect(epub.bytes.take(2), [0x50, 0x4b]);
+
+    final docx = exporter.exportArtifact(
+      project: project,
+      chapters: [chapter],
+      scenes: [scene],
+      catalogItems: [character],
+      relationships: [relationship],
+      profile: ExportProfile(
+        id: 'docx',
+        projectId: project.id,
+        name: 'DOCX',
+        format: ExportFormat.docx,
+        includeMetadata: true,
+      ),
+    );
+    expect(docx.mimeType, contains('wordprocessingml.document'));
+    expect(docx.bytes.take(2), [0x50, 0x4b]);
 
     final json = jsonDecode(jsonText) as Map<String, Object?>;
     expect(json['schema'], 'writeler.project.v2');

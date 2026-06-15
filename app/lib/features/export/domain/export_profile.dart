@@ -1,6 +1,6 @@
 import '../../../core/domain/json_map.dart';
 
-enum ExportFormat { markdown, html, plainText, outline, json }
+enum ExportFormat { markdown, html, plainText, outline, json, pdf, epub, docx }
 
 final class ExportProfile {
   const ExportProfile({

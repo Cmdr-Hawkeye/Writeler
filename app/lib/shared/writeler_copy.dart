@@ -113,7 +113,9 @@ final class WritelerCopy {
     'convertToNote': 'Als Notiz markieren',
     'exportPreview': 'Exportvorschau',
     'copyExport': 'Export kopieren',
+    'downloadExport': 'Export herunterladen',
     'exportCopied': 'Export in die Zwischenablage kopiert',
+    'exportDownloaded': 'Export heruntergeladen',
     'syncCheckpoint': 'Sync-Checkpoint',
     'syncCheckpointBody':
         'Erzeugt ein vollstaendiges, lokales Sync-Paket fuer manuelle Ablage, WebDAV oder spaetere Cloud-Adapter.',
@@ -268,7 +270,9 @@ final class WritelerCopy {
     'convertToNote': 'Mark as note',
     'exportPreview': 'Export preview',
     'copyExport': 'Copy export',
+    'downloadExport': 'Download export',
     'exportCopied': 'Export copied to clipboard',
+    'exportDownloaded': 'Export downloaded',
     'syncCheckpoint': 'Sync checkpoint',
     'syncCheckpointBody':
         'Creates a complete local sync package for manual storage, WebDAV, or future cloud adapters.',

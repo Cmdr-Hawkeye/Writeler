@@ -9,8 +9,11 @@ Writeler separates manuscript handoff formats from full project archives.
 - `TXT / manuscript`: plain manuscript text with optional scene headings.
 - `Outline / structure`: chapter and scene structure including summary, goal, conflict, outcome, status, and word counts.
 - `Writeler archive JSON`: complete local-first project archive for round-trip import/export.
+- `PDF`: downloadable manuscript PDF generated locally from the selected project.
+- `EPUB`: downloadable EPUB 3 package with OPF metadata, navigation document, and XHTML manuscript.
+- `DOCX`: downloadable WordprocessingML package with title, headings, manuscript text, and optional metadata.
 
-The UI can copy all formats to the clipboard. JSON archive import includes a preview step before the archive is persisted.
+The UI can copy text formats to the clipboard and download all formats as files on web. Binary formats copy a `data:` URI when clipboard export is used. JSON archive import includes a preview step before the archive is persisted.
 
 ## JSON Archive
 
@@ -31,7 +34,5 @@ The importer accepts `writeler.project.v1` and `writeler.project.v2`. Future ver
 
 ## Planned Adapters
 
-- DOCX using a document generation library and render verification.
-- PDF through a print/layout adapter.
-- EPUB draft package.
 - YAML or TOML for technical users who want hand-editable archives.
+- Higher-fidelity PDF/DOCX layout adapters with render verification and typography controls.
