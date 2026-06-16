@@ -1130,6 +1130,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         project: project,
         scene: scene,
         task: task,
+        languageCode: copy.languageCode,
         userPrompt: _aiPromptController.text.trim().isEmpty
             ? copy.t('defaultAiPrompt')
             : _aiPromptController.text.trim(),
@@ -1693,6 +1694,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           selectedScene: _selectedScene,
           scenes: _scenes,
           suggestions: _suggestions,
+          activeProviderConfig:
+              _activeProviderConfig ?? _defaultProviderConfig(),
           promptController: _aiPromptController,
           isRequesting: _isRequestingAi,
           lastError: _lastAiError,
@@ -3253,6 +3256,7 @@ final class _AIWorkshop extends StatelessWidget {
     required this.selectedScene,
     required this.scenes,
     required this.suggestions,
+    required this.activeProviderConfig,
     required this.promptController,
     required this.isRequesting,
     required this.lastError,
@@ -3269,6 +3273,7 @@ final class _AIWorkshop extends StatelessWidget {
   final Scene? selectedScene;
   final List<Scene> scenes;
   final List<AISuggestion> suggestions;
+  final AIProviderConfig activeProviderConfig;
   final TextEditingController promptController;
   final bool isRequesting;
   final String? lastError;
@@ -3302,6 +3307,11 @@ final class _AIWorkshop extends StatelessWidget {
                       ? copy.t('aiNeedsScene')
                       : '${copy.t('aiContext')}: ${scene.title}',
                   style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                _AIProviderStatusLine(
+                  copy: copy,
+                  config: activeProviderConfig,
                 ),
                 const SizedBox(height: 12),
                 Shortcuts(
@@ -3388,9 +3398,11 @@ final class _AIWorkshop extends StatelessWidget {
                             return ListTile(
                               leading:
                                   const Icon(Icons.psychology_alt_outlined),
-                              title: Text(suggestion.suggestionType),
+                              title: Text(_aiTaskLabel(
+                                  suggestion.suggestionType, copy)),
+                              isThreeLine: true,
                               subtitle: Text(
-                                suggestion.responseText,
+                                '${suggestion.modelName} - ${suggestion.responseText}',
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -3427,6 +3439,55 @@ final class _AIWorkshop extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+final class _AIProviderStatusLine extends StatelessWidget {
+  const _AIProviderStatusLine({
+    required this.copy,
+    required this.config,
+  });
+
+  final WritelerCopy copy;
+  final AIProviderConfig config;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final isMock = config.kind == AIProviderKind.mock;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isMock ? color.tertiaryContainer : color.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isMock ? Icons.science_outlined : Icons.cloud_done_outlined,
+              size: 18,
+              color:
+                  isMock ? color.onTertiaryContainer : color.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                isMock
+                    ? copy.t('aiMockProviderActive')
+                    : '${copy.t('activeProvider')}: ${config.displayName} - ${config.modelName}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isMock
+                          ? color.onTertiaryContainer
+                          : color.onSurfaceVariant,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -5162,6 +5223,28 @@ String _providerKindLabel(AIProviderKind kind, String languageCode) {
     AIProviderKind.openRouter => 'OpenRouter',
     AIProviderKind.ollama => 'Ollama',
     AIProviderKind.mock => german ? 'Mock / lokal' : 'Mock / local',
+  };
+}
+
+String _aiTaskLabel(String taskName, WritelerCopy copy) {
+  final task = AITaskKind.values
+      .where((candidate) => candidate.name == taskName)
+      .firstOrNull;
+  if (task == null) return taskName;
+  return switch (task) {
+    AITaskKind.customScenePrompt => copy.t('aiTaskCustomScenePrompt'),
+    AITaskKind.sceneIdeas => copy.t('requestSceneIdeas'),
+    AITaskKind.sceneGoalConflictOutcome => copy.t('requestStructure'),
+    AITaskKind.characterProfile => copy.t('aiTaskCharacterProfile'),
+    AITaskKind.consistencyCheck => copy.t('aiTaskConsistencyCheck'),
+    AITaskKind.timelineCheck => copy.t('aiTaskTimelineCheck'),
+    AITaskKind.storylineVariants => copy.t('aiTaskStorylineVariants'),
+    AITaskKind.blurbVariants => copy.t('aiTaskBlurbVariants'),
+    AITaskKind.styleAnalysis => copy.t('aiTaskStyleAnalysis'),
+    AITaskKind.authorQuestions => copy.t('aiTaskAuthorQuestions'),
+    AITaskKind.researchStructuring => copy.t('aiTaskResearchStructuring'),
+    AITaskKind.plotGapReview => copy.t('aiTaskPlotGapReview'),
+    AITaskKind.dialogueIntentAnalysis => copy.t('aiTaskDialogueIntentAnalysis'),
   };
 }
 

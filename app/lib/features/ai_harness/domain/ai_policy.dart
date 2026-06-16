@@ -60,7 +60,12 @@ final class AIPolicy {
     throw const DomainFailure('This AI task is not permitted.');
   }
 
-  String systemBoundary() {
+  String systemBoundary({String languageCode = 'en'}) {
+    if (languageCode == 'de') {
+      return 'Unterstuetze den Autor mit Struktur, Analyse, Alternativen und Fragen. '
+          'Erzeuge keinen finalen Manuskripttext als Ersatz fuer die Autorin oder den Autor. '
+          'Alle Vorschlaege muessen ausdruecklich geprueft werden.';
+    }
     return 'Assist the author with structure, analysis, alternatives, and questions. '
         'Do not produce final manuscript text as a replacement for the author. '
         'Return suggestions that require explicit user review.';
