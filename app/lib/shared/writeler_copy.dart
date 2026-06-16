@@ -144,6 +144,10 @@ final class WritelerCopy {
         'Pruefe diese Szene und schlage strukturierende Fragen vor.',
     'requestSceneIdeas': 'Szenenideen',
     'requestStructure': 'Ziel/Konflikt/Ausgang',
+    'submitAiPrompt': 'Auftrag senden',
+    'aiPromptSubmitHint': 'Strg+Enter sendet den Auftrag',
+    'aiApiKeyMissing':
+        'Fuer diesen Provider ist ein API-Key noetig. Speichere ihn unter Einstellungen > Provider-Konfiguration.',
     'aiRequestInProgress': 'Provider-Anfrage laeuft...',
     'aiRequestFailed': 'Provider-Anfrage fehlgeschlagen',
     'aiSuggestionCreated': 'KI-Vorschlag gespeichert',
@@ -341,6 +345,10 @@ final class WritelerCopy {
     'defaultAiPrompt': 'Review this scene and suggest structuring questions.',
     'requestSceneIdeas': 'Scene ideas',
     'requestStructure': 'Goal/conflict/outcome',
+    'submitAiPrompt': 'Send task',
+    'aiPromptSubmitHint': 'Ctrl+Enter sends the task',
+    'aiApiKeyMissing':
+        'This provider needs an API key. Save it under Settings > Provider configuration.',
     'aiRequestInProgress': 'Provider request in progress...',
     'aiRequestFailed': 'Provider request failed',
     'aiSuggestionCreated': 'AI suggestion saved',

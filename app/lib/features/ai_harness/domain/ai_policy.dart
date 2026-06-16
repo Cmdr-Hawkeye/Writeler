@@ -4,6 +4,7 @@ import '../../projects/domain/project.dart';
 import '../../structure/domain/scene.dart';
 
 enum AITaskKind {
+  customScenePrompt,
   sceneIdeas,
   sceneGoalConflictOutcome,
   characterProfile,
@@ -42,6 +43,7 @@ final class AIPolicy {
       return;
     }
     if (kind == AITaskKind.sceneIdeas ||
+        kind == AITaskKind.customScenePrompt ||
         kind == AITaskKind.sceneGoalConflictOutcome ||
         kind == AITaskKind.consistencyCheck ||
         kind == AITaskKind.timelineCheck ||

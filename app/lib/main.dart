@@ -374,21 +374,21 @@ final class _WritelerShellState extends State<WritelerShell> {
         return const MockLanguageModelProvider();
       case AIProviderKind.openAICompatible:
       case AIProviderKind.openRouter:
-        final apiKey = await _readApiKey(config);
+        final apiKey = await _readApiKey(config, required: true);
         return OpenAICompatibleLanguageModelProvider.fromConfig(
           config,
           apiKey: apiKey,
           transport: const HttpModelHttpTransport(),
         );
       case AIProviderKind.anthropic:
-        final apiKey = await _readApiKey(config);
+        final apiKey = await _readApiKey(config, required: true);
         return AnthropicLanguageModelProvider.fromConfig(
           config,
           apiKey: apiKey,
           transport: const HttpModelHttpTransport(),
         );
       case AIProviderKind.gemini:
-        final apiKey = await _readApiKey(config);
+        final apiKey = await _readApiKey(config, required: true);
         return GeminiLanguageModelProvider.fromConfig(
           config,
           apiKey: apiKey,
@@ -402,13 +402,24 @@ final class _WritelerShellState extends State<WritelerShell> {
     }
   }
 
-  Future<String?> _readApiKey(AIProviderConfig config) async {
+  Future<String?> _readApiKey(
+    AIProviderConfig config, {
+    bool required = false,
+  }) async {
     final ref = config.encryptedApiKeyRef;
-    if (ref == null) return null;
+    if (ref == null) {
+      if (required) {
+        throw const DomainFailure(
+          'AI_API_KEY_MISSING',
+        );
+      }
+      return null;
+    }
     final secret = await widget.secretVault.read(ref);
     if (secret == null || secret.isEmpty) {
       throw const DomainFailure(
-          'The configured API key could not be found in secure storage.');
+        'AI_API_KEY_MISSING',
+      );
     }
     return secret;
   }
@@ -1152,7 +1163,13 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   String _providerErrorMessage(Object error) {
-    if (error is DomainFailure) return error.message;
+    if (error is DomainFailure) {
+      if (error.message == 'AI_API_KEY_MISSING') {
+        return WritelerCopy(Localizations.localeOf(context).languageCode)
+            .t('aiApiKeyMissing');
+      }
+      return error.message;
+    }
     return error.toString().replaceFirst('Exception: ', '');
   }
 
@@ -1679,6 +1696,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           promptController: _aiPromptController,
           isRequesting: _isRequestingAi,
           lastError: _lastAiError,
+          onSubmitPrompt: () =>
+              _requestSceneSuggestion(copy, AITaskKind.customScenePrompt),
           onRequestSceneIdeas: () =>
               _requestSceneSuggestion(copy, AITaskKind.sceneIdeas),
           onRequestStructure: () => _requestSceneSuggestion(
@@ -3223,6 +3242,10 @@ final class _CatalogPresenceRow {
   final List<Scene> scenes;
 }
 
+final class _SubmitAiPromptIntent extends Intent {
+  const _SubmitAiPromptIntent();
+}
+
 final class _AIWorkshop extends StatelessWidget {
   const _AIWorkshop({
     required this.copy,
@@ -3233,6 +3256,7 @@ final class _AIWorkshop extends StatelessWidget {
     required this.promptController,
     required this.isRequesting,
     required this.lastError,
+    required this.onSubmitPrompt,
     required this.onRequestSceneIdeas,
     required this.onRequestStructure,
     required this.onAcceptSuggestion,
@@ -3248,6 +3272,7 @@ final class _AIWorkshop extends StatelessWidget {
   final TextEditingController promptController;
   final bool isRequesting;
   final String? lastError;
+  final VoidCallback onSubmitPrompt;
   final VoidCallback onRequestSceneIdeas;
   final VoidCallback onRequestStructure;
   final ValueChanged<AISuggestion> onAcceptSuggestion;
@@ -3279,13 +3304,36 @@ final class _AIWorkshop extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: promptController,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    labelText: copy.t('aiPrompt'),
-                    border: const OutlineInputBorder(),
+                Shortcuts(
+                  shortcuts: const {
+                    SingleActivator(LogicalKeyboardKey.enter, control: true):
+                        _SubmitAiPromptIntent(),
+                    SingleActivator(LogicalKeyboardKey.enter, meta: true):
+                        _SubmitAiPromptIntent(),
+                  },
+                  child: Actions(
+                    actions: {
+                      _SubmitAiPromptIntent:
+                          CallbackAction<_SubmitAiPromptIntent>(
+                        onInvoke: (intent) {
+                          if (aiAvailable && !isRequesting) {
+                            onSubmitPrompt();
+                          }
+                          return null;
+                        },
+                      ),
+                    },
+                    child: TextField(
+                      controller: promptController,
+                      minLines: 2,
+                      maxLines: 4,
+                      textInputAction: TextInputAction.newline,
+                      decoration: InputDecoration(
+                        labelText: copy.t('aiPrompt'),
+                        helperText: copy.t('aiPromptSubmitHint'),
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -3294,6 +3342,12 @@ final class _AIWorkshop extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     FilledButton.icon(
+                      onPressed:
+                          aiAvailable && !isRequesting ? onSubmitPrompt : null,
+                      icon: const Icon(Icons.send_outlined),
+                      label: Text(copy.t('submitAiPrompt')),
+                    ),
+                    OutlinedButton.icon(
                       onPressed: aiAvailable && !isRequesting
                           ? onRequestSceneIdeas
                           : null,
