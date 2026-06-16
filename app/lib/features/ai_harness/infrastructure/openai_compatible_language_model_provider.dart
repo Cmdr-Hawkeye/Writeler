@@ -119,13 +119,13 @@ final class OpenAICompatibleLanguageModelProvider
 
   Map<String, String> _headers() {
     final headers = <String, String>{
-      'content-type': 'application/json',
-      'accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...defaultHeaders,
     };
     final token = apiKey?.trim();
     if (token != null && token.isNotEmpty) {
-      headers['authorization'] = 'Bearer $token';
+      headers['Authorization'] = 'Bearer $token';
     }
     return headers;
   }

@@ -79,7 +79,10 @@ void main() {
     expect(response.estimatedOutputTokens, 9);
     expect(
         transport.uri.toString(), 'https://example.test/v1/chat/completions');
-    expect(transport.headers['authorization'], 'Bearer test-key');
+    expect(transport.headers['Authorization'], 'Bearer test-key');
+    expect(transport.headers.containsKey('authorization'), isFalse);
+    expect(transport.headers['Content-Type'], 'application/json');
+    expect(transport.headers['Accept'], 'application/json');
     expect(transport.body['model'], 'gpt-test');
     expect(transport.body['max_tokens'], 600);
     expect(transport.body['temperature'], 0.2);
@@ -133,7 +136,8 @@ void main() {
       'https://github.com/Cmdr-Hawkeye/Writeler',
     );
     expect(transport.headers['X-OpenRouter-Title'], 'Writeler');
-    expect(transport.headers['authorization'], 'Bearer test-key');
+    expect(transport.headers['Authorization'], 'Bearer test-key');
+    expect(transport.headers.containsKey('authorization'), isFalse);
     expect(transport.body['model'], 'google/gemini-2.5-flash-lite');
   });
 
