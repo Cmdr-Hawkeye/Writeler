@@ -126,7 +126,7 @@ final class OpenAICompatibleLanguageModelProvider
       'Accept': 'application/json',
       ...defaultHeaders,
     };
-    final token = apiKey?.trim();
+    final token = _normalizedApiKey();
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
       if (mirrorApiKeyInXApiKeyHeader) {
@@ -134,6 +134,16 @@ final class OpenAICompatibleLanguageModelProvider
       }
     }
     return headers;
+  }
+
+  String? _normalizedApiKey() {
+    final rawToken = apiKey?.trim();
+    if (rawToken == null || rawToken.isEmpty) return null;
+    var token = rawToken;
+    while (token.toLowerCase().startsWith('bearer ')) {
+      token = token.substring('bearer '.length).trim();
+    }
+    return token.isEmpty ? null : token;
   }
 
   static Map<String, String> _defaultHeadersFor(AIProviderKind kind) {

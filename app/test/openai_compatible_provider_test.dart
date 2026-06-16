@@ -62,7 +62,7 @@ void main() {
       displayName: 'OpenAI Compatible',
       modelName: 'gpt-test',
       baseUrl: Uri.parse('https://example.test/v1'),
-      apiKey: 'test-key',
+      apiKey: 'Bearer test-key',
       transport: transport,
     );
 
@@ -115,7 +115,7 @@ void main() {
         modelName: preset.modelName,
         baseUrl: preset.baseUrl,
       ),
-      apiKey: 'test-key',
+      apiKey: 'Bearer test-key',
       transport: transport,
     );
 

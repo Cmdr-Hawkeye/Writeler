@@ -421,7 +421,21 @@ final class _WritelerShellState extends State<WritelerShell> {
         'AI_API_KEY_MISSING',
       );
     }
-    return secret;
+    final normalizedSecret = _normalizeProviderApiKey(secret);
+    if (normalizedSecret.isEmpty) {
+      throw const DomainFailure(
+        'AI_API_KEY_MISSING',
+      );
+    }
+    return normalizedSecret;
+  }
+
+  String _normalizeProviderApiKey(String value) {
+    var normalized = value.trim();
+    while (normalized.toLowerCase().startsWith('bearer ')) {
+      normalized = normalized.substring('bearer '.length).trim();
+    }
+    return normalized;
   }
 
   Future<void> _loadProjectData(String projectId) async {
@@ -1420,7 +1434,7 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   Future<void> _saveProviderConfig(WritelerCopy copy) async {
     const providerId = 'default';
-    final apiKeyInput = _apiKeyRefController.text.trim();
+    final apiKeyInput = _normalizeProviderApiKey(_apiKeyRefController.text);
     final existingApiKeyRef = _activeProviderConfig?.encryptedApiKeyRef;
     String? apiKeyRef = existingApiKeyRef;
 
