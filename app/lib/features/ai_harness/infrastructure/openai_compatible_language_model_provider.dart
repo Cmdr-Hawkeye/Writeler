@@ -15,6 +15,7 @@ final class OpenAICompatibleLanguageModelProvider
     required this.modelName,
     required this.baseUrl,
     this.apiKey,
+    this.defaultHeaders = const {},
     this.transport = const MissingModelHttpTransport(),
   });
 
@@ -32,6 +33,7 @@ final class OpenAICompatibleLanguageModelProvider
       modelName: config.modelName,
       baseUrl: Uri.parse(baseUrl),
       apiKey: apiKey,
+      defaultHeaders: _defaultHeadersFor(config.kind),
       transport: transport,
     );
   }
@@ -45,6 +47,7 @@ final class OpenAICompatibleLanguageModelProvider
   final String modelName;
   final Uri baseUrl;
   final String? apiKey;
+  final Map<String, String> defaultHeaders;
   final ModelHttpTransport transport;
 
   @override
@@ -118,12 +121,23 @@ final class OpenAICompatibleLanguageModelProvider
     final headers = <String, String>{
       'content-type': 'application/json',
       'accept': 'application/json',
+      ...defaultHeaders,
     };
     final token = apiKey?.trim();
     if (token != null && token.isNotEmpty) {
       headers['authorization'] = 'Bearer $token';
     }
     return headers;
+  }
+
+  static Map<String, String> _defaultHeadersFor(AIProviderKind kind) {
+    return switch (kind) {
+      AIProviderKind.openRouter => const {
+          'HTTP-Referer': 'https://github.com/Cmdr-Hawkeye/Writeler',
+          'X-OpenRouter-Title': 'Writeler',
+        },
+      _ => const {},
+    };
   }
 
   JsonMap _requestBody(ModelRequest request) {

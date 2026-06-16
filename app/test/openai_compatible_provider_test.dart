@@ -34,7 +34,9 @@ void main() {
     );
   });
 
-  test('OpenAI-compatible provider posts chat completion requests and parses text', () async {
+  test(
+      'OpenAI-compatible provider posts chat completion requests and parses text',
+      () async {
     final transport = _FakeTransport(
       response: const ModelHttpResponse(
         statusCode: 200,
@@ -75,12 +77,64 @@ void main() {
     expect(response.text, 'Clarify the character goal before the midpoint.');
     expect(response.estimatedInputTokens, 18);
     expect(response.estimatedOutputTokens, 9);
-    expect(transport.uri.toString(), 'https://example.test/v1/chat/completions');
+    expect(
+        transport.uri.toString(), 'https://example.test/v1/chat/completions');
     expect(transport.headers['authorization'], 'Bearer test-key');
     expect(transport.body['model'], 'gpt-test');
     expect(transport.body['max_tokens'], 600);
     expect(transport.body['temperature'], 0.2);
     expect(transport.body['metadata'], containsPair('sceneId', 'scene-1'));
+  });
+
+  test('OpenRouter provider includes attribution headers', () async {
+    final transport = _FakeTransport(
+      response: const ModelHttpResponse(
+        statusCode: 200,
+        body: '''
+{
+  "choices": [
+    {
+      "message": {
+        "content": "OpenRouter is connected."
+      }
+    }
+  ]
+}
+''',
+      ),
+    );
+    final preset = AIProviderPreset.forKind(AIProviderKind.openRouter);
+    final provider = OpenAICompatibleLanguageModelProvider.fromConfig(
+      AIProviderConfig(
+        id: 'openrouter',
+        kind: AIProviderKind.openRouter,
+        displayName: preset.displayName,
+        modelName: preset.modelName,
+        baseUrl: preset.baseUrl,
+      ),
+      apiKey: 'test-key',
+      transport: transport,
+    );
+
+    await provider.generateText(
+      const ModelRequest(
+        prompt: 'Check connection.',
+        context: {},
+        parameters: ModelParameters(maxTokens: 16),
+      ),
+    );
+
+    expect(
+      transport.uri.toString(),
+      'https://openrouter.ai/api/v1/chat/completions',
+    );
+    expect(
+      transport.headers['HTTP-Referer'],
+      'https://github.com/Cmdr-Hawkeye/Writeler',
+    );
+    expect(transport.headers['X-OpenRouter-Title'], 'Writeler');
+    expect(transport.headers['authorization'], 'Bearer test-key');
+    expect(transport.body['model'], 'google/gemini-2.5-flash-lite');
   });
 
   test('OpenAI-compatible provider reports HTTP failures', () async {
@@ -90,7 +144,8 @@ void main() {
       modelName: 'gpt-test',
       baseUrl: Uri.parse('https://example.test/v1'),
       transport: _FakeTransport(
-        response: const ModelHttpResponse(statusCode: 429, body: 'rate limited'),
+        response:
+            const ModelHttpResponse(statusCode: 429, body: 'rate limited'),
       ),
     );
 
@@ -106,7 +161,8 @@ void main() {
     );
   });
 
-  test('Anthropic provider posts messages requests and parses text blocks', () async {
+  test('Anthropic provider posts messages requests and parses text blocks',
+      () async {
     final transport = _FakeTransport(
       response: const ModelHttpResponse(
         statusCode: 200,
@@ -149,7 +205,8 @@ void main() {
     expect(transport.body['model'], 'claude-haiku-test');
   });
 
-  test('Gemini provider posts generateContent requests and parses text parts', () async {
+  test('Gemini provider posts generateContent requests and parses text parts',
+      () async {
     final transport = _FakeTransport(
       response: const ModelHttpResponse(
         statusCode: 200,
@@ -200,7 +257,8 @@ void main() {
     expect(generationConfig['maxOutputTokens'], 300);
   });
 
-  test('Ollama provider posts local chat requests and parses message content', () async {
+  test('Ollama provider posts local chat requests and parses message content',
+      () async {
     final transport = _FakeTransport(
       response: const ModelHttpResponse(
         statusCode: 200,
