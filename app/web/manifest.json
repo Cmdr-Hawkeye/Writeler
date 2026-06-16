@@ -1,12 +1,13 @@
 {
-    "name": "writeler",
-    "short_name": "writeler",
+    "name": "Writeler",
+    "short_name": "Writeler",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#264C43",
+    "theme_color": "#264C43",
+    "description": "Offline-first writing project harness for authors.",
+    "orientation": "any",
+    "categories": ["productivity", "books", "utilities"],
     "prefer_related_applications": false,
     "icons": [
         {

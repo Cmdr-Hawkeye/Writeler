@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Writeler app icon">
+  <rect width="1024" height="1024" rx="220" fill="#264c43"/>
+  <path d="M210 292c92-42 190-42 302 0v474c-112-42-210-42-302 0V292z" fill="#f7f4ed"/>
+  <path d="M512 292c112-42 210-42 302 0v474c-92-42-190-42-302 0V292z" fill="#efe7d5"/>
+  <path d="M512 292v474" stroke="#264c43" stroke-width="26" stroke-linecap="round"/>
+  <path d="M650 260v414l58-40 58 40V260c-38-8-76-8-116 0z" fill="#c9a227"/>
+  <path d="M276 380c52-13 104-13 156 0M276 468c52-13 104-13 156 0M592 390c38-10 76-13 114-8M592 478c38-10 76-13 114-8" stroke="#264c43" stroke-width="24" stroke-linecap="round" opacity=".72"/>
+</svg>

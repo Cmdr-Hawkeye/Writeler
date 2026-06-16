@@ -98,5 +98,6 @@ See:
 - [User Guide](docs/user-guide.md)
 - [Developer Guide](docs/developer-guide.md)
 - [Export Formats](docs/export-formats.md)
+- [Native Release Guide](docs/native-release.md)
 - [Testing](docs/testing.md)
 - [Original Product Prompt](docs/spec/writeler_prompt.html)
