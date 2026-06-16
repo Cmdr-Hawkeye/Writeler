@@ -10,6 +10,8 @@ $repoRoot = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")
 $appDir = Join-Path $repoRoot "app"
 $webDir = Join-Path $appDir "build\web"
 $indexFile = Join-Path $webDir "index.html"
+$mainJsFile = Join-Path $webDir "main.dart.js"
+$builtWorkerFile = Join-Path $webDir "drift_worker.js"
 
 function Find-PythonCommand {
   $python = Get-Command python -ErrorAction SilentlyContinue
@@ -40,12 +42,60 @@ function Find-AvailablePort([int]$StartPort) {
   throw "No free local port found between $StartPort and $($StartPort + 19)."
 }
 
-if (-not (Test-Path -LiteralPath $indexFile)) {
-  Write-Host "Web build not found. Building Writeler web assets..."
+function Test-WebBuildStale {
+  if (
+    -not (Test-Path -LiteralPath $indexFile) -or
+    -not (Test-Path -LiteralPath $mainJsFile) -or
+    -not (Test-Path -LiteralPath $builtWorkerFile)
+  ) {
+    return $true
+  }
+
+  $mainBuildTime = (Get-Item -LiteralPath $mainJsFile).LastWriteTimeUtc
+  $webShellBuildTime = (Get-Item -LiteralPath $indexFile).LastWriteTimeUtc
+  $workerBuildTime = (Get-Item -LiteralPath $builtWorkerFile).LastWriteTimeUtc
+
+  $libDir = Join-Path $appDir "lib"
+  if (Test-Path -LiteralPath $libDir) {
+    $newerDartFile = Get-ChildItem -LiteralPath $libDir -Recurse -File |
+      Where-Object { $_.LastWriteTimeUtc -gt $mainBuildTime } |
+      Select-Object -First 1
+    if ($newerDartFile) {
+      return $true
+    }
+  }
+
+  $webDirSource = Join-Path $appDir "web"
+  if (Test-Path -LiteralPath $webDirSource) {
+    $newerWebFile = Get-ChildItem -LiteralPath $webDirSource -Recurse -File |
+      Where-Object { $_.Name -notmatch '^drift_worker\.js(\.deps|\.map)?$' } |
+      Where-Object { $_.LastWriteTimeUtc -gt $webShellBuildTime } |
+      Select-Object -First 1
+    if ($newerWebFile) {
+      return $true
+    }
+  }
+
+  foreach ($file in @((Join-Path $appDir "pubspec.yaml"), (Join-Path $appDir "pubspec.lock"))) {
+    if ((Test-Path -LiteralPath $file) -and (Get-Item -LiteralPath $file).LastWriteTimeUtc -gt $mainBuildTime) {
+      return $true
+    }
+  }
+
+  $workerBuildScript = Join-Path $repoRoot "scripts\build_web_assets.ps1"
+  if ((Test-Path -LiteralPath $workerBuildScript) -and (Get-Item -LiteralPath $workerBuildScript).LastWriteTimeUtc -gt $workerBuildTime) {
+    return $true
+  }
+
+  return $false
+}
+
+if (Test-WebBuildStale) {
+  Write-Host "Web build missing or stale. Building Writeler web assets..."
   & (Join-Path $repoRoot "scripts\build_web_assets.ps1")
   Push-Location $appDir
   try {
-    & flutter build web --no-pub --no-web-resources-cdn
+    & flutter build web --no-pub --no-web-resources-cdn --pwa-strategy=none
   } finally {
     Pop-Location
   }

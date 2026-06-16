@@ -16,6 +16,7 @@ final class OpenAICompatibleLanguageModelProvider
     required this.baseUrl,
     this.apiKey,
     this.defaultHeaders = const {},
+    this.mirrorApiKeyInXApiKeyHeader = false,
     this.transport = const MissingModelHttpTransport(),
   });
 
@@ -34,6 +35,7 @@ final class OpenAICompatibleLanguageModelProvider
       baseUrl: Uri.parse(baseUrl),
       apiKey: apiKey,
       defaultHeaders: _defaultHeadersFor(config.kind),
+      mirrorApiKeyInXApiKeyHeader: config.kind == AIProviderKind.openRouter,
       transport: transport,
     );
   }
@@ -48,6 +50,7 @@ final class OpenAICompatibleLanguageModelProvider
   final Uri baseUrl;
   final String? apiKey;
   final Map<String, String> defaultHeaders;
+  final bool mirrorApiKeyInXApiKeyHeader;
   final ModelHttpTransport transport;
 
   @override
@@ -126,6 +129,9 @@ final class OpenAICompatibleLanguageModelProvider
     final token = apiKey?.trim();
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
+      if (mirrorApiKeyInXApiKeyHeader) {
+        headers['X-Api-Key'] = token;
+      }
     }
     return headers;
   }

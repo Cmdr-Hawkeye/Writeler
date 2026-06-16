@@ -57,7 +57,7 @@ flutter run -d chrome
 ```powershell
 .\scripts\build_web_assets.ps1
 cd app
-flutter build web --no-pub --no-web-resources-cdn
+flutter build web --no-pub --no-web-resources-cdn --pwa-strategy=none
 ```
 
 7. Serve the web build locally:
@@ -70,7 +70,9 @@ Then open `http://127.0.0.1:8090`.
 
 On Windows, you can also double-click `start_writeler_web.cmd` in the
 repository root. It builds the web app if needed, starts a local server, picks
-the next free port starting at `8090`, and opens the browser.
+the next free port starting at `8090`, and opens the browser. Local web builds
+use `--pwa-strategy=none` so browsers do not keep an outdated Flutter service
+worker while you test provider and UI changes.
 
 On this OneDrive workspace, `flutter pub get` can trip over generated iOS/macOS `ephemeral` cache folders. `dart pub get` followed by Flutter commands with `--no-pub` avoids that local filesystem issue.
 

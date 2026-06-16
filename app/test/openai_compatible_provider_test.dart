@@ -137,6 +137,7 @@ void main() {
     );
     expect(transport.headers['X-OpenRouter-Title'], 'Writeler');
     expect(transport.headers['Authorization'], 'Bearer test-key');
+    expect(transport.headers['X-Api-Key'], 'test-key');
     expect(transport.headers.containsKey('authorization'), isFalse);
     expect(transport.body['model'], 'google/gemini-2.5-flash-lite');
   });
