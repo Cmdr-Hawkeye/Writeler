@@ -1466,6 +1466,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         children: [
           NavigationRail(
             selectedIndex: _selectedRailIndex,
+            scrollable: true,
             onDestinationSelected: (index) =>
                 setState(() => _selectedRailIndex = index),
             labelType: NavigationRailLabelType.all,
@@ -1499,6 +1500,11 @@ final class _WritelerShellState extends State<WritelerShell> {
                 icon: const Icon(Icons.category_outlined),
                 selectedIcon: const Icon(Icons.category),
                 label: Text(copy.t('objects')),
+              ),
+              NavigationRailDestination(
+                icon: const Icon(Icons.query_stats_outlined),
+                selectedIcon: const Icon(Icons.query_stats),
+                label: Text(copy.t('analysis')),
               ),
               NavigationRailDestination(
                 icon: const Icon(Icons.psychology_alt_outlined),
@@ -1653,7 +1659,18 @@ final class _WritelerShellState extends State<WritelerShell> {
               _showCreateCatalogItemDialog(copy, EntityType.object),
           onDeleteItem: (item) => _deleteCatalogItem(item, copy),
         ),
-      6 => _AIWorkshop(
+      6 => _AnalysisWorkspace(
+          copy: copy,
+          chapters: _chapters,
+          scenes: _scenes,
+          catalogItems: _catalogItems,
+          relationships: _relationships,
+          onOpenScene: (scene) {
+            _selectScene(scene);
+            setState(() => _selectedRailIndex = 1);
+          },
+        ),
+      7 => _AIWorkshop(
           copy: copy,
           project: _selectedProject,
           selectedScene: _selectedScene,
@@ -1673,7 +1690,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           onConvertSuggestion: (suggestion) =>
               _decideSuggestion(suggestion, SuggestionDecision.convertedToNote),
         ),
-      7 => _ExportCenter(
+      8 => _ExportCenter(
           copy: copy,
           project: _selectedProject,
           chapters: _chapters,
@@ -2659,6 +2676,551 @@ final class _CatalogWorkspace extends StatelessWidget {
       ],
     );
   }
+}
+
+final class _AnalysisWorkspace extends StatelessWidget {
+  const _AnalysisWorkspace({
+    required this.copy,
+    required this.chapters,
+    required this.scenes,
+    required this.catalogItems,
+    required this.relationships,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final List<Chapter> chapters;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final orderedChapters = [...chapters]
+      ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    final planningGapScenes = scenes
+        .where((scene) =>
+            scene.goal?.trim().isEmpty != false ||
+            scene.conflict?.trim().isEmpty != false ||
+            scene.outcome?.trim().isEmpty != false)
+        .toList();
+    final povMissingScenes = scenes
+        .where((scene) => scene.povCharacterId?.trim().isEmpty != false)
+        .toList();
+    final dateMissingScenes =
+        scenes.where((scene) => scene.storyDateStart == null).toList();
+    final detachedCatalogItems = catalogItems
+        .where((item) => _linkedScenesForItem(item).isEmpty)
+        .toList();
+    final chapterRows = _chapterRows(orderedChapters);
+    final presenceRows = _presenceRows();
+
+    return Column(
+      children: [
+        _WorkspaceHeader(title: copy.t('storyAnalysis')),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _StructureChip(
+                icon: Icons.rule_outlined,
+                label: copy.t('openPlanningGaps'),
+                value: '${planningGapScenes.length}',
+              ),
+              _StructureChip(
+                icon: Icons.visibility_off_outlined,
+                label: copy.t('scenesWithoutPov'),
+                value: '${povMissingScenes.length}',
+              ),
+              _StructureChip(
+                icon: Icons.event_busy_outlined,
+                label: copy.t('scenesWithoutDate'),
+                value: '${dateMissingScenes.length}',
+              ),
+              _StructureChip(
+                icon: Icons.link_off_outlined,
+                label: copy.t('detachedCatalogItems'),
+                value: '${detachedCatalogItems.length}',
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: Row(
+            children: [
+              SizedBox(
+                width: 340,
+                child: _AnalysisPanel(
+                  title: copy.t('storylineHealth'),
+                  child: _StorylineIssueList(
+                    copy: copy,
+                    planningGapScenes: planningGapScenes,
+                    povMissingScenes: povMissingScenes,
+                    dateMissingScenes: dateMissingScenes,
+                    detachedCatalogItems: detachedCatalogItems,
+                    onOpenScene: onOpenScene,
+                  ),
+                ),
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: _AnalysisPanel(
+                        title: copy.t('chapterBalance'),
+                        child: _ChapterBalanceList(
+                          copy: copy,
+                          rows: chapterRows,
+                        ),
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    SizedBox(
+                      height: 170,
+                      child: _AnalysisPanel(
+                        title: copy.t('statusSpread'),
+                        child: _StatusSpreadList(copy: copy, scenes: scenes),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const VerticalDivider(width: 1),
+              SizedBox(
+                width: 380,
+                child: _AnalysisPanel(
+                  title: copy.t('catalogPresence'),
+                  child: _CatalogPresenceList(
+                    copy: copy,
+                    rows: presenceRows,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<_ChapterAnalysisRow> _chapterRows(List<Chapter> orderedChapters) {
+    final rows = <_ChapterAnalysisRow>[
+      for (final chapter in orderedChapters)
+        _ChapterAnalysisRow(
+          title: chapter.title,
+          scenes: _scenesForChapter(chapter.id),
+        ),
+    ];
+    final unassigned = _scenesForChapter(null);
+    if (unassigned.isNotEmpty || rows.isEmpty) {
+      rows.add(
+          _ChapterAnalysisRow(title: copy.t('noChapter'), scenes: unassigned));
+    }
+    return rows;
+  }
+
+  List<Scene> _scenesForChapter(String? chapterId) {
+    final filtered =
+        scenes.where((scene) => scene.chapterId == chapterId).toList();
+    filtered.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    return filtered;
+  }
+
+  List<_CatalogPresenceRow> _presenceRows() {
+    final rows = [
+      for (final item in catalogItems)
+        _CatalogPresenceRow(
+          item: item,
+          scenes: _linkedScenesForItem(item),
+        ),
+    ];
+    rows.sort((a, b) {
+      final typeCompare = a.item.type.index.compareTo(b.item.type.index);
+      if (typeCompare != 0) return typeCompare;
+      return a.item.name.compareTo(b.item.name);
+    });
+    return rows;
+  }
+
+  List<Scene> _linkedScenesForItem(CatalogItem item) {
+    final sceneIds = relationships
+        .where((relationship) =>
+            _relationshipConnects(relationship, EntityType.scene, item.type) &&
+            (relationship.source.id == item.id ||
+                relationship.target.id == item.id))
+        .map((relationship) => relationship.source.type == EntityType.scene
+            ? relationship.source.id
+            : relationship.target.id)
+        .toSet();
+    final linked =
+        scenes.where((scene) => sceneIds.contains(scene.id)).toList();
+    linked.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    return linked;
+  }
+
+  bool _relationshipConnects(
+    Relationship relationship,
+    EntityType left,
+    EntityType right,
+  ) {
+    return (relationship.source.type == left &&
+            relationship.target.type == right) ||
+        (relationship.source.type == right && relationship.target.type == left);
+  }
+}
+
+final class _AnalysisPanel extends StatelessWidget {
+  const _AnalysisPanel({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(child: child),
+        ],
+      ),
+    );
+  }
+}
+
+final class _StorylineIssueList extends StatelessWidget {
+  const _StorylineIssueList({
+    required this.copy,
+    required this.planningGapScenes,
+    required this.povMissingScenes,
+    required this.dateMissingScenes,
+    required this.detachedCatalogItems,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final List<Scene> planningGapScenes;
+  final List<Scene> povMissingScenes;
+  final List<Scene> dateMissingScenes;
+  final List<CatalogItem> detachedCatalogItems;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final issues = <_AnalysisIssue>[
+      for (final scene in planningGapScenes)
+        _AnalysisIssue(
+          icon: Icons.rule_outlined,
+          title: scene.title,
+          subtitle: copy.t('missingStructure'),
+          scene: scene,
+        ),
+      for (final scene in povMissingScenes)
+        _AnalysisIssue(
+          icon: Icons.visibility_off_outlined,
+          title: scene.title,
+          subtitle: copy.t('scenesWithoutPov'),
+          scene: scene,
+        ),
+      for (final scene in dateMissingScenes)
+        _AnalysisIssue(
+          icon: Icons.event_busy_outlined,
+          title: scene.title,
+          subtitle: copy.t('scenesWithoutDate'),
+          scene: scene,
+        ),
+      for (final item in detachedCatalogItems)
+        _AnalysisIssue(
+          icon: _catalogIcon(item.type),
+          title: item.name,
+          subtitle: copy.t('noAppearances'),
+        ),
+    ];
+
+    if (issues.isEmpty) {
+      return _EmptyInlineMessage(message: copy.t('noAnalysisIssues'));
+    }
+
+    return ListView.separated(
+      itemCount: issues.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final issue = issues[index];
+        return ListTile(
+          leading: Icon(issue.icon),
+          title: Text(
+            issue.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(issue.subtitle),
+          onTap: issue.scene == null ? null : () => onOpenScene(issue.scene!),
+        );
+      },
+    );
+  }
+}
+
+final class _ChapterBalanceList extends StatelessWidget {
+  const _ChapterBalanceList({
+    required this.copy,
+    required this.rows,
+  });
+
+  final WritelerCopy copy;
+  final List<_ChapterAnalysisRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    if (rows.every((row) => row.scenes.isEmpty)) {
+      return _EmptyInlineMessage(message: copy.t('noScenesBody'));
+    }
+
+    final maxWords = rows.fold<int>(
+      1,
+      (max, row) => row.words > max ? row.words : max,
+    );
+
+    return ListView.separated(
+      itemCount: rows.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final row = rows[index];
+        final progress = row.words / maxWords;
+        return _ChapterBalanceTile(
+          copy: copy,
+          row: row,
+          progress: progress,
+        );
+      },
+    );
+  }
+}
+
+final class _ChapterBalanceTile extends StatelessWidget {
+  const _ChapterBalanceTile({
+    required this.copy,
+    required this.row,
+    required this.progress,
+  });
+
+  final WritelerCopy copy;
+  final _ChapterAnalysisRow row;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  row.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text('${row.scenes.length} ${copy.t('scenes')}'),
+              const SizedBox(width: 12),
+              Text('${row.words} ${copy.t('words')}'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(value: progress.clamp(0.0, 1.0)),
+        ],
+      ),
+    );
+  }
+}
+
+final class _StatusSpreadList extends StatelessWidget {
+  const _StatusSpreadList({
+    required this.copy,
+    required this.scenes,
+  });
+
+  final WritelerCopy copy;
+  final List<Scene> scenes;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = scenes.isEmpty ? 1 : scenes.length;
+    return ListView(
+      scrollDirection: Axis.horizontal,
+      children: [
+        for (final status in DraftStatus.values)
+          SizedBox(
+            width: 160,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: _StatusSpreadTile(
+                label: _draftStatusLabel(status, copy.languageCode),
+                count: scenes.where((scene) => scene.status == status).length,
+                total: total,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+final class _StatusSpreadTile extends StatelessWidget {
+  const _StatusSpreadTile({
+    required this.label,
+    required this.count,
+    required this.total,
+  });
+
+  final String label;
+  final int count;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 10),
+            Text(
+              '$count',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(value: count / total),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _CatalogPresenceList extends StatelessWidget {
+  const _CatalogPresenceList({
+    required this.copy,
+    required this.rows,
+  });
+
+  final WritelerCopy copy;
+  final List<_CatalogPresenceRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    if (rows.isEmpty) {
+      return _EmptyInlineMessage(message: copy.t('catalogEmptyBody'));
+    }
+
+    return ListView.separated(
+      itemCount: rows.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final row = rows[index];
+        final scenePreview = row.scenes.take(3).map((scene) => scene.title);
+        return ListTile(
+          leading: Icon(_catalogIcon(row.item.type)),
+          title:
+              Text(row.item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Text(
+            row.scenes.isEmpty
+                ? copy.t('noAppearances')
+                : scenePreview.join(', '),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Text('${row.scenes.length}'),
+        );
+      },
+    );
+  }
+}
+
+final class _EmptyInlineMessage extends StatelessWidget {
+  const _EmptyInlineMessage({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Text(
+        message,
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+    );
+  }
+}
+
+final class _AnalysisIssue {
+  const _AnalysisIssue({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.scene,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Scene? scene;
+}
+
+final class _ChapterAnalysisRow {
+  const _ChapterAnalysisRow({
+    required this.title,
+    required this.scenes,
+  });
+
+  final String title;
+  final List<Scene> scenes;
+
+  int get words =>
+      scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
+}
+
+final class _CatalogPresenceRow {
+  const _CatalogPresenceRow({
+    required this.item,
+    required this.scenes,
+  });
+
+  final CatalogItem item;
+  final List<Scene> scenes;
 }
 
 final class _AIWorkshop extends StatelessWidget {
