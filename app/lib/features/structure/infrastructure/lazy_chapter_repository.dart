@@ -10,6 +10,9 @@ final class LazyChapterRepository implements ChapterRepository {
   ChapterRepository get _repository => _inner ??= _create();
 
   @override
+  Future<void> delete(String id) => _repository.delete(id);
+
+  @override
   Future<Chapter?> findById(String id) => _repository.findById(id);
 
   @override

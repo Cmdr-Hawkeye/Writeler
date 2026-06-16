@@ -4,6 +4,8 @@ import 'catalog_item.dart';
 abstract interface class CatalogItemRepository {
   Future<void> save(CatalogItem item);
 
+  Future<void> delete(String id);
+
   Future<CatalogItem?> findById(String id);
 
   Future<List<CatalogItem>> listByProject(String projectId);

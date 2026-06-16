@@ -14,6 +14,33 @@ final class DriftProjectRepository implements ProjectRepository {
   final AppDatabase database;
 
   @override
+  Future<void> delete(String id) async {
+    await database.transaction(() async {
+      await (database.delete(database.metricEvents)
+            ..where((table) => table.projectId.equals(id)))
+          .go();
+      await (database.delete(database.aISuggestions)
+            ..where((table) => table.projectId.equals(id)))
+          .go();
+      await (database.delete(database.relationships)
+            ..where((table) => table.projectId.equals(id)))
+          .go();
+      await (database.delete(database.catalogItems)
+            ..where((table) => table.projectId.equals(id)))
+          .go();
+      await (database.delete(database.scenes)
+            ..where((table) => table.projectId.equals(id)))
+          .go();
+      await (database.delete(database.chapters)
+            ..where((table) => table.projectId.equals(id)))
+          .go();
+      await (database.delete(database.projects)
+            ..where((table) => table.id.equals(id)))
+          .go();
+    });
+  }
+
+  @override
   Future<Project?> findById(String id) async {
     final row = await (database.select(database.projects)
           ..where((table) => table.id.equals(id)))

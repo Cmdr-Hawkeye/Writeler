@@ -10,6 +10,9 @@ final class LazySceneRepository implements SceneRepository {
   SceneRepository get _repository => _inner ??= _create();
 
   @override
+  Future<void> delete(String id) => _repository.delete(id);
+
+  @override
   Future<Scene?> findById(String id) => _repository.findById(id);
 
   @override

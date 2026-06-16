@@ -5,6 +5,11 @@ final class InMemoryProjectRepository implements ProjectRepository {
   final Map<String, Project> _projects = {};
 
   @override
+  Future<void> delete(String id) async {
+    _projects.remove(id);
+  }
+
+  @override
   Future<Project?> findById(String id) async => _projects[id];
 
   @override

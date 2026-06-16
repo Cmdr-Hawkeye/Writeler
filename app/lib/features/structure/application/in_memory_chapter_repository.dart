@@ -5,6 +5,11 @@ final class InMemoryChapterRepository implements ChapterRepository {
   final Map<String, Chapter> _chapters = {};
 
   @override
+  Future<void> delete(String id) async {
+    _chapters.remove(id);
+  }
+
+  @override
   Future<Chapter?> findById(String id) async => _chapters[id];
 
   @override

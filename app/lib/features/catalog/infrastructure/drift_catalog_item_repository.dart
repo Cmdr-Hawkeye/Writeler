@@ -15,6 +15,13 @@ final class DriftCatalogItemRepository implements CatalogItemRepository {
   final AppDatabase database;
 
   @override
+  Future<void> delete(String id) async {
+    await (database.delete(database.catalogItems)
+          ..where((table) => table.id.equals(id)))
+        .go();
+  }
+
+  @override
   Future<CatalogItem?> findById(String id) async {
     final row = await (database.select(database.catalogItems)
           ..where((table) => table.id.equals(id)))

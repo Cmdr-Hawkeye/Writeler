@@ -14,6 +14,13 @@ final class DriftChapterRepository implements ChapterRepository {
   final AppDatabase database;
 
   @override
+  Future<void> delete(String id) async {
+    await (database.delete(database.chapters)
+          ..where((table) => table.id.equals(id)))
+        .go();
+  }
+
+  @override
   Future<Chapter?> findById(String id) async {
     final row = await (database.select(database.chapters)
           ..where((table) => table.id.equals(id)))

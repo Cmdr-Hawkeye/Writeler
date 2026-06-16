@@ -14,6 +14,13 @@ final class DriftSceneRepository implements SceneRepository {
   final AppDatabase database;
 
   @override
+  Future<void> delete(String id) async {
+    await (database.delete(database.scenes)
+          ..where((table) => table.id.equals(id)))
+        .go();
+  }
+
+  @override
   Future<Scene?> findById(String id) async {
     final row = await (database.select(database.scenes)
           ..where((table) => table.id.equals(id)))

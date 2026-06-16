@@ -6,6 +6,11 @@ final class InMemoryCatalogItemRepository implements CatalogItemRepository {
   final Map<String, CatalogItem> _items = {};
 
   @override
+  Future<void> delete(String id) async {
+    _items.remove(id);
+  }
+
+  @override
   Future<CatalogItem?> findById(String id) async => _items[id];
 
   @override

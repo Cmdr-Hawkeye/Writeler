@@ -5,6 +5,11 @@ final class InMemorySceneRepository implements SceneRepository {
   final Map<String, Scene> _scenes = {};
 
   @override
+  Future<void> delete(String id) async {
+    _scenes.remove(id);
+  }
+
+  @override
   Future<Scene?> findById(String id) async => _scenes[id];
 
   @override

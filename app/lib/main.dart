@@ -808,6 +808,196 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<bool> _confirmDelete({
+    required WritelerCopy copy,
+    required String title,
+    required String body,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(body),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(copy.t('cancel')),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: () => Navigator.of(context).pop(true),
+              icon: const Icon(Icons.delete_outline),
+              label: Text(copy.t('deletePermanently')),
+            ),
+          ],
+        );
+      },
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _deleteProject(Project project, WritelerCopy copy) async {
+    final confirmed = await _confirmDelete(
+      copy: copy,
+      title: copy.t('deleteProject'),
+      body: copy.t('deleteProjectBody'),
+    );
+    if (!confirmed) return;
+
+    await widget.projectRepository.delete(project.id);
+    final projects = await widget.projectRepository.listActive();
+    final selectedProject = projects.firstOrNull;
+    if (!mounted) return;
+    setState(() {
+      _projects = projects;
+      _selectedProject = selectedProject;
+      _chapters = const [];
+      _scenes = const [];
+      _catalogItems = const [];
+      _relationships = const [];
+      _metrics = const [];
+      _suggestions = const [];
+      _selectedScene = null;
+      _syncSceneControllers(null);
+    });
+    if (selectedProject != null) {
+      await _loadProjectData(selectedProject.id);
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('projectDeleted'))),
+    );
+  }
+
+  Future<void> _deleteChapter(Chapter chapter, WritelerCopy copy) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final confirmed = await _confirmDelete(
+      copy: copy,
+      title: copy.t('deleteChapter'),
+      body: copy.t('deleteChapterBody'),
+    );
+    if (!confirmed) return;
+
+    final affectedScenes =
+        _scenes.where((scene) => scene.chapterId == chapter.id).toList();
+    for (final scene in affectedScenes) {
+      await widget.sceneRepository.save(scene.copyWith(clearChapterId: true));
+    }
+    await widget.chapterRepository.delete(chapter.id);
+    final chapters = await widget.chapterRepository.listByProject(project.id);
+    final scenes = await widget.sceneRepository.listByProject(project.id);
+    final selected = _selectedScene == null
+        ? null
+        : scenes.firstWhere(
+            (scene) => scene.id == _selectedScene!.id,
+            orElse: () => _selectedScene!.copyWith(clearChapterId: true),
+          );
+    if (!mounted) return;
+    setState(() {
+      _chapters = chapters;
+      _scenes = scenes;
+      _selectedScene = selected;
+      _syncSceneControllers(selected);
+    });
+    await _recordProjectMetric(
+      eventType: 'chapter.deleted',
+      metadata: {'chapterId': chapter.id, 'title': chapter.title},
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('chapterDeleted'))),
+    );
+  }
+
+  Future<void> _deleteScene(Scene scene, WritelerCopy copy) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final confirmed = await _confirmDelete(
+      copy: copy,
+      title: copy.t('deleteScene'),
+      body: copy.t('deleteSceneBody'),
+    );
+    if (!confirmed) return;
+
+    await _deleteRelationshipsForRef(
+      EntityRef(type: EntityType.scene, id: scene.id),
+    );
+    await widget.sceneRepository.delete(scene.id);
+    final scenes = await widget.sceneRepository.listByProject(project.id);
+    final relationships =
+        await widget.relationshipRepository.listByProject(project.id);
+    final selected = _selectedScene?.id == scene.id
+        ? scenes.firstOrNull
+        : scenes.firstWhere(
+            (item) => item.id == _selectedScene?.id,
+            orElse: () => scenes.firstOrNull ?? scene,
+          );
+    if (!mounted) return;
+    setState(() {
+      _scenes = scenes;
+      _relationships = relationships;
+      _selectedScene = scenes.isEmpty ? null : selected;
+      _syncSceneControllers(_selectedScene);
+    });
+    await _recordProjectMetric(
+      eventType: 'scene.deleted',
+      metadata: {'sceneId': scene.id, 'title': scene.title},
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('sceneDeleted'))),
+    );
+  }
+
+  Future<void> _deleteCatalogItem(CatalogItem item, WritelerCopy copy) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final confirmed = await _confirmDelete(
+      copy: copy,
+      title: copy.t('deleteCatalogItem'),
+      body: copy.t('deleteCatalogItemBody'),
+    );
+    if (!confirmed) return;
+
+    await _deleteRelationshipsForRef(EntityRef(type: item.type, id: item.id));
+    await widget.catalogItemRepository.delete(item.id);
+    final items = await widget.catalogItemRepository.listByProject(project.id);
+    final relationships =
+        await widget.relationshipRepository.listByProject(project.id);
+    if (!mounted) return;
+    setState(() {
+      _catalogItems = items;
+      _relationships = relationships;
+    });
+    await _recordProjectMetric(
+      eventType: 'catalog.deleted',
+      metadata: {'itemId': item.id, 'type': item.type.wireName},
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('catalogItemDeleted'))),
+    );
+  }
+
+  Future<void> _deleteRelationshipsForRef(EntityRef ref) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final relationships =
+        await widget.relationshipRepository.listByProject(project.id);
+    for (final relationship in relationships.where(
+      (relationship) =>
+          _sameRef(relationship.source, ref) ||
+          _sameRef(relationship.target, ref),
+    )) {
+      await widget.relationshipRepository.delete(relationship.id);
+    }
+  }
+
+  bool _sameRef(EntityRef left, EntityRef right) {
+    return left.type == right.type && left.id == right.id;
+  }
+
   Future<void> _toggleSceneCatalogLink(CatalogItem item, bool selected) async {
     final project = _selectedProject;
     final scene = _selectedScene;
@@ -1382,6 +1572,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           metrics: _metrics,
           suggestions: _suggestions,
           onSelectProject: _selectProject,
+          onDeleteProject: (project) => _deleteProject(project, copy),
         ),
       1 => _WorkspaceView(
           copy: copy,
@@ -1401,7 +1592,9 @@ final class _WritelerShellState extends State<WritelerShell> {
           selectedSceneStatus: _selectedSceneStatus,
           selectedSceneChapterId: _selectedSceneChapterId,
           onSelectProject: _selectProject,
+          onDeleteProject: (project) => _deleteProject(project, copy),
           onSelectScene: _selectScene,
+          onDeleteScene: (scene) => _deleteScene(scene, copy),
           onSceneChapterChanged: (chapterId) => setState(
             () => _selectedSceneChapterId = chapterId,
           ),
@@ -1425,6 +1618,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           onMoveSceneUp: (scene) => _moveSceneInStructure(scene, -1),
           onMoveSceneDown: (scene) => _moveSceneInStructure(scene, 1),
           onMoveSceneToChapter: _moveSceneToChapter,
+          onDeleteScene: (scene) => _deleteScene(scene, copy),
+          onDeleteChapter: (chapter) => _deleteChapter(chapter, copy),
           onCreateScene: () => _showCreateSceneDialog(copy),
           onCreateChapter: () => _showCreateChapterDialog(copy),
         ),
@@ -1436,6 +1631,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               .toList(),
           onCreateItem: () =>
               _showCreateCatalogItemDialog(copy, EntityType.character),
+          onDeleteItem: (item) => _deleteCatalogItem(item, copy),
         ),
       4 => _CatalogWorkspace(
           copy: copy,
@@ -1445,6 +1641,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               .toList(),
           onCreateItem: () =>
               _showCreateCatalogItemDialog(copy, EntityType.location),
+          onDeleteItem: (item) => _deleteCatalogItem(item, copy),
         ),
       5 => _CatalogWorkspace(
           copy: copy,
@@ -1454,6 +1651,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               .toList(),
           onCreateItem: () =>
               _showCreateCatalogItemDialog(copy, EntityType.object),
+          onDeleteItem: (item) => _deleteCatalogItem(item, copy),
         ),
       6 => _AIWorkshop(
           copy: copy,
@@ -1545,7 +1743,9 @@ final class _WorkspaceView extends StatelessWidget {
     required this.selectedSceneStatus,
     required this.selectedSceneChapterId,
     required this.onSelectProject,
+    required this.onDeleteProject,
     required this.onSelectScene,
+    required this.onDeleteScene,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
     required this.onSceneStatusChanged,
@@ -1571,7 +1771,9 @@ final class _WorkspaceView extends StatelessWidget {
   final DraftStatus selectedSceneStatus;
   final String? selectedSceneChapterId;
   final ValueChanged<Project> onSelectProject;
+  final ValueChanged<Project> onDeleteProject;
   final ValueChanged<Scene> onSelectScene;
+  final ValueChanged<Scene> onDeleteScene;
   final ValueChanged<String?> onSceneChapterChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
@@ -1591,6 +1793,7 @@ final class _WorkspaceView extends StatelessWidget {
             projects: projects,
             selectedProject: selectedProject,
             onSelect: onSelectProject,
+            onDelete: onDeleteProject,
           ),
         ),
         const VerticalDivider(width: 1),
@@ -1612,6 +1815,7 @@ final class _WorkspaceView extends StatelessWidget {
             selectedSceneStatus: selectedSceneStatus,
             selectedSceneChapterId: selectedSceneChapterId,
             onSelectScene: onSelectScene,
+            onDeleteScene: onDeleteScene,
             onSceneChapterChanged: onSceneChapterChanged,
             onToggleSceneCatalogLink: onToggleSceneCatalogLink,
             onSceneStatusChanged: onSceneStatusChanged,
@@ -1679,6 +1883,7 @@ final class _ProjectOverview extends StatelessWidget {
     required this.metrics,
     required this.suggestions,
     required this.onSelectProject,
+    required this.onDeleteProject,
   });
 
   final WritelerCopy copy;
@@ -1690,6 +1895,7 @@ final class _ProjectOverview extends StatelessWidget {
   final List<MetricEvent> metrics;
   final List<AISuggestion> suggestions;
   final ValueChanged<Project> onSelectProject;
+  final ValueChanged<Project> onDeleteProject;
 
   @override
   Widget build(BuildContext context) {
@@ -1724,6 +1930,7 @@ final class _ProjectOverview extends StatelessWidget {
             projects: projects,
             selectedProject: selectedProject,
             onSelect: onSelectProject,
+            onDelete: onDeleteProject,
           ),
         ),
         const VerticalDivider(width: 1),
@@ -1888,6 +2095,8 @@ final class _SceneBoard extends StatelessWidget {
     required this.onMoveSceneUp,
     required this.onMoveSceneDown,
     required this.onMoveSceneToChapter,
+    required this.onDeleteScene,
+    required this.onDeleteChapter,
     required this.onCreateScene,
     required this.onCreateChapter,
   });
@@ -1900,6 +2109,8 @@ final class _SceneBoard extends StatelessWidget {
   final ValueChanged<Scene> onMoveSceneUp;
   final ValueChanged<Scene> onMoveSceneDown;
   final void Function(Scene scene, String? chapterId) onMoveSceneToChapter;
+  final ValueChanged<Scene> onDeleteScene;
+  final ValueChanged<Chapter> onDeleteChapter;
   final VoidCallback onCreateScene;
   final VoidCallback onCreateChapter;
 
@@ -1907,6 +2118,18 @@ final class _SceneBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     final orderedChapters = [...chapters]
       ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    final datedScenes = scenes
+        .where((scene) => scene.storyDateStart != null)
+        .toList()
+      ..sort((a, b) => a.storyDateStart!.compareTo(b.storyDateStart!));
+    final planningGaps = scenes
+        .where((scene) =>
+            scene.goal?.trim().isEmpty != false ||
+            scene.conflict?.trim().isEmpty != false ||
+            scene.outcome?.trim().isEmpty != false)
+        .length;
+    final unassignedScenes =
+        scenes.where((scene) => scene.chapterId == null).length;
     final groups = <_SceneStructureGroup>[
       for (final chapter in orderedChapters)
         _SceneStructureGroup(
@@ -1936,10 +2159,19 @@ final class _SceneBoard extends StatelessWidget {
     return Column(
       children: [
         _WorkspaceHeader(
-          title: copy.t('sceneBoard'),
+          title: copy.t('structureCockpit'),
           actionLabel: copy.t('newScene'),
           actionIcon: Icons.add,
           onAction: onCreateScene,
+        ),
+        const Divider(height: 1),
+        _StructureCockpitSummary(
+          copy: copy,
+          scenes: scenes,
+          chapters: orderedChapters,
+          planningGaps: planningGaps,
+          unassignedScenes: unassignedScenes,
+          datedScenes: datedScenes,
         ),
         const Divider(height: 1),
         if (chapters.isNotEmpty)
@@ -1949,17 +2181,26 @@ final class _SceneBoard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
-                final chapter = orderedChapters[index];
+                if (index == 0) {
+                  return OutlinedButton.icon(
+                    onPressed: onCreateChapter,
+                    icon: const Icon(Icons.create_new_folder_outlined),
+                    label: Text(copy.t('newChapter')),
+                  );
+                }
+                final chapter = orderedChapters[index - 1];
                 final sceneCount = scenes
                     .where((scene) => scene.chapterId == chapter.id)
                     .length;
                 return Chip(
                   avatar: const Icon(Icons.folder_outlined, size: 18),
-                  label: Text('${chapter.title} · $sceneCount'),
+                  label: Text('${chapter.title} - $sceneCount'),
+                  deleteIcon: const Icon(Icons.delete_outline, size: 18),
+                  onDeleted: () => onDeleteChapter(chapter),
                 );
               },
               separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemCount: orderedChapters.length,
+              itemCount: orderedChapters.length + 1,
             ),
           )
         else
@@ -1997,6 +2238,7 @@ final class _SceneBoard extends StatelessWidget {
                   onMoveSceneUp: onMoveSceneUp,
                   onMoveSceneDown: onMoveSceneDown,
                   onMoveSceneToChapter: onMoveSceneToChapter,
+                  onDeleteScene: onDeleteScene,
                 ),
               );
             },
@@ -2011,6 +2253,129 @@ final class _SceneBoard extends StatelessWidget {
         scenes.where((scene) => scene.chapterId == chapterId).toList();
     filtered.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     return filtered;
+  }
+}
+
+final class _StructureCockpitSummary extends StatelessWidget {
+  const _StructureCockpitSummary({
+    required this.copy,
+    required this.scenes,
+    required this.chapters,
+    required this.planningGaps,
+    required this.unassignedScenes,
+    required this.datedScenes,
+  });
+
+  final WritelerCopy copy;
+  final List<Scene> scenes;
+  final List<Chapter> chapters;
+  final int planningGaps;
+  final int unassignedScenes;
+  final List<Scene> datedScenes;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final words =
+        scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          _StructureChip(
+            icon: Icons.account_tree_outlined,
+            label: copy.t('chapterOverview'),
+            value: '${chapters.length}',
+          ),
+          _StructureChip(
+            icon: Icons.auto_awesome_motion_outlined,
+            label: copy.t('scenes'),
+            value: '${scenes.length}',
+          ),
+          _StructureChip(
+            icon: Icons.notes_outlined,
+            label: copy.t('words'),
+            value: '$words',
+          ),
+          _StructureChip(
+            icon: Icons.rule_outlined,
+            label: copy.t('planningGaps'),
+            value: '$planningGaps',
+          ),
+          _StructureChip(
+            icon: Icons.folder_off_outlined,
+            label: copy.t('unassignedScenes'),
+            value: '$unassignedScenes',
+          ),
+          _StructureChip(
+            icon: Icons.timeline_outlined,
+            label: copy.t('datedScenes'),
+            value: '${datedScenes.length}',
+          ),
+          if (datedScenes.isNotEmpty)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: color.surfaceContainerHighest.withValues(alpha: 0.58),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Text(
+                  '${copy.t('timeline')}: ${datedScenes.first.title}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _StructureChip extends StatelessWidget {
+  const _StructureChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: color.primary),
+            const SizedBox(width: 8),
+            Text(label, style: Theme.of(context).textTheme.labelMedium),
+            const SizedBox(width: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -2038,6 +2403,7 @@ final class _SceneStructureColumn extends StatelessWidget {
     required this.onMoveSceneUp,
     required this.onMoveSceneDown,
     required this.onMoveSceneToChapter,
+    required this.onDeleteScene,
   });
 
   final WritelerCopy copy;
@@ -2048,6 +2414,7 @@ final class _SceneStructureColumn extends StatelessWidget {
   final ValueChanged<Scene> onMoveSceneUp;
   final ValueChanged<Scene> onMoveSceneDown;
   final void Function(Scene scene, String? chapterId) onMoveSceneToChapter;
+  final ValueChanged<Scene> onDeleteScene;
 
   @override
   Widget build(BuildContext context) {
@@ -2120,6 +2487,7 @@ final class _SceneStructureColumn extends StatelessWidget {
                     onMoveDown: () => onMoveSceneDown(scene),
                     onMoveToChapter: (chapterId) =>
                         onMoveSceneToChapter(scene, chapterId),
+                    onDelete: () => onDeleteScene(scene),
                   ),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
@@ -2142,6 +2510,7 @@ final class _SceneStructureMenu extends StatelessWidget {
     required this.onMoveUp,
     required this.onMoveDown,
     required this.onMoveToChapter,
+    required this.onDelete,
   });
 
   final WritelerCopy copy;
@@ -2150,6 +2519,7 @@ final class _SceneStructureMenu extends StatelessWidget {
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
   final ValueChanged<String?> onMoveToChapter;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -2164,6 +2534,8 @@ final class _SceneStructureMenu extends StatelessWidget {
             onMoveDown();
           case _SceneStructureActionKind.moveToChapter:
             onMoveToChapter(action.chapterId);
+          case _SceneStructureActionKind.delete:
+            onDelete();
         }
       },
       itemBuilder: (context) {
@@ -2194,13 +2566,19 @@ final class _SceneStructureMenu extends StatelessWidget {
               ),
               child: Text('${copy.t('moveToChapter')}: ${chapter.title}'),
             ),
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value:
+                const _SceneStructureAction(_SceneStructureActionKind.delete),
+            child: Text(copy.t('deleteScene')),
+          ),
         ];
       },
     );
   }
 }
 
-enum _SceneStructureActionKind { moveUp, moveDown, moveToChapter }
+enum _SceneStructureActionKind { moveUp, moveDown, moveToChapter, delete }
 
 final class _SceneStructureAction {
   const _SceneStructureAction(this.kind, {this.chapterId});
@@ -2215,12 +2593,14 @@ final class _CatalogWorkspace extends StatelessWidget {
     required this.type,
     required this.items,
     required this.onCreateItem,
+    required this.onDeleteItem,
   });
 
   final WritelerCopy copy;
   final EntityType type;
   final List<CatalogItem> items;
   final VoidCallback onCreateItem;
+  final ValueChanged<CatalogItem> onDeleteItem;
 
   @override
   Widget build(BuildContext context) {
@@ -2259,8 +2639,19 @@ final class _CatalogWorkspace extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: Text(
-                          _draftStatusLabel(item.status, copy.languageCode)),
+                      trailing: Wrap(
+                        spacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(_draftStatusLabel(
+                              item.status, copy.languageCode)),
+                          IconButton(
+                            tooltip: copy.t('deleteCatalogItem'),
+                            onPressed: () => onDeleteItem(item),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -3110,12 +3501,14 @@ final class _ProjectLibrary extends StatelessWidget {
     required this.projects,
     required this.selectedProject,
     required this.onSelect,
+    required this.onDelete,
   });
 
   final WritelerCopy copy;
   final List<Project> projects;
   final Project? selectedProject;
   final ValueChanged<Project> onSelect;
+  final ValueChanged<Project> onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -3137,7 +3530,18 @@ final class _ProjectLibrary extends StatelessWidget {
             ),
             title: Text(project.title),
             subtitle: Text('${copy.t('localOnly')} - ${project.projectType}'),
-            trailing: Text(project.status.name),
+            trailing: Wrap(
+              spacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(project.status.name),
+                IconButton(
+                  tooltip: copy.t('deleteProject'),
+                  onPressed: () => onDelete(project),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ],
+            ),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onTap: () => onSelect(project),
@@ -3168,6 +3572,7 @@ final class _ProjectWorkspace extends StatelessWidget {
     required this.selectedSceneStatus,
     required this.selectedSceneChapterId,
     required this.onSelectScene,
+    required this.onDeleteScene,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
     required this.onSceneStatusChanged,
@@ -3192,6 +3597,7 @@ final class _ProjectWorkspace extends StatelessWidget {
   final DraftStatus selectedSceneStatus;
   final String? selectedSceneChapterId;
   final ValueChanged<Scene> onSelectScene;
+  final ValueChanged<Scene> onDeleteScene;
   final ValueChanged<String?> onSceneChapterChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
@@ -3252,6 +3658,7 @@ final class _ProjectWorkspace extends StatelessWidget {
                         scenes: scenes,
                         selectedScene: selectedScene,
                         onSelectScene: onSelectScene,
+                        onDeleteScene: onDeleteScene,
                       ),
               ),
               const VerticalDivider(width: 1),
@@ -3341,12 +3748,14 @@ final class _SceneList extends StatelessWidget {
     required this.scenes,
     required this.selectedScene,
     required this.onSelectScene,
+    required this.onDeleteScene,
   });
 
   final WritelerCopy copy;
   final List<Scene> scenes;
   final Scene? selectedScene;
   final ValueChanged<Scene> onSelectScene;
+  final ValueChanged<Scene> onDeleteScene;
 
   @override
   Widget build(BuildContext context) {
@@ -3367,6 +3776,11 @@ final class _SceneList extends StatelessWidget {
           title:
               Text(scene.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text('${scene.actualWordCount} ${copy.t('words')}'),
+          trailing: IconButton(
+            tooltip: copy.t('deleteScene'),
+            onPressed: () => onDeleteScene(scene),
+            icon: const Icon(Icons.delete_outline),
+          ),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           onTap: () => onSelectScene(scene),
         );
@@ -4157,12 +4571,16 @@ String _metricEventLabel(String eventType, String languageCode) {
     'project.created' => german ? 'Projekt angelegt' : 'Project created',
     'project.imported' => german ? 'Projekt importiert' : 'Project imported',
     'chapter.created' => german ? 'Kapitel angelegt' : 'Chapter created',
+    'chapter.deleted' => german ? 'Kapitel geloescht' : 'Chapter deleted',
     'scene.created' => german ? 'Szene angelegt' : 'Scene created',
     'scene.saved' => german ? 'Szene gespeichert' : 'Scene saved',
+    'scene.deleted' => german ? 'Szene geloescht' : 'Scene deleted',
     'scene.reordered' => german ? 'Szene sortiert' : 'Scene reordered',
     'scene.moved' => german ? 'Szene verschoben' : 'Scene moved',
     'catalog.created' =>
       german ? 'Katalogeintrag angelegt' : 'Catalog item created',
+    'catalog.deleted' =>
+      german ? 'Katalogeintrag geloescht' : 'Catalog item deleted',
     'relationship.linked' => german ? 'Kontext verknuepft' : 'Context linked',
     'relationship.unlinked' => german ? 'Kontext geloest' : 'Context unlinked',
     'ai.suggestion.created' =>
