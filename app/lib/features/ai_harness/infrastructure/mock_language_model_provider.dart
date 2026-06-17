@@ -74,6 +74,70 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
               '2. Conflict: Name the opposing force acting now, not later.\n'
               '3. Outcome: Capture what has irreversibly changed after the scene.';
     }
+    if (prompt.contains('konsistenz') ||
+        prompt.contains('continuity') ||
+        prompt.contains('consistency')) {
+      return german
+          ? 'Demo-Antwort des lokalen Mock-Providers:\n'
+              '1. Pruefe, ob Ziel, Konflikt und Ausgang dieselbe Kausalitaetskette bilden.\n'
+              '2. Markiere Begriffe, Fakten oder Beziehungen, die spaeter wieder auftauchen muessen.\n'
+              '3. Notiere eine offene Anschlussfrage fuer die naechste Szene.'
+          : 'Demo response from the local mock provider:\n'
+              '1. Check whether goal, conflict, and outcome form one causal chain.\n'
+              '2. Mark facts, terms, or relationships that must recur later.\n'
+              '3. Note one continuity question for the next scene.';
+    }
+    if (prompt.contains('timeline') ||
+        prompt.contains('zeitliche abfolge') ||
+        prompt.contains('chronology')) {
+      return german
+          ? 'Demo-Antwort des lokalen Mock-Providers:\n'
+              '1. Klaere, wann die Szene relativ zur vorherigen Szene beginnt.\n'
+              '2. Pruefe, ob Dauer, Ortswechsel und Erholungszeit plausibel sind.\n'
+              '3. Gib der Szene ein fixes Datum oder ein relatives Zeitfenster.'
+          : 'Demo response from the local mock provider:\n'
+              '1. Clarify when the scene starts relative to the previous scene.\n'
+              '2. Check whether duration, travel, and recovery time are plausible.\n'
+              '3. Give the scene a fixed date or a relative time window.';
+    }
+    if (prompt.contains('plot-luecken') ||
+        prompt.contains('plot gaps') ||
+        prompt.contains('kausalitaet')) {
+      return german
+          ? 'Demo-Antwort des lokalen Mock-Providers:\n'
+              '1. Suche nach einer Entscheidung, die noch nicht motiviert ist.\n'
+              '2. Benenne eine Information, die die Szene voraussetzt, aber nicht zeigt.\n'
+              '3. Formuliere eine kleine Ursache, die den Ausgang zwingender macht.'
+          : 'Demo response from the local mock provider:\n'
+              '1. Look for a decision that is not motivated yet.\n'
+              '2. Name one piece of information the scene assumes but does not show.\n'
+              '3. Add one small cause that makes the outcome feel inevitable.';
+    }
+    if (prompt.contains('autorenfragen') ||
+        prompt.contains('author questions')) {
+      return german
+          ? 'Demo-Antwort des lokalen Mock-Providers:\n'
+              '1. Welche Entscheidung darf die Figur am Ende nicht mehr vermeiden?\n'
+              '2. Was kostet es, wenn sie ihr Ziel erreicht?\n'
+              '3. Welche Information sollte der Leser nach dieser Szene neu bewerten?'
+          : 'Demo response from the local mock provider:\n'
+              '1. Which decision can the character no longer avoid at the end?\n'
+              '2. What does it cost if they reach their goal?\n'
+              '3. Which information should the reader reassess after this scene?';
+    }
+    if (prompt.contains('stilanalyse') ||
+        prompt.contains('style effect') ||
+        prompt.contains('rhythm')) {
+      return german
+          ? 'Demo-Antwort des lokalen Mock-Providers:\n'
+              '1. Pruefe, ob Satzlaenge und Rhythmus zum Druck der Szene passen.\n'
+              '2. Markiere eine Stelle, an der Ton oder Perspektive kippen darf.\n'
+              '3. Achte darauf, dass Stilhinweise keine Autorensaetze ersetzen.'
+          : 'Demo response from the local mock provider:\n'
+              '1. Check whether sentence length and rhythm match the scene pressure.\n'
+              '2. Mark one place where tone or perspective may shift.\n'
+              '3. Keep style notes separate from author prose.';
+    }
     return german
         ? 'Demo-Antwort des lokalen Mock-Providers:\n'
             '1. Der echte Provider ist offenbar noch nicht aktiv.\n'

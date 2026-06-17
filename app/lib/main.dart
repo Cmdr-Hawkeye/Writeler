@@ -1715,10 +1715,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           lastError: _lastAiError,
           onSubmitPrompt: () =>
               _requestSceneSuggestion(copy, AITaskKind.customScenePrompt),
-          onRequestSceneIdeas: () =>
-              _requestSceneSuggestion(copy, AITaskKind.sceneIdeas),
-          onRequestStructure: () => _requestSceneSuggestion(
-              copy, AITaskKind.sceneGoalConflictOutcome),
+          onRequestTask: (task) => _requestSceneSuggestion(copy, task),
           onAcceptSuggestion: (suggestion) =>
               _decideSuggestion(suggestion, SuggestionDecision.accepted),
           onRejectSuggestion: (suggestion) =>
@@ -3275,8 +3272,7 @@ final class _AIWorkshop extends StatelessWidget {
     required this.isRequesting,
     required this.lastError,
     required this.onSubmitPrompt,
-    required this.onRequestSceneIdeas,
-    required this.onRequestStructure,
+    required this.onRequestTask,
     required this.onAcceptSuggestion,
     required this.onRejectSuggestion,
     required this.onConvertSuggestion,
@@ -3292,8 +3288,7 @@ final class _AIWorkshop extends StatelessWidget {
   final bool isRequesting;
   final String? lastError;
   final VoidCallback onSubmitPrompt;
-  final VoidCallback onRequestSceneIdeas;
-  final VoidCallback onRequestStructure;
+  final ValueChanged<AITaskKind> onRequestTask;
   final ValueChanged<AISuggestion> onAcceptSuggestion;
   final ValueChanged<AISuggestion> onRejectSuggestion;
   final ValueChanged<AISuggestion> onConvertSuggestion;
@@ -3305,6 +3300,38 @@ final class _AIWorkshop extends StatelessWidget {
     final aiAvailable = project?.aiEnabled == true &&
         project?.noAiNoCloud == false &&
         scene != null;
+    const primaryActions = [
+      _AiWorkshopAction(
+        task: AITaskKind.sceneIdeas,
+        icon: Icons.lightbulb_outline,
+      ),
+      _AiWorkshopAction(
+        task: AITaskKind.sceneGoalConflictOutcome,
+        icon: Icons.account_tree_outlined,
+      ),
+      _AiWorkshopAction(
+        task: AITaskKind.consistencyCheck,
+        icon: Icons.rule_outlined,
+      ),
+    ];
+    const secondaryActions = [
+      _AiWorkshopAction(
+        task: AITaskKind.timelineCheck,
+        icon: Icons.timeline_outlined,
+      ),
+      _AiWorkshopAction(
+        task: AITaskKind.plotGapReview,
+        icon: Icons.troubleshoot_outlined,
+      ),
+      _AiWorkshopAction(
+        task: AITaskKind.authorQuestions,
+        icon: Icons.help_outline,
+      ),
+      _AiWorkshopAction(
+        task: AITaskKind.styleAnalysis,
+        icon: Icons.auto_fix_high_outlined,
+      ),
+    ];
 
     return Column(
       children: [
@@ -3371,19 +3398,30 @@ final class _AIWorkshop extends StatelessWidget {
                       icon: const Icon(Icons.send_outlined),
                       label: Text(copy.t('submitAiPrompt')),
                     ),
-                    OutlinedButton.icon(
-                      onPressed: aiAvailable && !isRequesting
-                          ? onRequestSceneIdeas
-                          : null,
-                      icon: const Icon(Icons.lightbulb_outline),
-                      label: Text(copy.t('requestSceneIdeas')),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: aiAvailable && !isRequesting
-                          ? onRequestStructure
-                          : null,
-                      icon: const Icon(Icons.account_tree_outlined),
-                      label: Text(copy.t('requestStructure')),
+                    for (final action in primaryActions)
+                      OutlinedButton.icon(
+                        onPressed: aiAvailable && !isRequesting
+                            ? () => onRequestTask(action.task)
+                            : null,
+                        icon: Icon(action.icon),
+                        label: Text(_aiTaskLabel(action.task.name, copy)),
+                      ),
+                    PopupMenuButton<AITaskKind>(
+                      enabled: aiAvailable && !isRequesting,
+                      tooltip: copy.t('moreAiChecks'),
+                      onSelected: onRequestTask,
+                      itemBuilder: (context) => [
+                        for (final action in secondaryActions)
+                          PopupMenuItem(
+                            value: action.task,
+                            child: ListTile(
+                              dense: true,
+                              leading: Icon(action.icon),
+                              title: Text(_aiTaskLabel(action.task.name, copy)),
+                            ),
+                          ),
+                      ],
+                      child: _AiMenuAnchor(copy: copy),
                     ),
                   ],
                 ),
@@ -3409,41 +3447,12 @@ final class _AIWorkshop extends StatelessWidget {
                               const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final suggestion = suggestions[index];
-                            return ListTile(
-                              leading:
-                                  const Icon(Icons.psychology_alt_outlined),
-                              title: Text(_aiTaskLabel(
-                                  suggestion.suggestionType, copy)),
-                              isThreeLine: true,
-                              subtitle: Text(
-                                '${suggestion.modelName} - ${suggestion.responseText}',
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              trailing: Wrap(
-                                spacing: 4,
-                                children: [
-                                  IconButton(
-                                    tooltip: copy.t('accept'),
-                                    onPressed: () =>
-                                        onAcceptSuggestion(suggestion),
-                                    icon: const Icon(Icons.check),
-                                  ),
-                                  IconButton(
-                                    tooltip: copy.t('convertToNote'),
-                                    onPressed: () =>
-                                        onConvertSuggestion(suggestion),
-                                    icon: const Icon(
-                                        Icons.sticky_note_2_outlined),
-                                  ),
-                                  IconButton(
-                                    tooltip: copy.t('reject'),
-                                    onPressed: () =>
-                                        onRejectSuggestion(suggestion),
-                                    icon: const Icon(Icons.close),
-                                  ),
-                                ],
-                              ),
+                            return _AISuggestionTile(
+                              copy: copy,
+                              suggestion: suggestion,
+                              onAcceptSuggestion: onAcceptSuggestion,
+                              onConvertSuggestion: onConvertSuggestion,
+                              onRejectSuggestion: onRejectSuggestion,
                             );
                           },
                         ),
@@ -3451,6 +3460,116 @@ final class _AIWorkshop extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _AiWorkshopAction {
+  const _AiWorkshopAction({
+    required this.task,
+    required this.icon,
+  });
+
+  final AITaskKind task;
+  final IconData icon;
+}
+
+final class _AiMenuAnchor extends StatelessWidget {
+  const _AiMenuAnchor({required this.copy});
+
+  final WritelerCopy copy;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color.outline),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.more_horiz, size: 18, color: color.primary),
+            const SizedBox(width: 8),
+            Text(
+              copy.t('moreAiChecks'),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: color.primary,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _AISuggestionTile extends StatelessWidget {
+  const _AISuggestionTile({
+    required this.copy,
+    required this.suggestion,
+    required this.onAcceptSuggestion,
+    required this.onConvertSuggestion,
+    required this.onRejectSuggestion,
+  });
+
+  final WritelerCopy copy;
+  final AISuggestion suggestion;
+  final ValueChanged<AISuggestion> onAcceptSuggestion;
+  final ValueChanged<AISuggestion> onConvertSuggestion;
+  final ValueChanged<AISuggestion> onRejectSuggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return ExpansionTile(
+      leading: const Icon(Icons.psychology_alt_outlined),
+      title: Text(_aiTaskLabel(suggestion.suggestionType, copy)),
+      subtitle: Text(
+        '${suggestion.modelName} - ${_decisionLabel(suggestion.userDecision, copy)}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      childrenPadding: const EdgeInsets.fromLTRB(56, 0, 16, 16),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SelectableText(
+            suggestion.responseText,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Text(
+              _formatLocalDateTime(suggestion.createdAt),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+            const Spacer(),
+            IconButton(
+              tooltip: copy.t('accept'),
+              onPressed: () => onAcceptSuggestion(suggestion),
+              icon: const Icon(Icons.check),
+            ),
+            IconButton(
+              tooltip: copy.t('convertToNote'),
+              onPressed: () => onConvertSuggestion(suggestion),
+              icon: const Icon(Icons.sticky_note_2_outlined),
+            ),
+            IconButton(
+              tooltip: copy.t('reject'),
+              onPressed: () => onRejectSuggestion(suggestion),
+              icon: const Icon(Icons.close),
+            ),
+          ],
         ),
       ],
     );
@@ -5260,6 +5379,22 @@ String _aiTaskLabel(String taskName, WritelerCopy copy) {
     AITaskKind.plotGapReview => copy.t('aiTaskPlotGapReview'),
     AITaskKind.dialogueIntentAnalysis => copy.t('aiTaskDialogueIntentAnalysis'),
   };
+}
+
+String _decisionLabel(SuggestionDecision decision, WritelerCopy copy) {
+  return switch (decision) {
+    SuggestionDecision.pending => copy.t('suggestionPending'),
+    SuggestionDecision.accepted => copy.t('suggestionAccepted'),
+    SuggestionDecision.rejected => copy.t('suggestionRejected'),
+    SuggestionDecision.convertedToNote => copy.t('suggestionConverted'),
+  };
+}
+
+String _formatLocalDateTime(DateTime value) {
+  final local = value.toLocal();
+  String twoDigits(int value) => value.toString().padLeft(2, '0');
+  return '${twoDigits(local.day)}.${twoDigits(local.month)}.${local.year} '
+      '${twoDigits(local.hour)}:${twoDigits(local.minute)}';
 }
 
 String _exportFormatLabel(ExportFormat format, String languageCode) {
