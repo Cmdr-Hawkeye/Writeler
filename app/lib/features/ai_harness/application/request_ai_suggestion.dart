@@ -117,6 +117,10 @@ final class RequestAISuggestion {
       german
           ? 'Nutzerauftrag: ${_fallback(userPrompt, 'keine Zusatzanweisung')}'
           : 'User request: ${_fallback(userPrompt, 'no extra instruction')}',
+      if (task == AITaskKind.sceneGoalConflictOutcome)
+        german
+            ? 'Strukturfelder: Beginne deine Antwort mit einem JSON-Block mit genau diesem Objekt: {"scenePatch":{"summary":"","goal":"","conflict":"","outcome":""}}. Danach duerfen kurze nummerierte Hinweise folgen. Schreibe keine Manuskriptprosa.'
+            : 'Planning fields: Start your response with a JSON block with exactly this object: {"scenePatch":{"summary":"","goal":"","conflict":"","outcome":""}}. After that, you may add short numbered notes. Do not write manuscript prose.',
       german
           ? 'Format: Gib 3 bis 6 nummerierte Punkte aus. Jeder Punkt soll eine konkrete Beobachtung oder Option enthalten, keine allgemeinen Ratschlaege.'
           : 'Format: Return 3 to 6 numbered points. Each point should contain a concrete observation or option, not generic advice.',

@@ -207,8 +207,14 @@ final class WritelerCopy {
     'suggestionRejected': 'abgelehnt',
     'suggestionConverted': 'als Notiz gesichert',
     'suggestionAcceptedFeedback': 'Vorschlag angenommen',
+    'suggestionAppliedFeedback': 'Vorschlag auf Szenenplanung angewendet',
+    'suggestionAcceptedNoPatchFeedback':
+        'Vorschlag angenommen, keine Planungsfelder geaendert',
     'suggestionDeletedFeedback': 'Vorschlag geloescht',
     'suggestionConvertedFeedback': 'Notiz aus Vorschlag erstellt',
+    'applyPreview': 'Aenderungsvorschau',
+    'noApplyPreview':
+        'Keine uebernehmbaren Szenenfelder erkannt. Annehmen markiert den Vorschlag nur als geprueft.',
     'accept': 'Annehmen',
     'reject': 'Ablehnen',
     'convertToNote': 'Als Notiz markieren',
@@ -463,8 +469,14 @@ final class WritelerCopy {
     'suggestionRejected': 'rejected',
     'suggestionConverted': 'saved as note',
     'suggestionAcceptedFeedback': 'Suggestion accepted',
+    'suggestionAppliedFeedback': 'Suggestion applied to scene planning',
+    'suggestionAcceptedNoPatchFeedback':
+        'Suggestion accepted, no planning fields changed',
     'suggestionDeletedFeedback': 'Suggestion deleted',
     'suggestionConvertedFeedback': 'Note created from suggestion',
+    'applyPreview': 'Apply preview',
+    'noApplyPreview':
+        'No applicable scene fields detected. Accepting only marks the suggestion as reviewed.',
     'accept': 'Accept',
     'reject': 'Reject',
     'convertToNote': 'Mark as note',

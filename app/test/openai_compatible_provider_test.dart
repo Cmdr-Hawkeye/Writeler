@@ -89,6 +89,44 @@ void main() {
     expect(transport.body['metadata'], containsPair('sceneId', 'scene-1'));
   });
 
+  test('OpenAI-compatible provider extracts fenced structured JSON', () async {
+    final provider = OpenAICompatibleLanguageModelProvider(
+      id: 'default',
+      displayName: 'OpenAI Compatible',
+      modelName: 'gpt-test',
+      baseUrl: Uri.parse('https://example.test/v1'),
+      transport: _FakeTransport(
+        response: const ModelHttpResponse(
+          statusCode: 200,
+          body: '''
+{
+  "choices": [
+    {
+      "message": {
+        "content": "```json\\n{\\"scenePatch\\":{\\"goal\\":\\"Reach the relay.\\"}}\\n```\\n1. Keep the pressure visible."
+      }
+    }
+  ]
+}
+''',
+        ),
+      ),
+    );
+
+    final response = await provider.generateText(
+      const ModelRequest(
+        prompt: 'Review the scene structure.',
+        context: {},
+        parameters: ModelParameters(),
+      ),
+    );
+
+    expect(
+      response.structured?['scenePatch'],
+      containsPair('goal', 'Reach the relay.'),
+    );
+  });
+
   test('OpenRouter provider includes attribution headers', () async {
     final transport = _FakeTransport(
       response: const ModelHttpResponse(

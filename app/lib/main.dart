@@ -10,6 +10,7 @@ import 'core/domain/entity_ref.dart';
 import 'core/domain/entity_type.dart';
 import 'core/domain/ids.dart';
 import 'features/ai_harness/application/request_ai_suggestion.dart';
+import 'features/ai_harness/application/apply_ai_suggestion_to_scene.dart';
 import 'features/ai_harness/domain/ai_policy.dart';
 import 'features/ai_harness/domain/ai_suggestion.dart';
 import 'features/ai_harness/domain/ai_suggestion_repository.dart';
@@ -1240,10 +1241,23 @@ final class _WritelerShellState extends State<WritelerShell> {
   ) async {
     final project = _selectedProject;
     if (project == null) return;
+    var appliedPlanningFields = false;
 
     if (decision == SuggestionDecision.rejected) {
       await widget.aiSuggestionRepository.delete(suggestion.id);
     } else {
+      var acceptedPatch = <String, Object?>{
+        'decision': decision.name,
+        'decidedAt': DateTime.now().toUtc().toIso8601String(),
+      };
+      if (decision == SuggestionDecision.accepted) {
+        final applyResult = await _applyAcceptedSuggestion(suggestion);
+        appliedPlanningFields = applyResult['applied'] == true;
+        acceptedPatch = {
+          ...acceptedPatch,
+          ...applyResult,
+        };
+      }
       if (decision == SuggestionDecision.convertedToNote) {
         final now = DateTime.now().toUtc();
         await widget.projectNoteRepository.save(
@@ -1269,10 +1283,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       await widget.aiSuggestionRepository.save(
         suggestion.copyWith(
           userDecision: decision,
-          acceptedPatch: {
-            'decision': decision.name,
-            'decidedAt': DateTime.now().toUtc().toIso8601String(),
-          },
+          acceptedPatch: acceptedPatch,
         ),
       );
     }
@@ -1285,8 +1296,66 @@ final class _WritelerShellState extends State<WritelerShell> {
       _notes = notes;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_suggestionDecisionFeedback(decision, copy))),
+      SnackBar(
+        content: Text(
+          _suggestionDecisionFeedback(
+            decision,
+            copy,
+            applied: appliedPlanningFields,
+          ),
+        ),
+      ),
     );
+  }
+
+  Future<Map<String, Object?>> _applyAcceptedSuggestion(
+    AISuggestion suggestion,
+  ) async {
+    if (suggestion.target.type != EntityType.scene) {
+      return {'applied': false, 'reason': 'unsupportedTarget'};
+    }
+    final scene = _scenes
+        .where((candidate) => candidate.id == suggestion.target.id)
+        .firstOrNull;
+    if (scene == null) {
+      return {'applied': false, 'reason': 'missingScene'};
+    }
+
+    final patch = const AIScenePlanningPatchBuilder().build(
+      suggestion: suggestion,
+      scene: scene,
+    );
+    if (!patch.hasChanges) {
+      return {'applied': false, 'reason': 'noScenePlanningFields'};
+    }
+
+    final updated = patch.applyTo(scene);
+    await widget.sceneRepository.save(updated);
+    final scenes = await widget.sceneRepository.listByProject(scene.projectId);
+    final selected = _selectedScene?.id == updated.id
+        ? scenes.firstWhere((candidate) => candidate.id == updated.id)
+        : _selectedScene;
+    if (mounted) {
+      setState(() {
+        _scenes = scenes;
+        _selectedScene = selected;
+        if (selected?.id == updated.id) {
+          _syncSceneControllers(selected);
+        }
+      });
+    }
+    await _recordProjectMetric(
+      eventType: 'ai.suggestion.applied',
+      metadata: {
+        'suggestionId': suggestion.id,
+        'sceneId': scene.id,
+        'fields': patch.changes.map((change) => change.fieldKey).toList(),
+      },
+    );
+    return {
+      'applied': true,
+      'scenePatch': patch.toJson(),
+    };
   }
 
   Future<void> _deleteNote(ProjectNote note, WritelerCopy copy) async {
@@ -4127,6 +4196,7 @@ final class _AIWorkshop extends StatelessWidget {
                       final suggestionsPanel = _AISuggestionsPanel(
                         copy: copy,
                         suggestions: suggestions,
+                        scenes: scenes,
                         onAcceptSuggestion: onAcceptSuggestion,
                         onConvertSuggestion: onConvertSuggestion,
                         onRejectSuggestion: onRejectSuggestion,
@@ -4170,6 +4240,7 @@ final class _AISuggestionsPanel extends StatelessWidget {
   const _AISuggestionsPanel({
     required this.copy,
     required this.suggestions,
+    required this.scenes,
     required this.onAcceptSuggestion,
     required this.onConvertSuggestion,
     required this.onRejectSuggestion,
@@ -4177,6 +4248,7 @@ final class _AISuggestionsPanel extends StatelessWidget {
 
   final WritelerCopy copy;
   final List<AISuggestion> suggestions;
+  final List<Scene> scenes;
   final ValueChanged<AISuggestion> onAcceptSuggestion;
   final ValueChanged<AISuggestion> onConvertSuggestion;
   final ValueChanged<AISuggestion> onRejectSuggestion;
@@ -4203,6 +4275,7 @@ final class _AISuggestionsPanel extends StatelessWidget {
                     return _AISuggestionTile(
                       copy: copy,
                       suggestion: suggestion,
+                      scenes: scenes,
                       onAcceptSuggestion: onAcceptSuggestion,
                       onConvertSuggestion: onConvertSuggestion,
                       onRejectSuggestion: onRejectSuggestion,
@@ -4344,6 +4417,7 @@ final class _AISuggestionTile extends StatelessWidget {
   const _AISuggestionTile({
     required this.copy,
     required this.suggestion,
+    required this.scenes,
     required this.onAcceptSuggestion,
     required this.onConvertSuggestion,
     required this.onRejectSuggestion,
@@ -4351,6 +4425,7 @@ final class _AISuggestionTile extends StatelessWidget {
 
   final WritelerCopy copy;
   final AISuggestion suggestion;
+  final List<Scene> scenes;
   final ValueChanged<AISuggestion> onAcceptSuggestion;
   final ValueChanged<AISuggestion> onConvertSuggestion;
   final ValueChanged<AISuggestion> onRejectSuggestion;
@@ -4358,6 +4433,15 @@ final class _AISuggestionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final scene = suggestion.target.type == EntityType.scene
+        ? scenes.where((scene) => scene.id == suggestion.target.id).firstOrNull
+        : null;
+    final patch = scene == null
+        ? null
+        : const AIScenePlanningPatchBuilder().build(
+            suggestion: suggestion,
+            scene: scene,
+          );
     return ExpansionTile(
       leading: const Icon(Icons.psychology_alt_outlined),
       title: Text(_aiTaskLabel(suggestion.suggestionType, copy)),
@@ -4381,6 +4465,11 @@ final class _AISuggestionTile extends StatelessWidget {
               SelectableText(
                 suggestion.responseText,
                 style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              _ScenePatchPreview(
+                copy: copy,
+                patch: patch,
               ),
               const SizedBox(height: 16),
               Text(
@@ -4435,6 +4524,74 @@ final class _AISuggestionTile extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+final class _ScenePatchPreview extends StatelessWidget {
+  const _ScenePatchPreview({
+    required this.copy,
+    required this.patch,
+  });
+
+  final WritelerCopy copy;
+  final ScenePlanningPatch? patch;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final changes = patch?.changes ?? const <ScenePlanningFieldChange>[];
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.fact_check_outlined, size: 18, color: color.primary),
+                const SizedBox(width: 8),
+                Text(
+                  copy.t('applyPreview'),
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (changes.isEmpty)
+              Text(
+                copy.t('noApplyPreview'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
+              )
+            else
+              for (final change in changes) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _planningFieldLabel(change.fieldKey, copy),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        change.suggestedValue,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -6259,13 +6416,26 @@ String _decisionLabel(SuggestionDecision decision, WritelerCopy copy) {
 
 String _suggestionDecisionFeedback(
   SuggestionDecision decision,
-  WritelerCopy copy,
-) {
+  WritelerCopy copy, {
+  bool applied = false,
+}) {
   return switch (decision) {
     SuggestionDecision.pending => copy.t('suggestionPending'),
-    SuggestionDecision.accepted => copy.t('suggestionAcceptedFeedback'),
+    SuggestionDecision.accepted => applied
+        ? copy.t('suggestionAppliedFeedback')
+        : copy.t('suggestionAcceptedNoPatchFeedback'),
     SuggestionDecision.rejected => copy.t('suggestionDeletedFeedback'),
     SuggestionDecision.convertedToNote => copy.t('suggestionConvertedFeedback'),
+  };
+}
+
+String _planningFieldLabel(String fieldKey, WritelerCopy copy) {
+  return switch (fieldKey) {
+    'summary' => copy.t('summary'),
+    'goal' => copy.t('goal'),
+    'conflict' => copy.t('conflict'),
+    'outcome' => copy.t('outcome'),
+    _ => fieldKey,
   };
 }
 

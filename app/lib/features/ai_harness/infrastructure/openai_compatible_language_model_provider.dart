@@ -102,6 +102,7 @@ final class OpenAICompatibleLanguageModelProvider
     final usage = json['usage'];
     return ModelResponse(
       text: content.trim(),
+      structured: _extractStructured(content.trim()),
       estimatedInputTokens:
           usage is Map ? _asInt(usage['prompt_tokens']) : null,
       estimatedOutputTokens:
@@ -203,6 +204,28 @@ final class OpenAICompatibleLanguageModelProvider
       throw const DomainFailure('Provider response was not a JSON object.');
     }
     return Map<String, Object?>.from(decoded);
+  }
+
+  JsonMap? _extractStructured(String content) {
+    final fence = RegExp(
+      r'```(?:json)?\s*([\s\S]*?)```',
+      caseSensitive: false,
+    ).firstMatch(content);
+    for (final candidate in [
+      if (fence != null) fence.group(1),
+      content,
+    ]) {
+      if (candidate == null) continue;
+      try {
+        final decoded = jsonDecode(candidate.trim());
+        if (decoded is Map) {
+          return Map<String, Object?>.from(decoded);
+        }
+      } on FormatException {
+        continue;
+      }
+    }
+    return null;
   }
 
   int? _asInt(Object? value) {

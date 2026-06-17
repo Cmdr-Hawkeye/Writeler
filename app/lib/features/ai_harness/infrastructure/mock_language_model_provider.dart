@@ -30,18 +30,37 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
         prompt.contains('szenentitel:') ||
         prompt.contains('aufgabe:');
     final text = _mockText(prompt: prompt, german: german);
+    final structureTask = prompt.contains('scenegoalconflictoutcome') ||
+        prompt.contains('ziel, konflikt und ausgang');
     return ModelResponse(
       text: text,
-      structured: {
-        'questions': [
-          german
-              ? 'Was will die Perspektivfigur vor Beginn der Szene?'
-              : 'What does the point-of-view character want before the scene begins?',
-          german
-              ? 'Was veraendert sich bis zum Ende der Szene?'
-              : 'What changes by the end of the scene?',
-        ],
-      },
+      structured: structureTask
+          ? {
+              'scenePatch': {
+                'summary': german
+                    ? 'Die Szene zeigt eine konkrete Entscheidung unter wachsendem Druck.'
+                    : 'The scene shows a concrete decision under rising pressure.',
+                'goal': german
+                    ? 'Die Figur will eine klare Information sichern, bevor die Gelegenheit verloren geht.'
+                    : 'The character wants to secure a clear piece of information before the chance is lost.',
+                'conflict': german
+                    ? 'Eine Gegenkraft zwingt sie, zwischen Tempo und Kontrolle zu waehlen.'
+                    : 'An opposing force makes them choose between speed and control.',
+                'outcome': german
+                    ? 'Am Ende ist die Lage veraendert und die naechste Entscheidung unausweichlich.'
+                    : 'By the end, the situation has changed and the next decision is unavoidable.',
+              },
+            }
+          : {
+              'questions': [
+                german
+                    ? 'Was will die Perspektivfigur vor Beginn der Szene?'
+                    : 'What does the point-of-view character want before the scene begins?',
+                german
+                    ? 'Was veraendert sich bis zum Ende der Szene?'
+                    : 'What changes by the end of the scene?',
+              ],
+            },
       estimatedInputTokens: await estimateTokens(request.prompt),
       estimatedOutputTokens: 32,
     );
