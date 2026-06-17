@@ -16,4 +16,9 @@ final class InMemoryAISuggestionRepository implements AISuggestionRepository {
     _items.removeWhere((item) => item.id == suggestion.id);
     _items.add(suggestion);
   }
+
+  @override
+  Future<void> delete(String id) async {
+    _items.removeWhere((item) => item.id == id);
+  }
 }

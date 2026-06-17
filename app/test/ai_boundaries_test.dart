@@ -11,7 +11,8 @@ import 'package:writeler/features/structure/application/create_scene.dart';
 import 'package:writeler/features/structure/application/in_memory_scene_repository.dart';
 
 void main() {
-  test('AI suggestions are saved separately and do not change manuscript text', () async {
+  test('AI suggestions are saved separately and do not change manuscript text',
+      () async {
     final projectRepository = InMemoryProjectRepository();
     final sceneRepository = InMemorySceneRepository();
     final suggestionRepository = InMemoryAISuggestionRepository();
@@ -72,5 +73,32 @@ void main() {
       ),
       throwsA(isA<DomainFailure>()),
     );
+  });
+
+  test('AI suggestions can be deleted after review', () async {
+    final projectRepository = InMemoryProjectRepository();
+    final sceneRepository = InMemorySceneRepository();
+    final suggestionRepository = InMemoryAISuggestionRepository();
+
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Review Queue'),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(projectId: project.id, title: 'Decision Point'),
+    );
+
+    final suggestion = await RequestAISuggestion(
+      provider: const MockLanguageModelProvider(),
+      repository: suggestionRepository,
+    ).forScene(
+      project: project,
+      scene: scene,
+      task: AITaskKind.authorQuestions,
+      userPrompt: 'Ask useful questions.',
+    );
+
+    await suggestionRepository.delete(suggestion.id);
+
+    expect(await suggestionRepository.listForProject(project.id), isEmpty);
   });
 }

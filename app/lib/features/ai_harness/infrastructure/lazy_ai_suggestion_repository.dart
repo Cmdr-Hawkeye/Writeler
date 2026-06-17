@@ -15,4 +15,7 @@ final class LazyAISuggestionRepository implements AISuggestionRepository {
 
   @override
   Future<void> save(AISuggestion suggestion) => _repository.save(suggestion);
+
+  @override
+  Future<void> delete(String id) => _repository.delete(id);
 }

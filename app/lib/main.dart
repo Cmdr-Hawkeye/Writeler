@@ -1199,16 +1199,33 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _decideSuggestion(
-      AISuggestion suggestion, SuggestionDecision decision) async {
+    WritelerCopy copy,
+    AISuggestion suggestion,
+    SuggestionDecision decision,
+  ) async {
     final project = _selectedProject;
     if (project == null) return;
 
-    await widget.aiSuggestionRepository
-        .save(suggestion.copyWith(userDecision: decision));
+    if (decision == SuggestionDecision.rejected) {
+      await widget.aiSuggestionRepository.delete(suggestion.id);
+    } else {
+      await widget.aiSuggestionRepository.save(
+        suggestion.copyWith(
+          userDecision: decision,
+          acceptedPatch: {
+            'decision': decision.name,
+            'decidedAt': DateTime.now().toUtc().toIso8601String(),
+          },
+        ),
+      );
+    }
     final suggestions =
         await widget.aiSuggestionRepository.listForProject(project.id);
     if (!mounted) return;
     setState(() => _suggestions = suggestions);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_suggestionDecisionFeedback(decision, copy))),
+    );
   }
 
   Future<void> _copyExport(WritelerCopy copy) async {
@@ -1717,11 +1734,11 @@ final class _WritelerShellState extends State<WritelerShell> {
               _requestSceneSuggestion(copy, AITaskKind.customScenePrompt),
           onRequestTask: (task) => _requestSceneSuggestion(copy, task),
           onAcceptSuggestion: (suggestion) =>
-              _decideSuggestion(suggestion, SuggestionDecision.accepted),
+              _decideSuggestion(copy, suggestion, SuggestionDecision.accepted),
           onRejectSuggestion: (suggestion) =>
-              _decideSuggestion(suggestion, SuggestionDecision.rejected),
-          onConvertSuggestion: (suggestion) =>
-              _decideSuggestion(suggestion, SuggestionDecision.convertedToNote),
+              _decideSuggestion(copy, suggestion, SuggestionDecision.rejected),
+          onConvertSuggestion: (suggestion) => _decideSuggestion(
+              copy, suggestion, SuggestionDecision.convertedToNote),
         ),
       8 => _ExportCenter(
           copy: copy,
@@ -3539,9 +3556,41 @@ final class _AISuggestionTile extends StatelessWidget {
       children: [
         Align(
           alignment: Alignment.centerLeft,
-          child: SelectableText(
-            suggestion.responseText,
-            style: Theme.of(context).textTheme.bodyMedium,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                copy.t('aiResponse'),
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 6),
+              SelectableText(
+                suggestion.responseText,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                copy.t('sentPrompt'),
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 6),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: SelectableText(
+                    suggestion.promptText,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
@@ -5387,6 +5436,18 @@ String _decisionLabel(SuggestionDecision decision, WritelerCopy copy) {
     SuggestionDecision.accepted => copy.t('suggestionAccepted'),
     SuggestionDecision.rejected => copy.t('suggestionRejected'),
     SuggestionDecision.convertedToNote => copy.t('suggestionConverted'),
+  };
+}
+
+String _suggestionDecisionFeedback(
+  SuggestionDecision decision,
+  WritelerCopy copy,
+) {
+  return switch (decision) {
+    SuggestionDecision.pending => copy.t('suggestionPending'),
+    SuggestionDecision.accepted => copy.t('suggestionAcceptedFeedback'),
+    SuggestionDecision.rejected => copy.t('suggestionDeletedFeedback'),
+    SuggestionDecision.convertedToNote => copy.t('suggestionConvertedFeedback'),
   };
 }
 

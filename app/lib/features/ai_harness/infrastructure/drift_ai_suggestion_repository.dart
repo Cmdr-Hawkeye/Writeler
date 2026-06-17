@@ -30,6 +30,13 @@ final class DriftAISuggestionRepository implements AISuggestionRepository {
         .insertOnConflictUpdate(_toCompanion(suggestion));
   }
 
+  @override
+  Future<void> delete(String id) async {
+    await (database.delete(database.aISuggestions)
+          ..where((table) => table.id.equals(id)))
+        .go();
+  }
+
   AISuggestionsCompanion _toCompanion(AISuggestion suggestion) {
     return AISuggestionsCompanion.insert(
       id: suggestion.id,
