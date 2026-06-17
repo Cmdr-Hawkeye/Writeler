@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../../catalog/domain/catalog_item.dart';
 import '../../catalog/domain/relationship.dart';
+import '../../notes/domain/project_note.dart';
 import '../../projects/domain/project.dart';
 import '../../structure/domain/chapter.dart';
 import '../../structure/domain/scene.dart';
@@ -114,6 +115,7 @@ final class DocumentPackageExporter {
     required List<Scene> scenes,
     required List<CatalogItem> catalogItems,
     required List<Relationship> relationships,
+    required List<ProjectNote> notes,
     required bool includeMetadata,
     required bool includeSceneTitles,
   }) {
@@ -148,6 +150,7 @@ final class DocumentPackageExporter {
         scenes: scenes,
         catalogItems: catalogItems,
         relationships: relationships,
+        notes: notes,
         includeMetadata: includeMetadata,
         includeSceneTitles: includeSceneTitles,
       ),
@@ -285,6 +288,7 @@ final class DocumentPackageExporter {
     required List<Scene> scenes,
     required List<CatalogItem> catalogItems,
     required List<Relationship> relationships,
+    required List<ProjectNote> notes,
     required bool includeMetadata,
     required bool includeSceneTitles,
   }) {
@@ -296,7 +300,8 @@ final class DocumentPackageExporter {
         ..write(_docxParagraph(
             '${scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount)} words'))
         ..write(_docxParagraph('${catalogItems.length} catalog items'))
-        ..write(_docxParagraph('${relationships.length} links'));
+        ..write(_docxParagraph('${relationships.length} links'))
+        ..write(_docxParagraph('${notes.length} notes'));
     }
     for (final group in _chapterGroups(chapters, scenes)) {
       if (includeSceneTitles && group.chapter != null) {
@@ -308,6 +313,19 @@ final class DocumentPackageExporter {
               style: group.chapter == null ? 'Heading1' : 'Heading2'));
         }
         for (final paragraph in _paragraphs(scene.manuscriptText)) {
+          body.write(_docxParagraph(paragraph));
+        }
+      }
+    }
+    if (includeMetadata && notes.isNotEmpty) {
+      body.write(_docxParagraph('Notes', style: 'Heading1'));
+      for (final note in notes) {
+        body
+          ..write(_docxParagraph(note.title, style: 'Heading2'))
+          ..write(_docxParagraph(
+            'Target: ${_noteTargetLabel(note, scenes, catalogItems)}',
+          ));
+        for (final paragraph in _paragraphs(note.body)) {
           body.write(_docxParagraph(paragraph));
         }
       }
@@ -339,6 +357,24 @@ final class DocumentPackageExporter {
 </w:styles>
 '''
       .trim();
+
+  String _noteTargetLabel(
+    ProjectNote note,
+    List<Scene> scenes,
+    List<CatalogItem> catalogItems,
+  ) {
+    final target = note.target;
+    if (target == null) return 'Project';
+    final scene = target.type.name == 'scene'
+        ? scenes.where((scene) => scene.id == target.id).firstOrNull
+        : null;
+    if (scene != null) return 'Scene: ${scene.title}';
+    final item = catalogItems
+        .where((item) => item.type == target.type && item.id == target.id)
+        .firstOrNull;
+    if (item != null) return '${item.type.name}: ${item.name}';
+    return '${target.type.name}: ${target.id}';
+  }
 
   List<_ChapterSceneGroup> _chapterGroups(
       List<Chapter> chapters, List<Scene> scenes) {

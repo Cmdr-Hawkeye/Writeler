@@ -8,12 +8,14 @@ The first implementation target is Flutter with a Clean Architecture layout so o
 
 This repository contains a working Flutter implementation of the local-first Writeler foundation:
 
-- persisted projects, chapters, scenes, catalog items, relationships, AI suggestions, provider settings, and local metrics
+- persisted projects, chapters, scenes, catalog items, relationships, project notes, AI suggestions, provider settings, and local metrics
 - a manuscript editor with planning fields, scene context links, live word/character counts, focus mode, and find/replace
-- a chapter-oriented scene board with scene reordering and chapter reassignment
+- a chapter-oriented scene board with scene reordering, chapter reassignment, and structure inspection
+- project, scene, and catalog-targeted notes with AI suggestion handoff
 - AI provider adapters for OpenAI-compatible APIs, OpenRouter, Anthropic, Gemini, Ollama, and a local mock provider
 - secure API key storage through a vault abstraction backed by `flutter_secure_storage`
-- import/export for Markdown, HTML, TXT manuscript, outline, full Writeler JSON archives, PDF, EPUB, and DOCX
+- prompt-transparent AI suggestions with accept/reject/note decisions and scene planning updates for structure suggestions
+- import/export for Markdown, HTML, TXT manuscript, outline, full Writeler JSON archives, PDF, EPUB, and DOCX, including readable notes in project-oriented formats
 - manual sync checkpoints that wrap full project archives with adapter metadata and fingerprint validation
 - German and English UI copy
 - Drift/SQLite local persistence for native and web, including SQLite WASM assets
@@ -67,6 +69,14 @@ flutter build web --no-pub --no-web-resources-cdn --pwa-strategy=none
 ```
 
 Then open the printed `http://127.0.0.1:<port>` URL.
+
+For non-interactive checks or browser-controlled QA, the underlying script also supports:
+
+```powershell
+.\scripts\start_web_server.ps1 -CheckOnly
+.\scripts\start_web_server.ps1 -NoBrowser
+.\scripts\start_web_server.ps1 -Port 8095
+```
 
 On Windows, you can also double-click `start_writeler_web.cmd` in the
 repository root. It builds the web app if needed, starts a local Dart server,

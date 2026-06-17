@@ -78,6 +78,7 @@ void main() {
         projectId: project.id,
         name: 'Markdown',
         format: ExportFormat.markdown,
+        includeMetadata: true,
       ),
     );
 
@@ -98,6 +99,9 @@ void main() {
 
     expect(markdown, contains('# Exportable Book'));
     expect(markdown, contains('A short authored paragraph.'));
+    expect(markdown, contains('Notes: 1'));
+    expect(markdown, contains('## Notes'));
+    expect(markdown, contains('Keep the pressure visible.'));
 
     final plainText = exporter.exportProject(
       project: project,
@@ -119,6 +123,7 @@ void main() {
       scenes: [scene.copyWith(summary: 'Opening beat.', goal: 'Find the map.')],
       catalogItems: [character],
       relationships: [relationship],
+      notes: [note],
       profile: ExportProfile(
         id: 'outline',
         projectId: project.id,
@@ -131,6 +136,8 @@ void main() {
     expect(outline, contains('## Opening'));
     expect(outline, contains('Summary: Opening beat.'));
     expect(outline, contains('Goal: Find the map.'));
+    expect(outline, contains('## Notes'));
+    expect(outline, contains('Scene idea'));
 
     final html = exporter.exportProject(
       project: project,
@@ -138,6 +145,7 @@ void main() {
       scenes: [scene],
       catalogItems: [character],
       relationships: [relationship],
+      notes: [note],
       profile: ExportProfile(
         id: 'html',
         projectId: project.id,
@@ -149,6 +157,8 @@ void main() {
     expect(html, contains('<h1>Exportable Book</h1>'));
     expect(html, contains('<div class="meta">'));
     expect(html, contains('<p>A short authored paragraph.</p>'));
+    expect(html, contains('<section class="notes"><h2>Notes</h2>'));
+    expect(html, contains('Keep the pressure visible.'));
 
     final pdf = exporter.exportArtifact(
       project: project,
@@ -184,6 +194,7 @@ void main() {
       scenes: [scene],
       catalogItems: [character],
       relationships: [relationship],
+      notes: [note],
       profile: ExportProfile(
         id: 'docx',
         projectId: project.id,
@@ -194,6 +205,7 @@ void main() {
     );
     expect(docx.mimeType, contains('wordprocessingml.document'));
     expect(docx.bytes.take(2), [0x50, 0x4b]);
+    expect(docx.previewText, contains('Notes: 1'));
 
     final json = jsonDecode(jsonText) as Map<String, Object?>;
     expect(json['schema'], 'writeler.project.v3');

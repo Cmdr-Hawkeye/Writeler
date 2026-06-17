@@ -38,13 +38,21 @@ final class ProjectExporter {
           scenes: scenes,
           catalogItems: catalogItems,
           relationships: relationships,
+          notes: notes,
           profile: profile,
         );
       case ExportFormat.plainText:
         return _toPlainText(project, scenes, profile);
       case ExportFormat.outline:
         return _toOutline(
-            project, chapters, scenes, catalogItems, relationships, profile);
+          project,
+          chapters,
+          scenes,
+          catalogItems,
+          relationships,
+          notes,
+          profile,
+        );
       case ExportFormat.json:
         return archiveCodec.encode(
           ProjectArchive(
@@ -63,6 +71,7 @@ final class ProjectExporter {
           scenes: scenes,
           catalogItems: catalogItems,
           relationships: relationships,
+          notes: notes,
           profile: profile,
         );
       case ExportFormat.pdf:
@@ -74,6 +83,7 @@ final class ProjectExporter {
           scenes: scenes,
           catalogItems: catalogItems,
           relationships: relationships,
+          notes: notes,
           profile: profile,
         );
     }
@@ -149,6 +159,7 @@ final class ProjectExporter {
             scenes: scenes,
             catalogItems: catalogItems,
             relationships: relationships,
+            notes: notes,
             includeMetadata: profile.includeMetadata,
             includeSceneTitles: profile.includeSceneTitles,
           ),
@@ -174,6 +185,7 @@ final class ProjectExporter {
     required List<Scene> scenes,
     required List<CatalogItem> catalogItems,
     required List<Relationship> relationships,
+    required List<ProjectNote> notes,
     required ExportProfile profile,
   }) {
     final buffer = StringBuffer()
@@ -181,7 +193,13 @@ final class ProjectExporter {
       ..writeln();
     if (profile.includeMetadata) {
       _writeMarkdownMetadata(
-          buffer, project, scenes, catalogItems, relationships);
+        buffer,
+        project,
+        scenes,
+        catalogItems,
+        relationships,
+        notes,
+      );
     }
 
     for (final group in _chapterGroups(chapters, scenes)) {
@@ -204,6 +222,14 @@ final class ProjectExporter {
             ..writeln();
         }
       }
+    }
+    if (profile.includeMetadata) {
+      _writeMarkdownNotes(
+        buffer,
+        notes,
+        scenes: scenes,
+        catalogItems: catalogItems,
+      );
     }
     return buffer.toString();
   }
@@ -233,6 +259,7 @@ final class ProjectExporter {
     List<Scene> scenes,
     List<CatalogItem> catalogItems,
     List<Relationship> relationships,
+    List<ProjectNote> notes,
     ExportProfile profile,
   ) {
     final buffer = StringBuffer()
@@ -240,7 +267,13 @@ final class ProjectExporter {
       ..writeln();
     if (profile.includeMetadata) {
       _writeMarkdownMetadata(
-          buffer, project, scenes, catalogItems, relationships);
+        buffer,
+        project,
+        scenes,
+        catalogItems,
+        relationships,
+        notes,
+      );
     }
 
     for (final group in _chapterGroups(chapters, scenes)) {
@@ -266,6 +299,12 @@ final class ProjectExporter {
       }
       buffer.writeln();
     }
+    _writeMarkdownNotes(
+      buffer,
+      notes,
+      scenes: scenes,
+      catalogItems: catalogItems,
+    );
     return buffer.toString();
   }
 
@@ -275,6 +314,7 @@ final class ProjectExporter {
     required List<Scene> scenes,
     required List<CatalogItem> catalogItems,
     required List<Relationship> relationships,
+    required List<ProjectNote> notes,
     required ExportProfile profile,
   }) {
     final escape = const HtmlEscape().convert;
@@ -284,15 +324,16 @@ final class ProjectExporter {
       ..write(
           '<style>body{font-family:serif;max-width:760px;margin:48px auto;line-height:1.65;padding:0 24px;}')
       ..write(
-          'h1,h2,h3{line-height:1.2;} .meta{font-family:sans-serif;color:#555;border-bottom:1px solid #ddd;padding-bottom:16px;margin-bottom:28px;}')
+          'h1,h2,h3{line-height:1.2;} .meta,.notes{font-family:sans-serif;color:#555;border-bottom:1px solid #ddd;padding-bottom:16px;margin-bottom:28px;} .note-target{font-weight:bold;color:#333;}')
       ..write('</style></head><body>')
       ..write('<h1>${escape(project.title)}</h1>');
 
     if (profile.includeMetadata) {
       buffer.write(
-        '<div class="meta">${scenes.length} scenes · '
-        '${scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount)} words · '
-        '${catalogItems.length} catalog items · ${relationships.length} links</div>',
+        '<div class="meta">${scenes.length} scenes - '
+        '${scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount)} words - '
+        '${catalogItems.length} catalog items - ${relationships.length} links - '
+        '${notes.length} notes</div>',
       );
     }
 
@@ -312,6 +353,23 @@ final class ProjectExporter {
       }
     }
 
+    if (profile.includeMetadata && notes.isNotEmpty) {
+      buffer.write('<section class="notes"><h2>Notes</h2>');
+      for (final note in notes) {
+        buffer
+          ..write('<article>')
+          ..write('<h3>${escape(note.title)}</h3>')
+          ..write(
+            '<p class="note-target">${escape(_noteTargetLabel(note, scenes, catalogItems))}</p>',
+          );
+        for (final paragraph in _paragraphs(note.body)) {
+          buffer.write('<p>${escape(paragraph)}</p>');
+        }
+        buffer.write('</article>');
+      }
+      buffer.write('</section>');
+    }
+
     return '${buffer.toString()}</body></html>';
   }
 
@@ -321,6 +379,7 @@ final class ProjectExporter {
     required List<Scene> scenes,
     required List<CatalogItem> catalogItems,
     required List<Relationship> relationships,
+    required List<ProjectNote> notes,
     required ExportProfile profile,
   }) {
     final extension = switch (profile.format) {
@@ -340,6 +399,7 @@ final class ProjectExporter {
       ..writeln('Words: $words')
       ..writeln('Catalog items: ${catalogItems.length}')
       ..writeln('Relationships: ${relationships.length}')
+      ..writeln('Notes: ${notes.length}')
       ..writeln()
       ..writeln(
           'Use the download action to save the generated .$extension file.');
@@ -352,6 +412,7 @@ final class ProjectExporter {
     List<Scene> scenes,
     List<CatalogItem> catalogItems,
     List<Relationship> relationships,
+    List<ProjectNote> notes,
   ) {
     buffer
       ..writeln('Project type: ${project.projectType}')
@@ -360,7 +421,50 @@ final class ProjectExporter {
           'Words: ${scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount)}')
       ..writeln('Catalog items: ${catalogItems.length}')
       ..writeln('Relationships: ${relationships.length}')
+      ..writeln('Notes: ${notes.length}')
       ..writeln();
+  }
+
+  void _writeMarkdownNotes(
+    StringBuffer buffer,
+    List<ProjectNote> notes, {
+    required List<Scene> scenes,
+    required List<CatalogItem> catalogItems,
+  }) {
+    if (notes.isEmpty) return;
+    buffer
+      ..writeln('## Notes')
+      ..writeln();
+    for (final note in notes) {
+      buffer
+        ..writeln('### ${note.title}')
+        ..writeln()
+        ..writeln('Target: ${_noteTargetLabel(note, scenes, catalogItems)}')
+        ..writeln();
+      if (note.body.trim().isNotEmpty) {
+        buffer
+          ..writeln(note.body.trim())
+          ..writeln();
+      }
+    }
+  }
+
+  String _noteTargetLabel(
+    ProjectNote note,
+    List<Scene> scenes,
+    List<CatalogItem> catalogItems,
+  ) {
+    final target = note.target;
+    if (target == null) return 'Project';
+    final scene = target.type.name == 'scene'
+        ? scenes.where((scene) => scene.id == target.id).firstOrNull
+        : null;
+    if (scene != null) return 'Scene: ${scene.title}';
+    final item = catalogItems
+        .where((item) => item.type == target.type && item.id == target.id)
+        .firstOrNull;
+    if (item != null) return '${item.type.name}: ${item.name}';
+    return '${target.type.name}: ${target.id}';
   }
 
   List<_ChapterSceneGroup> _chapterGroups(
