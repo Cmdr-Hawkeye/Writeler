@@ -12,19 +12,15 @@ $webDir = Join-Path $appDir "build\web"
 $indexFile = Join-Path $webDir "index.html"
 $mainJsFile = Join-Path $webDir "main.dart.js"
 $builtWorkerFile = Join-Path $webDir "drift_worker.js"
+$webServerScript = Join-Path $repoRoot "scripts\writeler_web_server.dart"
 
-function Find-PythonCommand {
-  $python = Get-Command python -ErrorAction SilentlyContinue
-  if ($python) {
-    return @($python.Source)
+function Find-DartCommand {
+  $dart = Get-Command dart -ErrorAction SilentlyContinue
+  if ($dart) {
+    return $dart.Source
   }
 
-  $py = Get-Command py -ErrorAction SilentlyContinue
-  if ($py) {
-    return @($py.Source, "-3")
-  }
-
-  throw "Python was not found. Install Python or add it to PATH, then run this starter again."
+  throw "Dart was not found. Install Flutter or add Dart to PATH, then run this starter again."
 }
 
 function Test-PortAvailable([int]$CandidatePort) {
@@ -101,7 +97,7 @@ if (Test-WebBuildStale) {
   }
 }
 
-$pythonCommand = Find-PythonCommand
+$dartCommand = Find-DartCommand
 $selectedPort = Find-AvailablePort $Port
 $url = "http://127.0.0.1:$selectedPort"
 
@@ -122,10 +118,6 @@ if (-not $NoBrowser) {
 Write-Host "Close this window or press Ctrl+C to stop the server."
 Write-Host ""
 
-$pythonArgs = @()
-if ($pythonCommand.Count -gt 1) {
-  $pythonArgs += $pythonCommand[1..($pythonCommand.Count - 1)]
-}
-$pythonArgs += @("-m", "http.server", "$selectedPort", "--bind", "127.0.0.1", "--directory", "$webDir")
+$dartArgs = @("run", "$webServerScript", "--port", "$selectedPort", "--bind", "127.0.0.1", "--directory", "$webDir")
 
-& $pythonCommand[0] $pythonArgs
+& $dartCommand $dartArgs

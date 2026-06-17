@@ -110,6 +110,9 @@ final class OpenAICompatibleLanguageModelProvider
   }
 
   Uri _chatCompletionsUri() {
+    final localOpenRouterProxy = _localOpenRouterProxyUri();
+    if (localOpenRouterProxy != null) return localOpenRouterProxy;
+
     final normalized = baseUrl.path.endsWith('/')
         ? baseUrl.path.substring(0, baseUrl.path.length - 1)
         : baseUrl.path;
@@ -117,6 +120,20 @@ final class OpenAICompatibleLanguageModelProvider
     return baseUrl.replace(
       path:
           alreadyChatCompletions ? normalized : '$normalized/chat/completions',
+    );
+  }
+
+  Uri? _localOpenRouterProxyUri() {
+    if (!mirrorApiKeyInXApiKeyHeader) return null;
+    final current = Uri.base;
+    final isLocalWeb =
+        (current.scheme == 'http' || current.scheme == 'https') &&
+            (current.host == '127.0.0.1' || current.host == 'localhost');
+    if (!isLocalWeb) return null;
+    return current.replace(
+      path: '/.writeler-ai/openrouter/chat/completions',
+      query: '',
+      fragment: '',
     );
   }
 

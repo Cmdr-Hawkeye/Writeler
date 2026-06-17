@@ -63,16 +63,19 @@ flutter build web --no-pub --no-web-resources-cdn --pwa-strategy=none
 7. Serve the web build locally:
 
 ```powershell
-python -m http.server 8090 --directory app/build/web
+.\start_writeler_web.cmd
 ```
 
-Then open `http://127.0.0.1:8090`.
+Then open the printed `http://127.0.0.1:<port>` URL.
 
 On Windows, you can also double-click `start_writeler_web.cmd` in the
-repository root. It builds the web app if needed, starts a local server, picks
-the next free port starting at `8090`, and opens the browser. Local web builds
-use `--pwa-strategy=none` so browsers do not keep an outdated Flutter service
-worker while you test provider and UI changes.
+repository root. It builds the web app if needed, starts a local Dart server,
+picks the next free port starting at `8090`, and opens the browser. Local web
+builds use `--pwa-strategy=none` so browsers do not keep an outdated Flutter
+service worker while you test provider and UI changes. The starter also runs a
+tiny local OpenRouter proxy at `/.writeler-ai/openrouter/chat/completions`,
+avoiding browser/provider CORS and authentication-header quirks while keeping
+the API key on the local machine.
 
 On this OneDrive workspace, `flutter pub get` can trip over generated iOS/macOS `ephemeral` cache folders. `dart pub get` followed by Flutter commands with `--no-pub` avoids that local filesystem issue.
 
