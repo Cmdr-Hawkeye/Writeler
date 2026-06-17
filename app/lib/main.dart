@@ -2431,7 +2431,9 @@ final class _SceneBoard extends StatelessWidget {
             scene.goal?.trim().isEmpty != false ||
             scene.conflict?.trim().isEmpty != false ||
             scene.outcome?.trim().isEmpty != false)
-        .length;
+        .toList();
+    final unscheduledScenes =
+        scenes.where((scene) => scene.storyDateStart == null).toList();
     final unassignedScenes =
         scenes.where((scene) => scene.chapterId == null).length;
     final groups = <_SceneStructureGroup>[
@@ -2473,7 +2475,7 @@ final class _SceneBoard extends StatelessWidget {
           copy: copy,
           scenes: scenes,
           chapters: orderedChapters,
-          planningGaps: planningGaps,
+          planningGaps: planningGaps.length,
           unassignedScenes: unassignedScenes,
           datedScenes: datedScenes,
         ),
@@ -2524,26 +2526,53 @@ final class _SceneBoard extends StatelessWidget {
           ),
         const Divider(height: 1),
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(20),
-            scrollDirection: Axis.horizontal,
-            itemCount: visibleGroups.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              final group = visibleGroups[index];
-              return SizedBox(
-                width: 320,
-                child: _SceneStructureColumn(
-                  copy: copy,
-                  group: group,
-                  chapters: orderedChapters,
-                  selectedScene: selectedScene,
-                  onSelectScene: onSelectScene,
-                  onMoveSceneUp: onMoveSceneUp,
-                  onMoveSceneDown: onMoveSceneDown,
-                  onMoveSceneToChapter: onMoveSceneToChapter,
-                  onDeleteScene: onDeleteScene,
-                ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final structureList = ListView.separated(
+                padding: const EdgeInsets.all(20),
+                scrollDirection: Axis.horizontal,
+                itemCount: visibleGroups.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 16),
+                itemBuilder: (context, index) {
+                  final group = visibleGroups[index];
+                  return SizedBox(
+                    width: 340,
+                    child: _SceneStructureColumn(
+                      copy: copy,
+                      group: group,
+                      chapters: orderedChapters,
+                      selectedScene: selectedScene,
+                      onSelectScene: onSelectScene,
+                      onMoveSceneUp: onMoveSceneUp,
+                      onMoveSceneDown: onMoveSceneDown,
+                      onMoveSceneToChapter: onMoveSceneToChapter,
+                      onDeleteScene: onDeleteScene,
+                    ),
+                  );
+                },
+              );
+              final inspector = _StructureInspector(
+                copy: copy,
+                planningGapScenes: planningGaps,
+                unscheduledScenes: unscheduledScenes,
+                datedScenes: datedScenes,
+                onOpenScene: onSelectScene,
+              );
+              if (constraints.maxWidth < 980) {
+                return Column(
+                  children: [
+                    Expanded(child: structureList),
+                    const Divider(height: 1),
+                    SizedBox(height: 260, child: inspector),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: structureList),
+                  const VerticalDivider(width: 1),
+                  SizedBox(width: 380, child: inspector),
+                ],
               );
             },
           ),
@@ -2773,34 +2802,326 @@ final class _SceneStructureColumn extends StatelessWidget {
               itemBuilder: (context, index) {
                 final scene = group.scenes[index];
                 final selected = selectedScene?.id == scene.id;
-                return ListTile(
+                return _SceneStructureTile(
+                  copy: copy,
+                  scene: scene,
                   selected: selected,
-                  selectedTileColor:
-                      color.primaryContainer.withValues(alpha: 0.38),
-                  title: Text(scene.title,
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text(
-                    '${_draftStatusLabel(scene.status, copy.languageCode)} - '
-                    '${scene.actualWordCount} ${copy.t('words')}',
-                  ),
-                  trailing: _SceneStructureMenu(
-                    copy: copy,
-                    scene: scene,
-                    chapters: chapters,
-                    onMoveUp: () => onMoveSceneUp(scene),
-                    onMoveDown: () => onMoveSceneDown(scene),
-                    onMoveToChapter: (chapterId) =>
-                        onMoveSceneToChapter(scene, chapterId),
-                    onDelete: () => onDeleteScene(scene),
-                  ),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                  chapters: chapters,
                   onTap: () => onSelectScene(scene),
+                  onMoveSceneUp: () => onMoveSceneUp(scene),
+                  onMoveSceneDown: () => onMoveSceneDown(scene),
+                  onMoveSceneToChapter: (chapterId) =>
+                      onMoveSceneToChapter(scene, chapterId),
+                  onDeleteScene: () => onDeleteScene(scene),
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+final class _StructureInspector extends StatelessWidget {
+  const _StructureInspector({
+    required this.copy,
+    required this.planningGapScenes,
+    required this.unscheduledScenes,
+    required this.datedScenes,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final List<Scene> planningGapScenes;
+  final List<Scene> unscheduledScenes;
+  final List<Scene> datedScenes;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            copy.t('structureInspector'),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 14),
+          Expanded(
+            child: ListView(
+              children: [
+                _StructureSceneSection(
+                  copy: copy,
+                  title: copy.t('planningGaps'),
+                  emptyText: copy.t('noPlanningGaps'),
+                  icon: Icons.rule_outlined,
+                  scenes: planningGapScenes,
+                  subtitleBuilder: (scene) =>
+                      _missingScenePlanningLabels(scene, copy).join(', '),
+                  onOpenScene: onOpenScene,
+                ),
+                const SizedBox(height: 18),
+                _StructureSceneSection(
+                  copy: copy,
+                  title: copy.t('unscheduled'),
+                  emptyText: copy.t('noUnscheduledScenes'),
+                  icon: Icons.event_busy_outlined,
+                  scenes: unscheduledScenes,
+                  subtitleBuilder: (scene) =>
+                      _draftStatusLabel(scene.status, copy.languageCode),
+                  onOpenScene: onOpenScene,
+                ),
+                const SizedBox(height: 18),
+                _StructureTimelineSection(
+                  copy: copy,
+                  scenes: datedScenes,
+                  onOpenScene: onOpenScene,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _StructureSceneSection extends StatelessWidget {
+  const _StructureSceneSection({
+    required this.copy,
+    required this.title,
+    required this.emptyText,
+    required this.icon,
+    required this.scenes,
+    required this.subtitleBuilder,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final String title;
+  final String emptyText;
+  final IconData icon;
+  final List<Scene> scenes;
+  final String Function(Scene scene) subtitleBuilder;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: color.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '$title (${scenes.length})',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (scenes.isEmpty)
+          _EmptyInlineMessage(message: emptyText)
+        else
+          for (final scene in scenes.take(6))
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.chevron_right),
+              title: Text(
+                scene.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                subtitleBuilder(scene),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: Tooltip(
+                message: copy.t('openScene'),
+                child: IconButton(
+                  onPressed: () => onOpenScene(scene),
+                  icon: const Icon(Icons.open_in_new),
+                ),
+              ),
+              onTap: () => onOpenScene(scene),
+            ),
+      ],
+    );
+  }
+}
+
+final class _StructureTimelineSection extends StatelessWidget {
+  const _StructureTimelineSection({
+    required this.copy,
+    required this.scenes,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final List<Scene> scenes;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.timeline_outlined, size: 18, color: color.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '${copy.t('timeline')} (${scenes.length})',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (scenes.isEmpty)
+          _EmptyInlineMessage(message: copy.t('noTimelineScenes'))
+        else
+          for (final scene in scenes.take(8))
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.event_outlined),
+              title: Text(
+                scene.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(_formatLocalDate(scene.storyDateStart!)),
+              onTap: () => onOpenScene(scene),
+            ),
+      ],
+    );
+  }
+}
+
+final class _SceneStructureTile extends StatelessWidget {
+  const _SceneStructureTile({
+    required this.copy,
+    required this.scene,
+    required this.selected,
+    required this.chapters,
+    required this.onTap,
+    required this.onMoveSceneUp,
+    required this.onMoveSceneDown,
+    required this.onMoveSceneToChapter,
+    required this.onDeleteScene,
+  });
+
+  final WritelerCopy copy;
+  final Scene scene;
+  final bool selected;
+  final List<Chapter> chapters;
+  final VoidCallback onTap;
+  final VoidCallback onMoveSceneUp;
+  final VoidCallback onMoveSceneDown;
+  final ValueChanged<String?> onMoveSceneToChapter;
+  final VoidCallback onDeleteScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final missing = _missingScenePlanningLabels(scene, copy);
+    final progress = _scenePlanningProgress(scene);
+    return Material(
+      color: selected ? color.primaryContainer.withValues(alpha: 0.38) : null,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 4, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      scene.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  _SceneStructureMenu(
+                    copy: copy,
+                    scene: scene,
+                    chapters: chapters,
+                    onMoveUp: onMoveSceneUp,
+                    onMoveDown: onMoveSceneDown,
+                    onMoveToChapter: onMoveSceneToChapter,
+                    onDelete: onDeleteScene,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    _draftStatusLabel(scene.status, copy.languageCode),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                  Text(
+                    '${scene.actualWordCount} ${copy.t('words')}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                  if (scene.storyDateStart != null)
+                    Text(
+                      _formatLocalDate(scene.storyDateStart!),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(value: progress),
+              const SizedBox(height: 8),
+              if (missing.isEmpty)
+                Text(
+                  copy.t('structureComplete'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                )
+              else
+                Text(
+                  '${copy.t('missing')}: ${missing.join(', ')}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.error,
+                      ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -6514,11 +6835,35 @@ IconData _noteFilterIcon(_NoteFilter filter) {
   };
 }
 
+List<String> _missingScenePlanningLabels(Scene scene, WritelerCopy copy) {
+  return [
+    if (scene.summary.trim().isEmpty) copy.t('summary'),
+    if (scene.goal?.trim().isEmpty != false) copy.t('goal'),
+    if (scene.conflict?.trim().isEmpty != false) copy.t('conflict'),
+    if (scene.outcome?.trim().isEmpty != false) copy.t('outcome'),
+  ];
+}
+
+double _scenePlanningProgress(Scene scene) {
+  var complete = 0;
+  if (scene.summary.trim().isNotEmpty) complete += 1;
+  if (scene.goal?.trim().isEmpty == false) complete += 1;
+  if (scene.conflict?.trim().isEmpty == false) complete += 1;
+  if (scene.outcome?.trim().isEmpty == false) complete += 1;
+  return complete / 4;
+}
+
 String _formatLocalDateTime(DateTime value) {
   final local = value.toLocal();
   String twoDigits(int value) => value.toString().padLeft(2, '0');
   return '${twoDigits(local.day)}.${twoDigits(local.month)}.${local.year} '
       '${twoDigits(local.hour)}:${twoDigits(local.minute)}';
+}
+
+String _formatLocalDate(DateTime value) {
+  final local = value.toLocal();
+  String twoDigits(int value) => value.toString().padLeft(2, '0');
+  return '${twoDigits(local.day)}.${twoDigits(local.month)}.${local.year}';
 }
 
 String _exportFormatLabel(ExportFormat format, String languageCode) {

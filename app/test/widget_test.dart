@@ -64,5 +64,11 @@ void main() {
     expect(find.text('Draft Atlas'), findsWidgets);
     expect(find.text('Local - novel'), findsOneWidget);
     expect(find.text('Project created'), findsOneWidget);
+
+    await tester.tap(find.text('Scenes').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Structure cockpit'), findsOneWidget);
+    expect(find.text('Structure inspector'), findsOneWidget);
   });
 }
