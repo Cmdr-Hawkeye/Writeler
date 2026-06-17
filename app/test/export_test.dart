@@ -9,6 +9,7 @@ import 'package:writeler/features/catalog/infrastructure/in_memory_catalog_item_
 import 'package:writeler/features/export/application/project_archive_codec.dart';
 import 'package:writeler/features/export/application/project_exporter.dart';
 import 'package:writeler/features/export/domain/export_profile.dart';
+import 'package:writeler/features/notes/domain/project_note.dart';
 import 'package:writeler/features/projects/application/create_project.dart';
 import 'package:writeler/features/projects/infrastructure/in_memory_project_repository.dart';
 import 'package:writeler/features/structure/application/create_chapter.dart';
@@ -52,6 +53,17 @@ void main() {
       createdAt: now,
       updatedAt: now,
     );
+    final note = ProjectNote(
+      id: 'note-1',
+      projectId: project.id,
+      target: EntityRef(type: EntityType.scene, id: scene.id),
+      title: 'Scene idea',
+      body: 'Keep the pressure visible.',
+      source: 'aiSuggestion',
+      sourceSuggestionId: 'suggestion-1',
+      createdAt: now,
+      updatedAt: now,
+    );
 
     const exporter = ProjectExporter();
     final markdown = exporter.exportProject(
@@ -60,6 +72,7 @@ void main() {
       scenes: [scene],
       catalogItems: [character],
       relationships: [relationship],
+      notes: [note],
       profile: ExportProfile(
         id: 'markdown',
         projectId: project.id,
@@ -74,6 +87,7 @@ void main() {
       scenes: [scene],
       catalogItems: [character],
       relationships: [relationship],
+      notes: [note],
       profile: ExportProfile(
         id: 'json',
         projectId: project.id,
@@ -182,7 +196,7 @@ void main() {
     expect(docx.bytes.take(2), [0x50, 0x4b]);
 
     final json = jsonDecode(jsonText) as Map<String, Object?>;
-    expect(json['schema'], 'writeler.project.v2');
+    expect(json['schema'], 'writeler.project.v3');
 
     final archive = const ProjectArchiveCodec().decode(jsonText);
     final preview = const ProjectArchiveCodec().preview(jsonText);
@@ -191,8 +205,10 @@ void main() {
     expect(archive.scenes.single.title, 'Scene One');
     expect(archive.catalogItems.single.name, 'Mara');
     expect(archive.relationships.single.target.id, character.id);
+    expect(archive.notes.single.body, 'Keep the pressure visible.');
     expect(preview.projectTitle, 'Exportable Book');
     expect(preview.sceneCount, 1);
     expect(preview.catalogItemCount, 1);
+    expect(preview.noteCount, 1);
   });
 }

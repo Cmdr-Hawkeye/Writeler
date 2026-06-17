@@ -4,6 +4,7 @@ import '../../../core/domain/domain_failure.dart';
 import '../../../core/domain/json_map.dart';
 import '../../catalog/domain/catalog_item.dart';
 import '../../catalog/domain/relationship.dart';
+import '../../notes/domain/project_note.dart';
 import '../../projects/domain/project.dart';
 import '../../structure/domain/chapter.dart';
 import '../../structure/domain/scene.dart';
@@ -15,6 +16,7 @@ final class ProjectArchive {
     required this.scenes,
     required this.catalogItems,
     required this.relationships,
+    this.notes = const [],
   });
 
   final Project project;
@@ -22,6 +24,7 @@ final class ProjectArchive {
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<ProjectNote> notes;
 }
 
 final class ProjectArchivePreview {
@@ -32,6 +35,7 @@ final class ProjectArchivePreview {
     required this.sceneCount,
     required this.catalogItemCount,
     required this.relationshipCount,
+    required this.noteCount,
   });
 
   final String schema;
@@ -40,6 +44,7 @@ final class ProjectArchivePreview {
   final int sceneCount;
   final int catalogItemCount;
   final int relationshipCount;
+  final int noteCount;
 }
 
 final class ProjectArchiveCodec {
@@ -47,7 +52,7 @@ final class ProjectArchiveCodec {
 
   String encode(ProjectArchive archive) {
     return const JsonEncoder.withIndent('  ').convert({
-      'schema': 'writeler.project.v2',
+      'schema': 'writeler.project.v3',
       'project': archive.project.toJson(),
       'chapters': archive.chapters.map((chapter) => chapter.toJson()).toList(),
       'scenes': archive.scenes.map((scene) => scene.toJson()).toList(),
@@ -56,6 +61,7 @@ final class ProjectArchiveCodec {
       'relationships': archive.relationships
           .map((relationship) => relationship.toJson())
           .toList(),
+      'notes': archive.notes.map((note) => note.toJson()).toList(),
     });
   }
 
@@ -67,7 +73,7 @@ final class ProjectArchiveCodec {
 
     final json = Map<String, Object?>.from(decoded);
     final schema = json['schema'] as String?;
-    if (schema != 'writeler.project.v1' && schema != 'writeler.project.v2') {
+    if (!_supportedSchema(schema)) {
       throw DomainFailure(
           'Unsupported project archive schema: ${schema ?? 'missing'}.');
     }
@@ -78,6 +84,7 @@ final class ProjectArchiveCodec {
     final catalogJson = _list(json['catalogItems'] ?? const [], 'catalogItems');
     final relationshipJson =
         _list(json['relationships'] ?? const [], 'relationships');
+    final noteJson = _list(json['notes'] ?? const [], 'notes');
 
     return ProjectArchive(
       project: Project.fromJson(projectJson),
@@ -85,6 +92,7 @@ final class ProjectArchiveCodec {
       scenes: sceneJson.map(Scene.fromJson).toList(),
       catalogItems: catalogJson.map(CatalogItem.fromJson).toList(),
       relationships: relationshipJson.map(Relationship.fromJson).toList(),
+      notes: noteJson.map(ProjectNote.fromJson).toList(),
     );
   }
 
@@ -96,7 +104,7 @@ final class ProjectArchiveCodec {
 
     final json = Map<String, Object?>.from(decoded);
     final schema = json['schema'] as String?;
-    if (schema != 'writeler.project.v1' && schema != 'writeler.project.v2') {
+    if (!_supportedSchema(schema)) {
       throw DomainFailure(
           'Unsupported project archive schema: ${schema ?? 'missing'}.');
     }
@@ -111,7 +119,14 @@ final class ProjectArchiveCodec {
           _list(json['catalogItems'] ?? const [], 'catalogItems').length,
       relationshipCount:
           _list(json['relationships'] ?? const [], 'relationships').length,
+      noteCount: _list(json['notes'] ?? const [], 'notes').length,
     );
+  }
+
+  bool _supportedSchema(String? schema) {
+    return schema == 'writeler.project.v1' ||
+        schema == 'writeler.project.v2' ||
+        schema == 'writeler.project.v3';
   }
 
   JsonMap _object(Object? value, String fieldName) {

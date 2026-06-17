@@ -4402,6 +4402,565 @@ class AISuggestionsCompanion extends UpdateCompanion<AISuggestionRow> {
   }
 }
 
+class $ProjectNotesTable extends ProjectNotes
+    with TableInfo<$ProjectNotesTable, ProjectNoteRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProjectNotesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES projects (id)'));
+  static const VerificationMeta _targetTypeMeta =
+      const VerificationMeta('targetType');
+  @override
+  late final GeneratedColumn<String> targetType = GeneratedColumn<String>(
+      'target_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _targetIdMeta =
+      const VerificationMeta('targetId');
+  @override
+  late final GeneratedColumn<String> targetId = GeneratedColumn<String>(
+      'target_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+      'body', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+      'source', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('manual'));
+  static const VerificationMeta _sourceSuggestionIdMeta =
+      const VerificationMeta('sourceSuggestionId');
+  @override
+  late final GeneratedColumn<String> sourceSuggestionId =
+      GeneratedColumn<String>('source_suggestion_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _metadataJsonMeta =
+      const VerificationMeta('metadataJson');
+  @override
+  late final GeneratedColumn<String> metadataJson = GeneratedColumn<String>(
+      'metadata_json', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        projectId,
+        targetType,
+        targetId,
+        title,
+        body,
+        source,
+        sourceSuggestionId,
+        metadataJson,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'project_notes';
+  @override
+  VerificationContext validateIntegrity(Insertable<ProjectNoteRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('target_type')) {
+      context.handle(
+          _targetTypeMeta,
+          targetType.isAcceptableOrUnknown(
+              data['target_type']!, _targetTypeMeta));
+    }
+    if (data.containsKey('target_id')) {
+      context.handle(_targetIdMeta,
+          targetId.isAcceptableOrUnknown(data['target_id']!, _targetIdMeta));
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+          _bodyMeta, body.isAcceptableOrUnknown(data['body']!, _bodyMeta));
+    } else if (isInserting) {
+      context.missing(_bodyMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta,
+          source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    }
+    if (data.containsKey('source_suggestion_id')) {
+      context.handle(
+          _sourceSuggestionIdMeta,
+          sourceSuggestionId.isAcceptableOrUnknown(
+              data['source_suggestion_id']!, _sourceSuggestionIdMeta));
+    }
+    if (data.containsKey('metadata_json')) {
+      context.handle(
+          _metadataJsonMeta,
+          metadataJson.isAcceptableOrUnknown(
+              data['metadata_json']!, _metadataJsonMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProjectNoteRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProjectNoteRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}project_id'])!,
+      targetType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}target_type']),
+      targetId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}target_id']),
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      body: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}body'])!,
+      source: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      sourceSuggestionId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}source_suggestion_id']),
+      metadataJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata_json'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $ProjectNotesTable createAlias(String alias) {
+    return $ProjectNotesTable(attachedDatabase, alias);
+  }
+}
+
+class ProjectNoteRow extends DataClass implements Insertable<ProjectNoteRow> {
+  final String id;
+  final String projectId;
+  final String? targetType;
+  final String? targetId;
+  final String title;
+  final String body;
+  final String source;
+  final String? sourceSuggestionId;
+  final String metadataJson;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const ProjectNoteRow(
+      {required this.id,
+      required this.projectId,
+      this.targetType,
+      this.targetId,
+      required this.title,
+      required this.body,
+      required this.source,
+      this.sourceSuggestionId,
+      required this.metadataJson,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['project_id'] = Variable<String>(projectId);
+    if (!nullToAbsent || targetType != null) {
+      map['target_type'] = Variable<String>(targetType);
+    }
+    if (!nullToAbsent || targetId != null) {
+      map['target_id'] = Variable<String>(targetId);
+    }
+    map['title'] = Variable<String>(title);
+    map['body'] = Variable<String>(body);
+    map['source'] = Variable<String>(source);
+    if (!nullToAbsent || sourceSuggestionId != null) {
+      map['source_suggestion_id'] = Variable<String>(sourceSuggestionId);
+    }
+    map['metadata_json'] = Variable<String>(metadataJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  ProjectNotesCompanion toCompanion(bool nullToAbsent) {
+    return ProjectNotesCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      targetType: targetType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetType),
+      targetId: targetId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetId),
+      title: Value(title),
+      body: Value(body),
+      source: Value(source),
+      sourceSuggestionId: sourceSuggestionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceSuggestionId),
+      metadataJson: Value(metadataJson),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ProjectNoteRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProjectNoteRow(
+      id: serializer.fromJson<String>(json['id']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      targetType: serializer.fromJson<String?>(json['targetType']),
+      targetId: serializer.fromJson<String?>(json['targetId']),
+      title: serializer.fromJson<String>(json['title']),
+      body: serializer.fromJson<String>(json['body']),
+      source: serializer.fromJson<String>(json['source']),
+      sourceSuggestionId:
+          serializer.fromJson<String?>(json['sourceSuggestionId']),
+      metadataJson: serializer.fromJson<String>(json['metadataJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'projectId': serializer.toJson<String>(projectId),
+      'targetType': serializer.toJson<String?>(targetType),
+      'targetId': serializer.toJson<String?>(targetId),
+      'title': serializer.toJson<String>(title),
+      'body': serializer.toJson<String>(body),
+      'source': serializer.toJson<String>(source),
+      'sourceSuggestionId': serializer.toJson<String?>(sourceSuggestionId),
+      'metadataJson': serializer.toJson<String>(metadataJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ProjectNoteRow copyWith(
+          {String? id,
+          String? projectId,
+          Value<String?> targetType = const Value.absent(),
+          Value<String?> targetId = const Value.absent(),
+          String? title,
+          String? body,
+          String? source,
+          Value<String?> sourceSuggestionId = const Value.absent(),
+          String? metadataJson,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      ProjectNoteRow(
+        id: id ?? this.id,
+        projectId: projectId ?? this.projectId,
+        targetType: targetType.present ? targetType.value : this.targetType,
+        targetId: targetId.present ? targetId.value : this.targetId,
+        title: title ?? this.title,
+        body: body ?? this.body,
+        source: source ?? this.source,
+        sourceSuggestionId: sourceSuggestionId.present
+            ? sourceSuggestionId.value
+            : this.sourceSuggestionId,
+        metadataJson: metadataJson ?? this.metadataJson,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  ProjectNoteRow copyWithCompanion(ProjectNotesCompanion data) {
+    return ProjectNoteRow(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      targetType:
+          data.targetType.present ? data.targetType.value : this.targetType,
+      targetId: data.targetId.present ? data.targetId.value : this.targetId,
+      title: data.title.present ? data.title.value : this.title,
+      body: data.body.present ? data.body.value : this.body,
+      source: data.source.present ? data.source.value : this.source,
+      sourceSuggestionId: data.sourceSuggestionId.present
+          ? data.sourceSuggestionId.value
+          : this.sourceSuggestionId,
+      metadataJson: data.metadataJson.present
+          ? data.metadataJson.value
+          : this.metadataJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectNoteRow(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('targetType: $targetType, ')
+          ..write('targetId: $targetId, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('source: $source, ')
+          ..write('sourceSuggestionId: $sourceSuggestionId, ')
+          ..write('metadataJson: $metadataJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, projectId, targetType, targetId, title,
+      body, source, sourceSuggestionId, metadataJson, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProjectNoteRow &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.targetType == this.targetType &&
+          other.targetId == this.targetId &&
+          other.title == this.title &&
+          other.body == this.body &&
+          other.source == this.source &&
+          other.sourceSuggestionId == this.sourceSuggestionId &&
+          other.metadataJson == this.metadataJson &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ProjectNotesCompanion extends UpdateCompanion<ProjectNoteRow> {
+  final Value<String> id;
+  final Value<String> projectId;
+  final Value<String?> targetType;
+  final Value<String?> targetId;
+  final Value<String> title;
+  final Value<String> body;
+  final Value<String> source;
+  final Value<String?> sourceSuggestionId;
+  final Value<String> metadataJson;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const ProjectNotesCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.targetType = const Value.absent(),
+    this.targetId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.body = const Value.absent(),
+    this.source = const Value.absent(),
+    this.sourceSuggestionId = const Value.absent(),
+    this.metadataJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProjectNotesCompanion.insert({
+    required String id,
+    required String projectId,
+    this.targetType = const Value.absent(),
+    this.targetId = const Value.absent(),
+    required String title,
+    required String body,
+    this.source = const Value.absent(),
+    this.sourceSuggestionId = const Value.absent(),
+    this.metadataJson = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        projectId = Value(projectId),
+        title = Value(title),
+        body = Value(body),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<ProjectNoteRow> custom({
+    Expression<String>? id,
+    Expression<String>? projectId,
+    Expression<String>? targetType,
+    Expression<String>? targetId,
+    Expression<String>? title,
+    Expression<String>? body,
+    Expression<String>? source,
+    Expression<String>? sourceSuggestionId,
+    Expression<String>? metadataJson,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (targetType != null) 'target_type': targetType,
+      if (targetId != null) 'target_id': targetId,
+      if (title != null) 'title': title,
+      if (body != null) 'body': body,
+      if (source != null) 'source': source,
+      if (sourceSuggestionId != null)
+        'source_suggestion_id': sourceSuggestionId,
+      if (metadataJson != null) 'metadata_json': metadataJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProjectNotesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? projectId,
+      Value<String?>? targetType,
+      Value<String?>? targetId,
+      Value<String>? title,
+      Value<String>? body,
+      Value<String>? source,
+      Value<String?>? sourceSuggestionId,
+      Value<String>? metadataJson,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return ProjectNotesCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      targetType: targetType ?? this.targetType,
+      targetId: targetId ?? this.targetId,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      source: source ?? this.source,
+      sourceSuggestionId: sourceSuggestionId ?? this.sourceSuggestionId,
+      metadataJson: metadataJson ?? this.metadataJson,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (targetType.present) {
+      map['target_type'] = Variable<String>(targetType.value);
+    }
+    if (targetId.present) {
+      map['target_id'] = Variable<String>(targetId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (sourceSuggestionId.present) {
+      map['source_suggestion_id'] = Variable<String>(sourceSuggestionId.value);
+    }
+    if (metadataJson.present) {
+      map['metadata_json'] = Variable<String>(metadataJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectNotesCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('targetType: $targetType, ')
+          ..write('targetId: $targetId, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('source: $source, ')
+          ..write('sourceSuggestionId: $sourceSuggestionId, ')
+          ..write('metadataJson: $metadataJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AIProviderConfigsTable extends AIProviderConfigs
     with TableInfo<$AIProviderConfigsTable, AIProviderConfigRow> {
   @override
@@ -5253,6 +5812,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CatalogItemsTable catalogItems = $CatalogItemsTable(this);
   late final $RelationshipsTable relationships = $RelationshipsTable(this);
   late final $AISuggestionsTable aISuggestions = $AISuggestionsTable(this);
+  late final $ProjectNotesTable projectNotes = $ProjectNotesTable(this);
   late final $AIProviderConfigsTable aIProviderConfigs =
       $AIProviderConfigsTable(this);
   late final $MetricEventsTable metricEvents = $MetricEventsTable(this);
@@ -5267,6 +5827,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         catalogItems,
         relationships,
         aISuggestions,
+        projectNotes,
         aIProviderConfigs,
         metricEvents
       ];
@@ -5375,6 +5936,20 @@ final class $$ProjectsTableReferences
         .filter((f) => f.projectId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_aISuggestionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ProjectNotesTable, List<ProjectNoteRow>>
+      _projectNotesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.projectNotes,
+              aliasName: 'projects__id__project_notes__project_id');
+
+  $$ProjectNotesTableProcessedTableManager get projectNotesRefs {
+    final manager = $$ProjectNotesTableTableManager($_db, $_db.projectNotes)
+        .filter((f) => f.projectId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_projectNotesRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -5540,6 +6115,27 @@ class $$ProjectsTableFilterComposer
             $$AISuggestionsTableFilterComposer(
               $db: $db,
               $table: $db.aISuggestions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> projectNotesRefs(
+      Expression<bool> Function($$ProjectNotesTableFilterComposer f) f) {
+    final $$ProjectNotesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.projectNotes,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectNotesTableFilterComposer(
+              $db: $db,
+              $table: $db.projectNotes,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -5775,6 +6371,27 @@ class $$ProjectsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> projectNotesRefs<T extends Object>(
+      Expression<T> Function($$ProjectNotesTableAnnotationComposer a) f) {
+    final $$ProjectNotesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.projectNotes,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectNotesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.projectNotes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> metricEventsRefs<T extends Object>(
       Expression<T> Function($$MetricEventsTableAnnotationComposer a) f) {
     final $$MetricEventsTableAnnotationComposer composer = $composerBuilder(
@@ -5814,6 +6431,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
         bool catalogItemsRefs,
         bool relationshipsRefs,
         bool aISuggestionsRefs,
+        bool projectNotesRefs,
         bool metricEventsRefs})> {
   $$ProjectsTableTableManager(_$AppDatabase db, $ProjectsTable table)
       : super(TableManagerState(
@@ -5899,6 +6517,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
               catalogItemsRefs = false,
               relationshipsRefs = false,
               aISuggestionsRefs = false,
+              projectNotesRefs = false,
               metricEventsRefs = false}) {
             return PrefetchHooks(
               db: db,
@@ -5908,6 +6527,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
                 if (catalogItemsRefs) db.catalogItems,
                 if (relationshipsRefs) db.relationships,
                 if (aISuggestionsRefs) db.aISuggestions,
+                if (projectNotesRefs) db.projectNotes,
                 if (metricEventsRefs) db.metricEvents
               ],
               addJoins: null,
@@ -5977,6 +6597,19 @@ class $$ProjectsTableTableManager extends RootTableManager<
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.projectId == item.id),
                         typedResults: items),
+                  if (projectNotesRefs)
+                    await $_getPrefetchedData<ProjectRow, $ProjectsTable,
+                            ProjectNoteRow>(
+                        currentTable: table,
+                        referencedTable: $$ProjectsTableReferences
+                            ._projectNotesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProjectsTableReferences(db, table, p0)
+                                .projectNotesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.projectId == item.id),
+                        typedResults: items),
                   if (metricEventsRefs)
                     await $_getPrefetchedData<ProjectRow, $ProjectsTable,
                             MetricEventRow>(
@@ -6014,6 +6647,7 @@ typedef $$ProjectsTableProcessedTableManager = ProcessedTableManager<
         bool catalogItemsRefs,
         bool relationshipsRefs,
         bool aISuggestionsRefs,
+        bool projectNotesRefs,
         bool metricEventsRefs})>;
 typedef $$ChaptersTableCreateCompanionBuilder = ChaptersCompanion Function({
   required String id,
@@ -8183,6 +8817,373 @@ typedef $$AISuggestionsTableProcessedTableManager = ProcessedTableManager<
     (AISuggestionRow, $$AISuggestionsTableReferences),
     AISuggestionRow,
     PrefetchHooks Function({bool projectId})>;
+typedef $$ProjectNotesTableCreateCompanionBuilder = ProjectNotesCompanion
+    Function({
+  required String id,
+  required String projectId,
+  Value<String?> targetType,
+  Value<String?> targetId,
+  required String title,
+  required String body,
+  Value<String> source,
+  Value<String?> sourceSuggestionId,
+  Value<String> metadataJson,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$ProjectNotesTableUpdateCompanionBuilder = ProjectNotesCompanion
+    Function({
+  Value<String> id,
+  Value<String> projectId,
+  Value<String?> targetType,
+  Value<String?> targetId,
+  Value<String> title,
+  Value<String> body,
+  Value<String> source,
+  Value<String?> sourceSuggestionId,
+  Value<String> metadataJson,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$ProjectNotesTableReferences
+    extends BaseReferences<_$AppDatabase, $ProjectNotesTable, ProjectNoteRow> {
+  $$ProjectNotesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProjectsTable _projectIdTable(_$AppDatabase db) =>
+      db.projects.createAlias('project_notes__project_id__projects__id');
+
+  $$ProjectsTableProcessedTableManager get projectId {
+    final $_column = $_itemColumn<String>('project_id')!;
+
+    final manager = $$ProjectsTableTableManager($_db, $_db.projects)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$ProjectNotesTableFilterComposer
+    extends Composer<_$AppDatabase, $ProjectNotesTable> {
+  $$ProjectNotesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get targetType => $composableBuilder(
+      column: $table.targetType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get targetId => $composableBuilder(
+      column: $table.targetId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get body => $composableBuilder(
+      column: $table.body, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sourceSuggestionId => $composableBuilder(
+      column: $table.sourceSuggestionId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metadataJson => $composableBuilder(
+      column: $table.metadataJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  $$ProjectsTableFilterComposer get projectId {
+    final $$ProjectsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableFilterComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProjectNotesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProjectNotesTable> {
+  $$ProjectNotesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get targetType => $composableBuilder(
+      column: $table.targetType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get targetId => $composableBuilder(
+      column: $table.targetId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get body => $composableBuilder(
+      column: $table.body, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sourceSuggestionId => $composableBuilder(
+      column: $table.sourceSuggestionId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metadataJson => $composableBuilder(
+      column: $table.metadataJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  $$ProjectsTableOrderingComposer get projectId {
+    final $$ProjectsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableOrderingComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProjectNotesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProjectNotesTable> {
+  $$ProjectNotesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get targetType => $composableBuilder(
+      column: $table.targetType, builder: (column) => column);
+
+  GeneratedColumn<String> get targetId =>
+      $composableBuilder(column: $table.targetId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceSuggestionId => $composableBuilder(
+      column: $table.sourceSuggestionId, builder: (column) => column);
+
+  GeneratedColumn<String> get metadataJson => $composableBuilder(
+      column: $table.metadataJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$ProjectsTableAnnotationComposer get projectId {
+    final $$ProjectsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProjectNotesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ProjectNotesTable,
+    ProjectNoteRow,
+    $$ProjectNotesTableFilterComposer,
+    $$ProjectNotesTableOrderingComposer,
+    $$ProjectNotesTableAnnotationComposer,
+    $$ProjectNotesTableCreateCompanionBuilder,
+    $$ProjectNotesTableUpdateCompanionBuilder,
+    (ProjectNoteRow, $$ProjectNotesTableReferences),
+    ProjectNoteRow,
+    PrefetchHooks Function({bool projectId})> {
+  $$ProjectNotesTableTableManager(_$AppDatabase db, $ProjectNotesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProjectNotesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProjectNotesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProjectNotesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> projectId = const Value.absent(),
+            Value<String?> targetType = const Value.absent(),
+            Value<String?> targetId = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> body = const Value.absent(),
+            Value<String> source = const Value.absent(),
+            Value<String?> sourceSuggestionId = const Value.absent(),
+            Value<String> metadataJson = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProjectNotesCompanion(
+            id: id,
+            projectId: projectId,
+            targetType: targetType,
+            targetId: targetId,
+            title: title,
+            body: body,
+            source: source,
+            sourceSuggestionId: sourceSuggestionId,
+            metadataJson: metadataJson,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String projectId,
+            Value<String?> targetType = const Value.absent(),
+            Value<String?> targetId = const Value.absent(),
+            required String title,
+            required String body,
+            Value<String> source = const Value.absent(),
+            Value<String?> sourceSuggestionId = const Value.absent(),
+            Value<String> metadataJson = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProjectNotesCompanion.insert(
+            id: id,
+            projectId: projectId,
+            targetType: targetType,
+            targetId: targetId,
+            title: title,
+            body: body,
+            source: source,
+            sourceSuggestionId: sourceSuggestionId,
+            metadataJson: metadataJson,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ProjectNotesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({projectId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (projectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.projectId,
+                    referencedTable:
+                        $$ProjectNotesTableReferences._projectIdTable(db),
+                    referencedColumn:
+                        $$ProjectNotesTableReferences._projectIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ProjectNotesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ProjectNotesTable,
+    ProjectNoteRow,
+    $$ProjectNotesTableFilterComposer,
+    $$ProjectNotesTableOrderingComposer,
+    $$ProjectNotesTableAnnotationComposer,
+    $$ProjectNotesTableCreateCompanionBuilder,
+    $$ProjectNotesTableUpdateCompanionBuilder,
+    (ProjectNoteRow, $$ProjectNotesTableReferences),
+    ProjectNoteRow,
+    PrefetchHooks Function({bool projectId})>;
 typedef $$AIProviderConfigsTableCreateCompanionBuilder
     = AIProviderConfigsCompanion Function({
   required String id,
@@ -8730,6 +9731,8 @@ class $AppDatabaseManager {
       $$RelationshipsTableTableManager(_db, _db.relationships);
   $$AISuggestionsTableTableManager get aISuggestions =>
       $$AISuggestionsTableTableManager(_db, _db.aISuggestions);
+  $$ProjectNotesTableTableManager get projectNotes =>
+      $$ProjectNotesTableTableManager(_db, _db.projectNotes);
   $$AIProviderConfigsTableTableManager get aIProviderConfigs =>
       $$AIProviderConfigsTableTableManager(_db, _db.aIProviderConfigs);
   $$MetricEventsTableTableManager get metricEvents =>

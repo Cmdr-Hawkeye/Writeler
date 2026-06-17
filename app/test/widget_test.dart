@@ -4,6 +4,7 @@ import 'package:writeler/features/ai_harness/infrastructure/in_memory_ai_suggest
 import 'package:writeler/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
 import 'package:writeler/features/catalog/infrastructure/in_memory_relationship_repository.dart';
 import 'package:writeler/features/metrics/application/in_memory_metric_repository.dart';
+import 'package:writeler/features/notes/infrastructure/in_memory_project_note_repository.dart';
 import 'package:writeler/features/projects/infrastructure/in_memory_project_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_ai_provider_config_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_secret_vault.dart';
@@ -22,6 +23,7 @@ void main() {
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
         aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
         secretVault: InMemorySecretVault(),
       ),
@@ -45,6 +47,7 @@ void main() {
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
         aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
         secretVault: InMemorySecretVault(),
       ),

@@ -40,6 +40,10 @@ import 'features/metrics/domain/metric_event.dart';
 import 'features/metrics/domain/metric_repository.dart';
 import 'features/metrics/infrastructure/drift_metric_repository.dart';
 import 'features/metrics/infrastructure/lazy_metric_repository.dart';
+import 'features/notes/domain/project_note.dart';
+import 'features/notes/domain/project_note_repository.dart';
+import 'features/notes/infrastructure/drift_project_note_repository.dart';
+import 'features/notes/infrastructure/lazy_project_note_repository.dart';
 import 'features/projects/application/create_project.dart';
 import 'features/projects/domain/project.dart';
 import 'features/projects/domain/project_repository.dart';
@@ -94,6 +98,9 @@ void main() {
       aiSuggestionRepository: LazyAISuggestionRepository(
         () => DriftAISuggestionRepository(getDatabase()),
       ),
+      projectNoteRepository: LazyProjectNoteRepository(
+        () => DriftProjectNoteRepository(getDatabase()),
+      ),
       aiProviderConfigRepository: LazyAIProviderConfigRepository(
         () => DriftAIProviderConfigRepository(getDatabase()),
       ),
@@ -111,6 +118,7 @@ final class WritelerApp extends StatelessWidget {
     required this.relationshipRepository,
     required this.metricRepository,
     required this.aiSuggestionRepository,
+    required this.projectNoteRepository,
     required this.aiProviderConfigRepository,
     required this.secretVault,
     super.key,
@@ -123,6 +131,7 @@ final class WritelerApp extends StatelessWidget {
   final RelationshipRepository relationshipRepository;
   final MetricRepository metricRepository;
   final AISuggestionRepository aiSuggestionRepository;
+  final ProjectNoteRepository projectNoteRepository;
   final AIProviderConfigRepository aiProviderConfigRepository;
   final SecretVault secretVault;
 
@@ -164,6 +173,7 @@ final class WritelerApp extends StatelessWidget {
         relationshipRepository: relationshipRepository,
         metricRepository: metricRepository,
         aiSuggestionRepository: aiSuggestionRepository,
+        projectNoteRepository: projectNoteRepository,
         aiProviderConfigRepository: aiProviderConfigRepository,
         secretVault: secretVault,
       ),
@@ -180,6 +190,7 @@ final class WritelerShell extends StatefulWidget {
     required this.relationshipRepository,
     required this.metricRepository,
     required this.aiSuggestionRepository,
+    required this.projectNoteRepository,
     required this.aiProviderConfigRepository,
     required this.secretVault,
     super.key,
@@ -192,6 +203,7 @@ final class WritelerShell extends StatefulWidget {
   final RelationshipRepository relationshipRepository;
   final MetricRepository metricRepository;
   final AISuggestionRepository aiSuggestionRepository;
+  final ProjectNoteRepository projectNoteRepository;
   final AIProviderConfigRepository aiProviderConfigRepository;
   final SecretVault secretVault;
 
@@ -239,6 +251,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   List<Relationship> _relationships = const [];
   List<MetricEvent> _metrics = const [];
   List<AISuggestion> _suggestions = const [];
+  List<ProjectNote> _notes = const [];
   Project? _selectedProject;
   Scene? _selectedScene;
   String? _selectedSceneChapterId;
@@ -447,12 +460,14 @@ final class _WritelerShellState extends State<WritelerShell> {
     final metricsFuture = widget.metricRepository.listForProject(projectId);
     final suggestionsFuture =
         widget.aiSuggestionRepository.listForProject(projectId);
+    final notesFuture = widget.projectNoteRepository.listForProject(projectId);
     final scenes = await scenesFuture;
     final chapters = await chaptersFuture;
     final catalogItems = await catalogFuture;
     final relationships = await relationshipsFuture;
     final metrics = await metricsFuture;
     final suggestions = await suggestionsFuture;
+    final notes = await notesFuture;
     if (!mounted) return;
     setState(() {
       _scenes = scenes;
@@ -461,6 +476,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       _relationships = relationships;
       _metrics = metrics;
       _suggestions = suggestions;
+      _notes = notes;
       _selectedScene = scenes.firstOrNull;
       _syncSceneControllers(_selectedScene);
     });
@@ -476,6 +492,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       _relationships = const [];
       _metrics = const [];
       _suggestions = const [];
+      _notes = const [];
       _syncSceneControllers(null);
     });
     await _loadProjectData(project.id);
@@ -570,6 +587,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       _relationships = const [];
       _metrics = const [];
       _suggestions = const [];
+      _notes = const [];
       _selectedScene = null;
       _syncSceneControllers(null);
     });
@@ -948,10 +966,12 @@ final class _WritelerShellState extends State<WritelerShell> {
     await _deleteRelationshipsForRef(
       EntityRef(type: EntityType.scene, id: scene.id),
     );
+    await _deleteNotesForRef(EntityRef(type: EntityType.scene, id: scene.id));
     await widget.sceneRepository.delete(scene.id);
     final scenes = await widget.sceneRepository.listByProject(project.id);
     final relationships =
         await widget.relationshipRepository.listByProject(project.id);
+    final notes = await widget.projectNoteRepository.listForProject(project.id);
     final selected = _selectedScene?.id == scene.id
         ? scenes.firstOrNull
         : scenes.firstWhere(
@@ -962,6 +982,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     setState(() {
       _scenes = scenes;
       _relationships = relationships;
+      _notes = notes;
       _selectedScene = scenes.isEmpty ? null : selected;
       _syncSceneControllers(_selectedScene);
     });
@@ -986,14 +1007,17 @@ final class _WritelerShellState extends State<WritelerShell> {
     if (!confirmed) return;
 
     await _deleteRelationshipsForRef(EntityRef(type: item.type, id: item.id));
+    await _deleteNotesForRef(EntityRef(type: item.type, id: item.id));
     await widget.catalogItemRepository.delete(item.id);
     final items = await widget.catalogItemRepository.listByProject(project.id);
     final relationships =
         await widget.relationshipRepository.listByProject(project.id);
+    final notes = await widget.projectNoteRepository.listForProject(project.id);
     if (!mounted) return;
     setState(() {
       _catalogItems = items;
       _relationships = relationships;
+      _notes = notes;
     });
     await _recordProjectMetric(
       eventType: 'catalog.deleted',
@@ -1016,6 +1040,16 @@ final class _WritelerShellState extends State<WritelerShell> {
           _sameRef(relationship.target, ref),
     )) {
       await widget.relationshipRepository.delete(relationship.id);
+    }
+  }
+
+  Future<void> _deleteNotesForRef(EntityRef ref) async {
+    final notes = _notes
+        .where((note) =>
+            note.target?.type == ref.type && note.target?.id == ref.id)
+        .toList();
+    for (final note in notes) {
+      await widget.projectNoteRepository.delete(note.id);
     }
   }
 
@@ -1195,6 +1229,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       scenes: _scenes,
       catalogItems: _catalogItems,
       relationships: _relationships,
+      notes: _notes,
     );
   }
 
@@ -1209,6 +1244,28 @@ final class _WritelerShellState extends State<WritelerShell> {
     if (decision == SuggestionDecision.rejected) {
       await widget.aiSuggestionRepository.delete(suggestion.id);
     } else {
+      if (decision == SuggestionDecision.convertedToNote) {
+        final now = DateTime.now().toUtc();
+        await widget.projectNoteRepository.save(
+          ProjectNote(
+            id: newLocalId('note'),
+            projectId: project.id,
+            target: suggestion.target,
+            title: _aiTaskLabel(suggestion.suggestionType, copy),
+            body: suggestion.responseText,
+            source: 'aiSuggestion',
+            sourceSuggestionId: suggestion.id,
+            metadata: {
+              'suggestionType': suggestion.suggestionType,
+              'providerId': suggestion.providerId,
+              'modelName': suggestion.modelName,
+              'promptText': suggestion.promptText,
+            },
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
       await widget.aiSuggestionRepository.save(
         suggestion.copyWith(
           userDecision: decision,
@@ -1221,10 +1278,27 @@ final class _WritelerShellState extends State<WritelerShell> {
     }
     final suggestions =
         await widget.aiSuggestionRepository.listForProject(project.id);
+    final notes = await widget.projectNoteRepository.listForProject(project.id);
     if (!mounted) return;
-    setState(() => _suggestions = suggestions);
+    setState(() {
+      _suggestions = suggestions;
+      _notes = notes;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(_suggestionDecisionFeedback(decision, copy))),
+    );
+  }
+
+  Future<void> _deleteNote(ProjectNote note, WritelerCopy copy) async {
+    final project = _selectedProject;
+    if (project == null) return;
+
+    await widget.projectNoteRepository.delete(note.id);
+    final notes = await widget.projectNoteRepository.listForProject(project.id);
+    if (!mounted) return;
+    setState(() => _notes = notes);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('noteDeleted'))),
     );
   }
 
@@ -1238,6 +1312,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       scenes: _scenes,
       catalogItems: _catalogItems,
       relationships: _relationships,
+      notes: _notes,
       profile: ExportProfile(
         id: 'ui-preview',
         projectId: project.id,
@@ -1274,6 +1349,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       scenes: _scenes,
       catalogItems: _catalogItems,
       relationships: _relationships,
+      notes: _notes,
       profile: ExportProfile(
         id: 'ui-download',
         projectId: project.id,
@@ -1377,10 +1453,16 @@ final class _WritelerShellState extends State<WritelerShell> {
       for (final relationship in archive.relationships) {
         await widget.relationshipRepository.save(relationship);
       }
+      for (final note in archive.notes) {
+        await widget.projectNoteRepository.save(note);
+      }
 
       final projects = await widget.projectRepository.listActive();
       final suggestions = await widget.aiSuggestionRepository
           .listForProject(archive.project.id);
+      final notes = await widget.projectNoteRepository.listForProject(
+        archive.project.id,
+      );
       if (!mounted) return;
       setState(() {
         _projects = projects;
@@ -1390,6 +1472,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         _catalogItems = archive.catalogItems;
         _relationships = archive.relationships;
         _suggestions = suggestions;
+        _notes = notes;
         _selectedScene = archive.scenes.firstOrNull;
         _syncSceneControllers(_selectedScene);
         _importArchiveController.clear();
@@ -1406,6 +1489,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           'scenes': archive.scenes.length,
           'catalogItems': archive.catalogItems.length,
           'relationships': archive.relationships.length,
+          'notes': archive.notes.length,
           if (inspection.envelope != null) ...inspection.envelope!.toJson(),
         },
       );
@@ -1623,6 +1707,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           selectedProject: _selectedProject,
           chapters: _chapters,
           scenes: _scenes,
+          notes: _notes,
           catalogItems: _catalogItems,
           metrics: _metrics,
           suggestions: _suggestions,
@@ -1725,6 +1810,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           selectedScene: _selectedScene,
           scenes: _scenes,
           suggestions: _suggestions,
+          notes: _notes,
           activeProviderConfig:
               _activeProviderConfig ?? _defaultProviderConfig(),
           promptController: _aiPromptController,
@@ -1739,12 +1825,14 @@ final class _WritelerShellState extends State<WritelerShell> {
               _decideSuggestion(copy, suggestion, SuggestionDecision.rejected),
           onConvertSuggestion: (suggestion) => _decideSuggestion(
               copy, suggestion, SuggestionDecision.convertedToNote),
+          onDeleteNote: (note) => _deleteNote(note, copy),
         ),
       8 => _ExportCenter(
           copy: copy,
           project: _selectedProject,
           chapters: _chapters,
           scenes: _scenes,
+          notes: _notes,
           format: _selectedExportFormat,
           includeSceneTitles: _includeSceneTitles,
           includeMetadata: _includeExportMetadata,
@@ -1946,6 +2034,7 @@ final class _ProjectOverview extends StatelessWidget {
     required this.selectedProject,
     required this.chapters,
     required this.scenes,
+    required this.notes,
     required this.catalogItems,
     required this.metrics,
     required this.suggestions,
@@ -1958,6 +2047,7 @@ final class _ProjectOverview extends StatelessWidget {
   final Project? selectedProject;
   final List<Chapter> chapters;
   final List<Scene> scenes;
+  final List<ProjectNote> notes;
   final List<CatalogItem> catalogItems;
   final List<MetricEvent> metrics;
   final List<AISuggestion> suggestions;
@@ -2029,6 +2119,8 @@ final class _ProjectOverview extends StatelessWidget {
                     _MetricTile(
                         label: copy.t('catalog'),
                         value: catalogItems.length.toString()),
+                    _MetricTile(
+                        label: copy.t('notes'), value: notes.length.toString()),
                     _MetricTile(
                       label: copy.t('openSuggestions'),
                       value: pendingSuggestions.toString(),
@@ -3284,6 +3376,7 @@ final class _AIWorkshop extends StatelessWidget {
     required this.selectedScene,
     required this.scenes,
     required this.suggestions,
+    required this.notes,
     required this.activeProviderConfig,
     required this.promptController,
     required this.isRequesting,
@@ -3293,6 +3386,7 @@ final class _AIWorkshop extends StatelessWidget {
     required this.onAcceptSuggestion,
     required this.onRejectSuggestion,
     required this.onConvertSuggestion,
+    required this.onDeleteNote,
   });
 
   final WritelerCopy copy;
@@ -3300,6 +3394,7 @@ final class _AIWorkshop extends StatelessWidget {
   final Scene? selectedScene;
   final List<Scene> scenes;
   final List<AISuggestion> suggestions;
+  final List<ProjectNote> notes;
   final AIProviderConfig activeProviderConfig;
   final TextEditingController promptController;
   final bool isRequesting;
@@ -3309,10 +3404,10 @@ final class _AIWorkshop extends StatelessWidget {
   final ValueChanged<AISuggestion> onAcceptSuggestion;
   final ValueChanged<AISuggestion> onRejectSuggestion;
   final ValueChanged<AISuggestion> onConvertSuggestion;
+  final ValueChanged<ProjectNote> onDeleteNote;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
     final scene = selectedScene ?? scenes.firstOrNull;
     final aiAvailable = project?.aiEnabled == true &&
         project?.noAiNoCloud == false &&
@@ -3451,32 +3546,176 @@ final class _AIWorkshop extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 24),
-                Text(copy.t('suggestions'),
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
                 Expanded(
-                  child: suggestions.isEmpty
-                      ? Text(copy.t('noSuggestions'),
-                          style: TextStyle(color: color.onSurfaceVariant))
-                      : ListView.separated(
-                          itemCount: suggestions.length,
-                          separatorBuilder: (context, index) =>
-                              const Divider(height: 1),
-                          itemBuilder: (context, index) {
-                            final suggestion = suggestions[index];
-                            return _AISuggestionTile(
-                              copy: copy,
-                              suggestion: suggestion,
-                              onAcceptSuggestion: onAcceptSuggestion,
-                              onConvertSuggestion: onConvertSuggestion,
-                              onRejectSuggestion: onRejectSuggestion,
-                            );
-                          },
-                        ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final suggestionsPanel = _AISuggestionsPanel(
+                        copy: copy,
+                        suggestions: suggestions,
+                        onAcceptSuggestion: onAcceptSuggestion,
+                        onConvertSuggestion: onConvertSuggestion,
+                        onRejectSuggestion: onRejectSuggestion,
+                      );
+                      final notesPanel = _AINotesPanel(
+                        copy: copy,
+                        notes: notes,
+                        scenes: scenes,
+                        onDeleteNote: onDeleteNote,
+                      );
+                      if (constraints.maxWidth >= 920) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 3, child: suggestionsPanel),
+                            const SizedBox(width: 24),
+                            SizedBox(width: 360, child: notesPanel),
+                          ],
+                        );
+                      }
+                      return Column(
+                        children: [
+                          Expanded(child: suggestionsPanel),
+                          const SizedBox(height: 16),
+                          SizedBox(height: 220, child: notesPanel),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _AISuggestionsPanel extends StatelessWidget {
+  const _AISuggestionsPanel({
+    required this.copy,
+    required this.suggestions,
+    required this.onAcceptSuggestion,
+    required this.onConvertSuggestion,
+    required this.onRejectSuggestion,
+  });
+
+  final WritelerCopy copy;
+  final List<AISuggestion> suggestions;
+  final ValueChanged<AISuggestion> onAcceptSuggestion;
+  final ValueChanged<AISuggestion> onConvertSuggestion;
+  final ValueChanged<AISuggestion> onRejectSuggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(copy.t('suggestions'),
+            style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Expanded(
+          child: suggestions.isEmpty
+              ? Text(copy.t('noSuggestions'),
+                  style: TextStyle(color: color.onSurfaceVariant))
+              : ListView.separated(
+                  itemCount: suggestions.length,
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final suggestion = suggestions[index];
+                    return _AISuggestionTile(
+                      copy: copy,
+                      suggestion: suggestion,
+                      onAcceptSuggestion: onAcceptSuggestion,
+                      onConvertSuggestion: onConvertSuggestion,
+                      onRejectSuggestion: onRejectSuggestion,
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _AINotesPanel extends StatelessWidget {
+  const _AINotesPanel({
+    required this.copy,
+    required this.notes,
+    required this.scenes,
+    required this.onDeleteNote,
+  });
+
+  final WritelerCopy copy;
+  final List<ProjectNote> notes;
+  final List<Scene> scenes;
+  final ValueChanged<ProjectNote> onDeleteNote;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(copy.t('notes'), style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Expanded(
+          child: notes.isEmpty
+              ? Text(
+                  copy.t('noNotes'),
+                  style: TextStyle(color: color.onSurfaceVariant),
+                )
+              : ListView.separated(
+                  itemCount: notes.length,
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final note = notes[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.sticky_note_2_outlined),
+                      title: Text(
+                        note.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_noteTargetLabel(note, scenes) case final target?)
+                            Text(
+                              target,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: color.primary),
+                            ),
+                          Text(
+                            note.body,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            _formatLocalDateTime(note.createdAt),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: color.onSurfaceVariant,
+                                    ),
+                          ),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        tooltip: copy.t('delete'),
+                        onPressed: () => onDeleteNote(note),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -3740,6 +3979,7 @@ final class _ExportCenter extends StatelessWidget {
     required this.project,
     required this.chapters,
     required this.scenes,
+    required this.notes,
     required this.catalogItems,
     required this.relationships,
     required this.format,
@@ -3765,6 +4005,7 @@ final class _ExportCenter extends StatelessWidget {
   final Project? project;
   final List<Chapter> chapters;
   final List<Scene> scenes;
+  final List<ProjectNote> notes;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
   final ExportFormat format;
@@ -3796,6 +4037,7 @@ final class _ExportCenter extends StatelessWidget {
             scenes: scenes,
             catalogItems: catalogItems,
             relationships: relationships,
+            notes: notes,
             profile: ExportProfile(
               id: 'preview',
               projectId: project.id,
@@ -4073,7 +4315,8 @@ final class _ImportArchivePreview extends StatelessWidget {
                     '${copy.t('chapters')}: ${preview.chapterCount} · '
                     '${copy.t('scenes')}: ${preview.sceneCount}\n'
                     '${copy.t('catalog')}: ${preview.catalogItemCount} · '
-                    '${copy.t('relationships')}: ${preview.relationshipCount}',
+                    '${copy.t('relationships')}: ${preview.relationshipCount}\n'
+                    '${copy.t('notes')}: ${preview.noteCount}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: color.onSecondaryContainer,
                         ),
@@ -5449,6 +5692,16 @@ String _suggestionDecisionFeedback(
     SuggestionDecision.rejected => copy.t('suggestionDeletedFeedback'),
     SuggestionDecision.convertedToNote => copy.t('suggestionConvertedFeedback'),
   };
+}
+
+String? _noteTargetLabel(ProjectNote note, List<Scene> scenes) {
+  final target = note.target;
+  if (target?.type == EntityType.scene) {
+    final targetId = target?.id;
+    final scene = scenes.where((scene) => scene.id == targetId).firstOrNull;
+    return scene?.title;
+  }
+  return target?.id;
 }
 
 String _formatLocalDateTime(DateTime value) {

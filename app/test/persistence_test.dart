@@ -8,6 +8,8 @@ import 'package:writeler/features/catalog/domain/relationship.dart';
 import 'package:writeler/features/catalog/infrastructure/drift_relationship_repository.dart';
 import 'package:writeler/features/metrics/application/record_metric.dart';
 import 'package:writeler/features/metrics/infrastructure/drift_metric_repository.dart';
+import 'package:writeler/features/notes/domain/project_note.dart';
+import 'package:writeler/features/notes/infrastructure/drift_project_note_repository.dart';
 import 'package:writeler/features/projects/application/create_project.dart';
 import 'package:writeler/features/projects/infrastructure/drift_project_repository.dart';
 import 'package:writeler/features/settings/domain/ai_provider_config.dart';
@@ -24,6 +26,7 @@ void main() {
   late DriftSceneRepository sceneRepository;
   late DriftRelationshipRepository relationshipRepository;
   late DriftMetricRepository metricRepository;
+  late DriftProjectNoteRepository noteRepository;
   late DriftAIProviderConfigRepository providerConfigRepository;
 
   setUp(() {
@@ -33,6 +36,7 @@ void main() {
     sceneRepository = DriftSceneRepository(database);
     relationshipRepository = DriftRelationshipRepository(database);
     metricRepository = DriftMetricRepository(database);
+    noteRepository = DriftProjectNoteRepository(database);
     providerConfigRepository = DriftAIProviderConfigRepository(database);
   });
 
@@ -41,11 +45,11 @@ void main() {
   });
 
   test('database schema creates core local-first tables', () async {
-    expect(database.schemaVersion, 6);
+    expect(database.schemaVersion, 7);
 
     final rows = await database
         .customSelect(
-          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'catalog_items', 'chapters', 'metric_events', 'projects', 'relationships', 'scenes') order by name",
+          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'catalog_items', 'chapters', 'metric_events', 'project_notes', 'projects', 'relationships', 'scenes') order by name",
         )
         .get();
 
@@ -55,6 +59,7 @@ void main() {
       'catalog_items',
       'chapters',
       'metric_events',
+      'project_notes',
       'projects',
       'relationships',
       'scenes',
@@ -74,13 +79,15 @@ void main() {
     expect(loaded?.title, 'Persisted Novel');
     expect(loaded?.wordTarget, 90000);
 
-    await projectRepository.save(project.copyWith(status: DraftStatus.archived));
+    await projectRepository
+        .save(project.copyWith(status: DraftStatus.archived));
 
     final activeProjects = await projectRepository.listActive();
     expect(activeProjects, isEmpty);
   });
 
-  test('scene repository persists manuscript text and returns project order', () async {
+  test('scene repository persists manuscript text and returns project order',
+      () async {
     final project = await CreateProject(projectRepository)(
       const CreateProjectCommand(title: 'Structured Book'),
     );
@@ -101,12 +108,15 @@ void main() {
       ),
     );
 
-    await sceneRepository.save(laterScene.withAuthorText('Second in reading order.'));
-    await sceneRepository.save(firstScene.withAuthorText('First in reading order.'));
+    await sceneRepository
+        .save(laterScene.withAuthorText('Second in reading order.'));
+    await sceneRepository
+        .save(firstScene.withAuthorText('First in reading order.'));
 
     final scenes = await sceneRepository.listByProject(project.id);
 
-    expect(scenes.map((scene) => scene.title).toList(), ['First Scene', 'Later Scene']);
+    expect(scenes.map((scene) => scene.title).toList(),
+        ['First Scene', 'Later Scene']);
     expect(scenes.first.actualWordCount, 4);
   });
 
@@ -117,14 +127,17 @@ void main() {
     final createChapter = CreateChapter(chapterRepository);
 
     await createChapter(
-      CreateChapterCommand(projectId: project.id, title: 'Second', orderIndex: 2000),
+      CreateChapterCommand(
+          projectId: project.id, title: 'Second', orderIndex: 2000),
     );
     await createChapter(
-      CreateChapterCommand(projectId: project.id, title: 'First', orderIndex: 1000),
+      CreateChapterCommand(
+          projectId: project.id, title: 'First', orderIndex: 1000),
     );
 
     final chapters = await chapterRepository.listByProject(project.id);
-    expect(chapters.map((chapter) => chapter.title).toList(), ['First', 'Second']);
+    expect(
+        chapters.map((chapter) => chapter.title).toList(), ['First', 'Second']);
   });
 
   test('provider config repository persists model configuration', () async {
@@ -173,7 +186,8 @@ void main() {
 
     await relationshipRepository.delete(relationship.id);
     expect(
-      await relationshipRepository.listForSource(EntityRef(type: EntityType.scene, id: scene.id)),
+      await relationshipRepository
+          .listForSource(EntityRef(type: EntityType.scene, id: scene.id)),
       isEmpty,
     );
   });
@@ -194,5 +208,55 @@ void main() {
     expect(events.single.eventType, 'scene.saved');
     expect(events.single.value, 42);
     expect(events.single.metadata['sceneId'], 'scene-1');
+  });
+
+  test('project note repository persists and deletes notes', () async {
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Noted Book'),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(projectId: project.id, title: 'Noted Scene'),
+    );
+    final earlier = DateTime.utc(2026);
+    final later = DateTime.utc(2026, 1, 2);
+
+    await noteRepository.save(
+      ProjectNote(
+        id: 'note-1',
+        projectId: project.id,
+        target: EntityRef(type: EntityType.scene, id: scene.id),
+        title: 'Scene idea',
+        body: 'Raise the pressure in the middle.',
+        source: 'aiSuggestion',
+        sourceSuggestionId: 'suggestion-1',
+        metadata: {'task': 'sceneIdeas'},
+        createdAt: earlier,
+        updatedAt: earlier,
+      ),
+    );
+    await noteRepository.save(
+      ProjectNote(
+        id: 'note-2',
+        projectId: project.id,
+        title: 'Project note',
+        body: 'Keep the ending quiet.',
+        source: 'manual',
+        createdAt: later,
+        updatedAt: later,
+      ),
+    );
+
+    final notes = await noteRepository.listForProject(project.id);
+    expect(notes.map((note) => note.id).toList(), ['note-2', 'note-1']);
+    expect(notes.last.target?.id, scene.id);
+    expect(notes.last.metadata['task'], 'sceneIdeas');
+
+    await noteRepository.delete('note-1');
+    expect(
+      (await noteRepository.listForProject(project.id))
+          .map((note) => note.id)
+          .toList(),
+      ['note-2'],
+    );
   });
 }

@@ -134,6 +134,24 @@ class AISuggestions extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('ProjectNoteRow')
+class ProjectNotes extends Table {
+  TextColumn get id => text()();
+  TextColumn get projectId => text().references(Projects, #id)();
+  TextColumn get targetType => text().nullable()();
+  TextColumn get targetId => text().nullable()();
+  TextColumn get title => text()();
+  TextColumn get body => text()();
+  TextColumn get source => text().withDefault(const Constant('manual'))();
+  TextColumn get sourceSuggestionId => text().nullable()();
+  TextColumn get metadataJson => text().withDefault(const Constant('{}'))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DataClassName('AIProviderConfigRow')
 class AIProviderConfigs extends Table {
   TextColumn get id => text()();
@@ -171,6 +189,7 @@ class MetricEvents extends Table {
     CatalogItems,
     Relationships,
     AISuggestions,
+    ProjectNotes,
     AIProviderConfigs,
     MetricEvents,
   ],
@@ -189,7 +208,7 @@ final class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -212,6 +231,9 @@ final class AppDatabase extends _$AppDatabase {
           }
           if (from < 6) {
             await migrator.createTable(metricEvents);
+          }
+          if (from < 7) {
+            await migrator.createTable(projectNotes);
           }
         },
         beforeOpen: (details) async {
