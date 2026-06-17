@@ -26,6 +26,34 @@ final class ProjectNote {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  ProjectNote copyWith({
+    EntityRef? target,
+    bool clearTarget = false,
+    String? title,
+    String? body,
+    String? source,
+    String? sourceSuggestionId,
+    bool clearSourceSuggestionId = false,
+    JsonMap? metadata,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ProjectNote(
+      id: id,
+      projectId: projectId,
+      target: clearTarget ? null : target ?? this.target,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      source: source ?? this.source,
+      sourceSuggestionId: clearSourceSuggestionId
+          ? null
+          : sourceSuggestionId ?? this.sourceSuggestionId,
+      metadata: metadata ?? this.metadata,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   JsonMap toJson() => {
         'id': id,
         'projectId': projectId,

@@ -1302,6 +1302,52 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<ProjectNote?> _saveNote(
+    WritelerCopy copy, {
+    ProjectNote? existing,
+    required String title,
+    required String body,
+    required EntityRef? target,
+  }) async {
+    final project = _selectedProject;
+    if (project == null) return null;
+    final now = DateTime.now().toUtc();
+    final trimmedTitle = title.trim();
+    final trimmedBody = body.trim();
+    if (trimmedTitle.isEmpty && trimmedBody.isEmpty) return null;
+
+    final note = existing == null
+        ? ProjectNote(
+            id: newLocalId('note'),
+            projectId: project.id,
+            target: target,
+            title: trimmedTitle.isEmpty ? copy.t('untitledNote') : trimmedTitle,
+            body: trimmedBody,
+            source: 'manual',
+            createdAt: now,
+            updatedAt: now,
+          )
+        : existing.copyWith(
+            target: target,
+            clearTarget: target == null,
+            title: trimmedTitle.isEmpty ? copy.t('untitledNote') : trimmedTitle,
+            body: trimmedBody,
+            updatedAt: now,
+          );
+
+    await widget.projectNoteRepository.save(note);
+    final notes = await widget.projectNoteRepository.listForProject(project.id);
+    if (!mounted) return note;
+    setState(() => _notes = notes);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            existing == null ? copy.t('noteCreated') : copy.t('noteSaved')),
+      ),
+    );
+    return note;
+  }
+
   Future<void> _copyExport(WritelerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
@@ -1640,6 +1686,11 @@ final class _WritelerShellState extends State<WritelerShell> {
                 label: Text(copy.t('analysis')),
               ),
               NavigationRailDestination(
+                icon: const Icon(Icons.sticky_note_2_outlined),
+                selectedIcon: const Icon(Icons.sticky_note_2),
+                label: Text(copy.t('notes')),
+              ),
+              NavigationRailDestination(
                 icon: const Icon(Icons.psychology_alt_outlined),
                 selectedIcon: const Icon(Icons.psychology_alt),
                 label: Text(copy.t('aiWorkshop')),
@@ -1804,7 +1855,32 @@ final class _WritelerShellState extends State<WritelerShell> {
             setState(() => _selectedRailIndex = 1);
           },
         ),
-      7 => _AIWorkshop(
+      7 => _NotesCockpit(
+          copy: copy,
+          project: _selectedProject,
+          notes: _notes,
+          scenes: _scenes,
+          catalogItems: _catalogItems,
+          onSaveNote: ({
+            existing,
+            required title,
+            required body,
+            required target,
+          }) =>
+              _saveNote(
+            copy,
+            existing: existing,
+            title: title,
+            body: body,
+            target: target,
+          ),
+          onDeleteNote: (note) => _deleteNote(note, copy),
+          onOpenScene: (scene) {
+            _selectScene(scene);
+            setState(() => _selectedRailIndex = 1);
+          },
+        ),
+      8 => _AIWorkshop(
           copy: copy,
           project: _selectedProject,
           selectedScene: _selectedScene,
@@ -1827,7 +1903,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               copy, suggestion, SuggestionDecision.convertedToNote),
           onDeleteNote: (note) => _deleteNote(note, copy),
         ),
-      8 => _ExportCenter(
+      9 => _ExportCenter(
           copy: copy,
           project: _selectedProject,
           chapters: _chapters,
@@ -3015,6 +3091,505 @@ final class _AnalysisWorkspace extends StatelessWidget {
     return (relationship.source.type == left &&
             relationship.target.type == right) ||
         (relationship.source.type == right && relationship.target.type == left);
+  }
+}
+
+typedef _SaveNoteCallback = Future<ProjectNote?> Function({
+  ProjectNote? existing,
+  required String title,
+  required String body,
+  required EntityRef? target,
+});
+
+enum _NoteFilter { all, project, scene, catalog, manual, ai }
+
+final class _NotesCockpit extends StatefulWidget {
+  const _NotesCockpit({
+    required this.copy,
+    required this.project,
+    required this.notes,
+    required this.scenes,
+    required this.catalogItems,
+    required this.onSaveNote,
+    required this.onDeleteNote,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final Project? project;
+  final List<ProjectNote> notes;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final _SaveNoteCallback onSaveNote;
+  final ValueChanged<ProjectNote> onDeleteNote;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  State<_NotesCockpit> createState() => _NotesCockpitState();
+}
+
+final class _NotesCockpitState extends State<_NotesCockpit> {
+  late final TextEditingController _searchController = TextEditingController();
+  late final TextEditingController _titleController = TextEditingController();
+  late final TextEditingController _bodyController = TextEditingController();
+  _NoteFilter _filter = _NoteFilter.all;
+  String _targetValue = 'project';
+  String? _selectedNoteId;
+  bool _draftingNew = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectInitialNote();
+  }
+
+  @override
+  void didUpdateWidget(covariant _NotesCockpit oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final selectedExists =
+        widget.notes.any((note) => note.id == _selectedNoteId);
+    if (!_draftingNew && !selectedExists) {
+      _selectInitialNote();
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  ProjectNote? get _selectedNote => _draftingNew
+      ? null
+      : widget.notes.where((note) => note.id == _selectedNoteId).firstOrNull;
+
+  void _selectInitialNote() {
+    final note = widget.notes.firstOrNull;
+    _loadNote(note);
+  }
+
+  void _startNewNote() {
+    setState(() {
+      _draftingNew = true;
+      _selectedNoteId = null;
+      _titleController.clear();
+      _bodyController.clear();
+      _targetValue = 'project';
+    });
+  }
+
+  void _loadNote(ProjectNote? note) {
+    _draftingNew = note == null;
+    _selectedNoteId = note?.id;
+    _titleController.text = note?.title ?? '';
+    _bodyController.text = note?.body ?? '';
+    _targetValue = _targetValueFor(note?.target);
+  }
+
+  Future<void> _saveCurrentNote() async {
+    final saved = await widget.onSaveNote(
+      existing: _selectedNote,
+      title: _titleController.text,
+      body: _bodyController.text,
+      target: _targetFromValue(_targetValue),
+    );
+    if (saved == null || !mounted) return;
+    setState(() {
+      _draftingNew = false;
+      _selectedNoteId = saved.id;
+      _titleController.text = saved.title;
+      _bodyController.text = saved.body;
+      _targetValue = _targetValueFor(saved.target);
+    });
+  }
+
+  void _deleteCurrentNote() {
+    final note = _selectedNote;
+    if (note == null) return;
+    widget.onDeleteNote(note);
+    setState(() {
+      _selectedNoteId = null;
+      _draftingNew = false;
+      _titleController.clear();
+      _bodyController.clear();
+      _targetValue = 'project';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredNotes = _filteredNotes();
+    final selectedNote = _selectedNote;
+
+    return Column(
+      children: [
+        _WorkspaceHeader(
+          title: widget.copy.t('notesCockpit'),
+          actionLabel: widget.copy.t('newNote'),
+          actionIcon: Icons.add,
+          onAction: _startNewNote,
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final list = _NotesListPane(
+                copy: widget.copy,
+                notes: filteredNotes,
+                selectedNoteId: _selectedNoteId,
+                searchController: _searchController,
+                filter: _filter,
+                scenes: widget.scenes,
+                catalogItems: widget.catalogItems,
+                onFilterChanged: (filter) => setState(() => _filter = filter),
+                onSearchChanged: (_) => setState(() {}),
+                onSelectNote: (note) => setState(() => _loadNote(note)),
+              );
+              final editor = _NoteEditorPane(
+                copy: widget.copy,
+                project: widget.project,
+                note: selectedNote,
+                titleController: _titleController,
+                bodyController: _bodyController,
+                targetValue: _targetValue,
+                targetOptions: _targetOptions(),
+                draftingNew: _draftingNew,
+                onTargetChanged: (value) =>
+                    setState(() => _targetValue = value ?? 'project'),
+                onSave: _saveCurrentNote,
+                onDelete: selectedNote == null ? null : _deleteCurrentNote,
+                onOpenScene:
+                    _sceneForTarget(_targetFromValue(_targetValue)) == null
+                        ? null
+                        : () => widget.onOpenScene(
+                            _sceneForTarget(_targetFromValue(_targetValue))!),
+              );
+
+              if (constraints.maxWidth < 980) {
+                return Column(
+                  children: [
+                    SizedBox(height: 280, child: list),
+                    const Divider(height: 1),
+                    Expanded(child: editor),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  SizedBox(width: 380, child: list),
+                  const VerticalDivider(width: 1),
+                  Expanded(child: editor),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<ProjectNote> _filteredNotes() {
+    final query = _searchController.text.trim().toLowerCase();
+    return widget.notes.where((note) {
+      final matchesFilter = switch (_filter) {
+        _NoteFilter.all => true,
+        _NoteFilter.project => note.target == null,
+        _NoteFilter.scene => note.target?.type == EntityType.scene,
+        _NoteFilter.catalog => note.target?.type == EntityType.character ||
+            note.target?.type == EntityType.location ||
+            note.target?.type == EntityType.object,
+        _NoteFilter.manual => note.source == 'manual',
+        _NoteFilter.ai => note.source == 'aiSuggestion',
+      };
+      if (!matchesFilter) return false;
+      if (query.isEmpty) return true;
+      final targetLabel =
+          _noteTargetDisplay(note.target, widget.scenes, widget.catalogItems);
+      return note.title.toLowerCase().contains(query) ||
+          note.body.toLowerCase().contains(query) ||
+          targetLabel.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  List<DropdownMenuItem<String>> _targetOptions() {
+    return [
+      DropdownMenuItem(
+        value: 'project',
+        child: Text(widget.copy.t('targetProject')),
+      ),
+      for (final scene in widget.scenes)
+        DropdownMenuItem(
+          value:
+              _targetValueFor(EntityRef(type: EntityType.scene, id: scene.id)),
+          child: Text('${widget.copy.t('scene')}: ${scene.title}'),
+        ),
+      for (final item in widget.catalogItems)
+        DropdownMenuItem(
+          value: _targetValueFor(EntityRef(type: item.type, id: item.id)),
+          child:
+              Text('${_entityTypeLabel(item.type, widget.copy)}: ${item.name}'),
+        ),
+    ];
+  }
+
+  Scene? _sceneForTarget(EntityRef? target) {
+    if (target?.type != EntityType.scene) return null;
+    return widget.scenes.where((scene) => scene.id == target!.id).firstOrNull;
+  }
+}
+
+final class _NotesListPane extends StatelessWidget {
+  const _NotesListPane({
+    required this.copy,
+    required this.notes,
+    required this.selectedNoteId,
+    required this.searchController,
+    required this.filter,
+    required this.scenes,
+    required this.catalogItems,
+    required this.onFilterChanged,
+    required this.onSearchChanged,
+    required this.onSelectNote,
+  });
+
+  final WritelerCopy copy;
+  final List<ProjectNote> notes;
+  final String? selectedNoteId;
+  final TextEditingController searchController;
+  final _NoteFilter filter;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final ValueChanged<_NoteFilter> onFilterChanged;
+  final ValueChanged<String> onSearchChanged;
+  final ValueChanged<ProjectNote> onSelectNote;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: searchController,
+            onChanged: onSearchChanged,
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              labelText: copy.t('searchNotes'),
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SegmentedButton<_NoteFilter>(
+              showSelectedIcon: false,
+              selected: {filter},
+              onSelectionChanged: (selection) =>
+                  onFilterChanged(selection.first),
+              segments: [
+                for (final option in _NoteFilter.values)
+                  ButtonSegment(
+                    value: option,
+                    icon: Icon(_noteFilterIcon(option), size: 18),
+                    label: Text(_noteFilterLabel(option, copy)),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: notes.isEmpty
+                ? _EmptyInlineMessage(message: copy.t('noNotesForFilter'))
+                : ListView.separated(
+                    itemCount: notes.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final note = notes[index];
+                      final selected = note.id == selectedNoteId;
+                      return ListTile(
+                        selected: selected,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        leading: Icon(
+                          note.source == 'aiSuggestion'
+                              ? Icons.psychology_alt_outlined
+                              : Icons.sticky_note_2_outlined,
+                          color: selected ? color.primary : null,
+                        ),
+                        title: Text(
+                          note.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          '${_noteTargetDisplay(note.target, scenes, catalogItems)}\n'
+                          '${note.body}',
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () => onSelectNote(note),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _NoteEditorPane extends StatelessWidget {
+  const _NoteEditorPane({
+    required this.copy,
+    required this.project,
+    required this.note,
+    required this.titleController,
+    required this.bodyController,
+    required this.targetValue,
+    required this.targetOptions,
+    required this.draftingNew,
+    required this.onTargetChanged,
+    required this.onSave,
+    required this.onDelete,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final Project? project;
+  final ProjectNote? note;
+  final TextEditingController titleController;
+  final TextEditingController bodyController;
+  final String targetValue;
+  final List<DropdownMenuItem<String>> targetOptions;
+  final bool draftingNew;
+  final ValueChanged<String?> onTargetChanged;
+  final VoidCallback onSave;
+  final VoidCallback? onDelete;
+  final VoidCallback? onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final hasEditableSurface = project != null && (note != null || draftingNew);
+    if (!hasEditableSurface) {
+      return _EmptyPanel(
+        icon: Icons.sticky_note_2_outlined,
+        title: copy.t('noNoteSelectedTitle'),
+        body: copy.t('noNoteSelectedBody'),
+      );
+    }
+
+    final sourceText = note == null
+        ? copy.t('manualNote')
+        : note!.source == 'aiSuggestion'
+            ? copy.t('aiNote')
+            : copy.t('manualNote');
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  draftingNew ? copy.t('newNote') : copy.t('editNote'),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+              Text(
+                sourceText,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          TextField(
+            controller: titleController,
+            decoration: InputDecoration(
+              labelText: copy.t('noteTitle'),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(
+            initialValue: targetOptions.any((item) => item.value == targetValue)
+                ? targetValue
+                : 'project',
+            items: targetOptions,
+            onChanged: onTargetChanged,
+            decoration: InputDecoration(
+              labelText: copy.t('noteTarget'),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          if (onOpenScene != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: onOpenScene,
+                icon: const Icon(Icons.open_in_new),
+                label: Text(copy.t('openLinkedScene')),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Expanded(
+            child: TextField(
+              controller: bodyController,
+              expands: true,
+              maxLines: null,
+              minLines: null,
+              textAlignVertical: TextAlignVertical.top,
+              decoration: InputDecoration(
+                labelText: copy.t('noteBody'),
+                alignLabelWithHint: true,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              FilledButton.icon(
+                onPressed: onSave,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(copy.t('saveNote')),
+              ),
+              const SizedBox(width: 12),
+              if (onDelete != null)
+                OutlinedButton.icon(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline),
+                  label: Text(copy.t('delete')),
+                ),
+              const Spacer(),
+              if (note != null)
+                Text(
+                  _formatLocalDateTime(note!.updatedAt),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -5702,6 +6277,71 @@ String? _noteTargetLabel(ProjectNote note, List<Scene> scenes) {
     return scene?.title;
   }
   return target?.id;
+}
+
+String _targetValueFor(EntityRef? target) {
+  if (target == null) return 'project';
+  return '${target.type.wireName}:${target.id}';
+}
+
+EntityRef? _targetFromValue(String value) {
+  if (value == 'project') return null;
+  final separator = value.indexOf(':');
+  if (separator <= 0 || separator == value.length - 1) return null;
+  return EntityRef(
+    type: EntityTypeWire.parse(value.substring(0, separator)),
+    id: value.substring(separator + 1),
+  );
+}
+
+String _noteTargetDisplay(
+  EntityRef? target,
+  List<Scene> scenes,
+  List<CatalogItem> catalogItems,
+) {
+  if (target == null) return 'Projekt';
+  if (target.type == EntityType.scene) {
+    final scene = scenes.where((scene) => scene.id == target.id).firstOrNull;
+    return scene == null ? target.id : scene.title;
+  }
+  final item = catalogItems
+      .where((item) => item.type == target.type && item.id == target.id)
+      .firstOrNull;
+  return item == null ? target.id : item.name;
+}
+
+String _entityTypeLabel(EntityType type, WritelerCopy copy) {
+  return switch (type) {
+    EntityType.project => copy.t('project'),
+    EntityType.chapter => copy.t('chapter'),
+    EntityType.scene => copy.t('scene'),
+    EntityType.character => copy.t('character'),
+    EntityType.location => copy.t('location'),
+    EntityType.object => copy.t('object'),
+    _ => type.wireName,
+  };
+}
+
+String _noteFilterLabel(_NoteFilter filter, WritelerCopy copy) {
+  return switch (filter) {
+    _NoteFilter.all => copy.t('allNotes'),
+    _NoteFilter.project => copy.t('projectNotes'),
+    _NoteFilter.scene => copy.t('sceneNotes'),
+    _NoteFilter.catalog => copy.t('catalogNotes'),
+    _NoteFilter.manual => copy.t('manualNotes'),
+    _NoteFilter.ai => copy.t('aiNotes'),
+  };
+}
+
+IconData _noteFilterIcon(_NoteFilter filter) {
+  return switch (filter) {
+    _NoteFilter.all => Icons.notes_outlined,
+    _NoteFilter.project => Icons.library_books_outlined,
+    _NoteFilter.scene => Icons.edit_note_outlined,
+    _NoteFilter.catalog => Icons.category_outlined,
+    _NoteFilter.manual => Icons.edit_outlined,
+    _NoteFilter.ai => Icons.psychology_alt_outlined,
+  };
 }
 
 String _formatLocalDateTime(DateTime value) {

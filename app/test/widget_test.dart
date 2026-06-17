@@ -33,6 +33,7 @@ void main() {
     expect(find.text('Projects'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
     expect(find.text('Scenes'), findsOneWidget);
+    expect(find.text('Notes'), findsOneWidget);
     expect(find.text('AI Workshop'), findsOneWidget);
     expect(find.text('New Project'), findsOneWidget);
   });
