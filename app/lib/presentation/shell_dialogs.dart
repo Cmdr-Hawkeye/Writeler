@@ -383,6 +383,320 @@ extension _WritelerShellDialogs on _WritelerShellState {
     );
   }
 
+  Future<void> _showRelationshipDialog(
+    WritelerCopy copy, {
+    Relationship? existing,
+    EntityRef? initialSource,
+  }) async {
+    final project = _selectedProject;
+    if (project == null) return;
+
+    final endpoints = _relationshipEndpoints(copy);
+    if (endpoints.length < 2) return;
+
+    final sourceFallback = initialSource ?? existing?.source;
+    var sourceKey = _endpointKey(sourceFallback) ?? endpoints.first.key;
+    if (!endpoints.any((endpoint) => endpoint.key == sourceKey)) {
+      sourceKey = endpoints.first.key;
+    }
+    var targetKey = _endpointKey(existing?.target);
+    if (targetKey == null ||
+        targetKey == sourceKey ||
+        !endpoints.any((endpoint) => endpoint.key == targetKey)) {
+      targetKey =
+          endpoints.firstWhere((endpoint) => endpoint.key != sourceKey).key;
+    }
+
+    const commonTypes = [
+      'appearsIn',
+      'ally',
+      'conflict',
+      'family',
+      'owns',
+      'locatedAt',
+      'foreshadows',
+    ];
+    var selectedType = commonTypes.contains(existing?.relationshipType)
+        ? existing!.relationshipType
+        : 'custom';
+    final customTypeController = TextEditingController(
+      text: selectedType == 'custom' ? existing?.relationshipType ?? '' : '',
+    );
+    final labelController = TextEditingController(text: existing?.label ?? '');
+    final descriptionController =
+        TextEditingController(text: existing?.description ?? '');
+    var direction = existing?.direction ?? RelationshipDirection.directed;
+    var strength = existing?.strength ?? 0.5;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final targetOptions = endpoints
+                .where((endpoint) => endpoint.key != sourceKey)
+                .toList(growable: false);
+            if (!targetOptions.any((endpoint) => endpoint.key == targetKey)) {
+              targetKey = targetOptions.first.key;
+            }
+            return AlertDialog(
+              title: Text(
+                existing == null
+                    ? copy.t('newRelationship')
+                    : copy.t('editRelationship'),
+              ),
+              content: SizedBox(
+                width: 520,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        initialValue: sourceKey,
+                        decoration: InputDecoration(
+                          labelText: copy.t('relationshipSource'),
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          for (final endpoint in endpoints)
+                            DropdownMenuItem(
+                              value: endpoint.key,
+                              child: Text(endpoint.label),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setDialogState(() => sourceKey = value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: targetKey,
+                        decoration: InputDecoration(
+                          labelText: copy.t('relationshipTarget'),
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          for (final endpoint in targetOptions)
+                            DropdownMenuItem(
+                              value: endpoint.key,
+                              child: Text(endpoint.label),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setDialogState(() => targetKey = value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedType,
+                        decoration: InputDecoration(
+                          labelText: copy.t('relationshipType'),
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          for (final type in commonTypes)
+                            DropdownMenuItem(
+                              value: type,
+                              child: Text(_relationshipTypeLabel(type, copy)),
+                            ),
+                          DropdownMenuItem(
+                            value: 'custom',
+                            child: Text(copy.t('relationTypeCustom')),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setDialogState(() => selectedType = value);
+                        },
+                      ),
+                      if (selectedType == 'custom') ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: customTypeController,
+                          decoration: InputDecoration(
+                            labelText: copy.t('relationshipType'),
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      SegmentedButton<RelationshipDirection>(
+                        segments: [
+                          ButtonSegment(
+                            value: RelationshipDirection.directed,
+                            icon: const Icon(Icons.arrow_forward),
+                            label: Text(copy.t('relationshipDirected')),
+                          ),
+                          ButtonSegment(
+                            value: RelationshipDirection.undirected,
+                            icon: const Icon(Icons.sync_alt),
+                            label: Text(copy.t('relationshipUndirected')),
+                          ),
+                        ],
+                        selected: {direction},
+                        onSelectionChanged: (selection) {
+                          setDialogState(() => direction = selection.first);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: labelController,
+                        decoration: InputDecoration(
+                          labelText: copy.t('relationshipLabel'),
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: descriptionController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: copy.t('relationshipDescription'),
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(copy.t('relationshipStrength')),
+                          ),
+                          Text('${(strength * 100).round()}%'),
+                        ],
+                      ),
+                      Slider(
+                        value: strength,
+                        onChanged: (value) {
+                          setDialogState(() => strength = value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(copy.t('cancel')),
+                ),
+                FilledButton.icon(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  icon: const Icon(Icons.save_outlined),
+                  label: Text(copy.t('saveRelationship')),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (saved != true) {
+      customTypeController.dispose();
+      labelController.dispose();
+      descriptionController.dispose();
+      return;
+    }
+
+    final source =
+        endpoints.where((endpoint) => endpoint.key == sourceKey).first.ref;
+    final target =
+        endpoints.where((endpoint) => endpoint.key == targetKey).first.ref;
+    final now = DateTime.now().toUtc();
+    final relationshipType = selectedType == 'custom'
+        ? customTypeController.text.trim()
+        : selectedType;
+    final relationship = Relationship(
+      id: existing?.id ?? newLocalId('relationship'),
+      projectId: project.id,
+      source: source,
+      target: target,
+      relationshipType:
+          relationshipType.isEmpty ? 'relatedTo' : relationshipType,
+      label: labelController.text.trim().isEmpty
+          ? null
+          : labelController.text.trim(),
+      description: descriptionController.text.trim().isEmpty
+          ? null
+          : descriptionController.text.trim(),
+      strength: strength,
+      direction: direction,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+      metadata: existing?.metadata ?? const {},
+    );
+    customTypeController.dispose();
+    labelController.dispose();
+    descriptionController.dispose();
+
+    await widget.relationshipRepository.save(relationship);
+    final relationships =
+        await widget.relationshipRepository.listByProject(project.id);
+    if (!mounted) return;
+    _setShellState(() => _relationships = relationships);
+    await _recordProjectMetric(
+      eventType: 'relationship.saved',
+      metadata: {
+        'relationshipId': relationship.id,
+        'relationshipType': relationship.relationshipType,
+      },
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('relationshipSaved'))),
+    );
+  }
+
+  Future<void> _deleteRelationship(
+    Relationship relationship,
+    WritelerCopy copy,
+  ) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final confirmed = await _confirmDelete(
+      copy: copy,
+      title: copy.t('deleteRelationship'),
+      body: copy.t('deleteRelationshipBody'),
+    );
+    if (!confirmed) return;
+
+    await widget.relationshipRepository.delete(relationship.id);
+    final relationships =
+        await widget.relationshipRepository.listByProject(project.id);
+    if (!mounted) return;
+    _setShellState(() => _relationships = relationships);
+    await _recordProjectMetric(
+      eventType: 'relationship.deleted',
+      metadata: {'relationshipId': relationship.id},
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('relationshipDeleted'))),
+    );
+  }
+
+  List<_RelationshipEndpoint> _relationshipEndpoints(WritelerCopy copy) {
+    return [
+      for (final scene in _scenes)
+        _RelationshipEndpoint(
+          ref: EntityRef(type: EntityType.scene, id: scene.id),
+          label: '${copy.t('scene')}: ${scene.title}',
+        ),
+      for (final item in _catalogItems)
+        _RelationshipEndpoint(
+          ref: EntityRef(type: item.type, id: item.id),
+          label: '${_entityTypeLabel(item.type, copy)}: ${item.name}',
+        ),
+    ];
+  }
+
+  String? _endpointKey(EntityRef? ref) {
+    if (ref == null) return null;
+    return '${ref.type.wireName}:${ref.id}';
+  }
+
   Future<bool> _confirmDelete({
     required WritelerCopy copy,
     required String title,
@@ -410,4 +724,16 @@ extension _WritelerShellDialogs on _WritelerShellState {
     );
     return confirmed == true;
   }
+}
+
+final class _RelationshipEndpoint {
+  const _RelationshipEndpoint({
+    required this.ref,
+    required this.label,
+  });
+
+  final EntityRef ref;
+  final String label;
+
+  String get key => '${ref.type.wireName}:${ref.id}';
 }

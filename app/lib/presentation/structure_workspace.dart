@@ -18,6 +18,9 @@ final class _SceneBoard extends StatelessWidget {
     required this.onDeleteChapter,
     required this.onCreateScene,
     required this.onCreateChapter,
+    required this.onCreateRelationship,
+    required this.onEditRelationship,
+    required this.onDeleteRelationship,
   });
 
   final WritelerCopy copy;
@@ -34,6 +37,9 @@ final class _SceneBoard extends StatelessWidget {
   final ValueChanged<Chapter> onDeleteChapter;
   final VoidCallback onCreateScene;
   final VoidCallback onCreateChapter;
+  final ValueChanged<EntityRef?> onCreateRelationship;
+  final ValueChanged<Relationship> onEditRelationship;
+  final ValueChanged<Relationship> onDeleteRelationship;
 
   @override
   Widget build(BuildContext context) {
@@ -192,6 +198,7 @@ final class _SceneBoard extends StatelessWidget {
               );
               final inspector = _StructureInspector(
                 copy: copy,
+                scenes: scenes,
                 planningGapScenes: planningGaps,
                 openConflictScenes: openConflictScenes,
                 unscheduledScenes: unscheduledScenes,
@@ -200,6 +207,9 @@ final class _SceneBoard extends StatelessWidget {
                 motifRows: motifRows,
                 relationships: relationships,
                 onOpenScene: onSelectScene,
+                onCreateRelationship: onCreateRelationship,
+                onEditRelationship: onEditRelationship,
+                onDeleteRelationship: onDeleteRelationship,
               );
               if (constraints.maxHeight < 320) {
                 return structureList;
@@ -495,6 +505,7 @@ final class _SceneStructureColumn extends StatelessWidget {
 final class _StructureInspector extends StatelessWidget {
   const _StructureInspector({
     required this.copy,
+    required this.scenes,
     required this.planningGapScenes,
     required this.openConflictScenes,
     required this.unscheduledScenes,
@@ -503,9 +514,13 @@ final class _StructureInspector extends StatelessWidget {
     required this.motifRows,
     required this.relationships,
     required this.onOpenScene,
+    required this.onCreateRelationship,
+    required this.onEditRelationship,
+    required this.onDeleteRelationship,
   });
 
   final WritelerCopy copy;
+  final List<Scene> scenes;
   final List<Scene> planningGapScenes;
   final List<Scene> openConflictScenes;
   final List<Scene> unscheduledScenes;
@@ -514,6 +529,9 @@ final class _StructureInspector extends StatelessWidget {
   final List<_StructureMotifRow> motifRows;
   final List<Relationship> relationships;
   final ValueChanged<Scene> onOpenScene;
+  final ValueChanged<EntityRef?> onCreateRelationship;
+  final ValueChanged<Relationship> onEditRelationship;
+  final ValueChanged<Relationship> onDeleteRelationship;
 
   @override
   Widget build(BuildContext context) {
@@ -579,15 +597,30 @@ final class _StructureInspector extends StatelessWidget {
                 const SizedBox(height: 18),
                 _StructureEntitySection(
                   copy: copy,
+                  scenes: scenes,
+                  catalogItems: [
+                    for (final row in entityRows) row.item,
+                  ],
                   rows: entityRows,
+                  relationships: relationships,
                   onOpenScene: onOpenScene,
+                  onCreateRelationship: onCreateRelationship,
+                  onEditRelationship: onEditRelationship,
+                  onDeleteRelationship: onDeleteRelationship,
                 ),
                 const SizedBox(height: 18),
                 _StructureMotifSection(copy: copy, rows: motifRows),
                 const SizedBox(height: 18),
                 _StructureRelationshipSection(
                   copy: copy,
+                  scenes: scenes,
+                  catalogItems: [
+                    for (final row in entityRows) row.item,
+                  ],
                   relationships: relationships,
+                  onCreateRelationship: () => onCreateRelationship(null),
+                  onEditRelationship: onEditRelationship,
+                  onDeleteRelationship: onDeleteRelationship,
                 ),
               ],
             ),
@@ -722,13 +755,25 @@ final class _StructureTimelineSection extends StatelessWidget {
 final class _StructureEntitySection extends StatelessWidget {
   const _StructureEntitySection({
     required this.copy,
+    required this.scenes,
+    required this.catalogItems,
     required this.rows,
+    required this.relationships,
     required this.onOpenScene,
+    required this.onCreateRelationship,
+    required this.onEditRelationship,
+    required this.onDeleteRelationship,
   });
 
   final WritelerCopy copy;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
   final List<_CatalogPresenceRow> rows;
+  final List<Relationship> relationships;
   final ValueChanged<Scene> onOpenScene;
+  final ValueChanged<EntityRef?> onCreateRelationship;
+  final ValueChanged<Relationship> onEditRelationship;
+  final ValueChanged<Relationship> onDeleteRelationship;
 
   @override
   Widget build(BuildContext context) {
@@ -749,63 +794,125 @@ final class _StructureEntitySection extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: DecoratedBox(
                 decoration: BoxDecoration(
+                  color: color.surfaceContainerLowest,
                   border: Border(
                     bottom: BorderSide(color: color.outlineVariant),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(_catalogIcon(row.item.type),
-                          color: color.primary, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              row.item.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelLarge,
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              row.scenes.isEmpty
-                                  ? copy.t('noAppearances')
-                                  : row.scenes
-                                      .take(3)
-                                      .map((scene) => scene.title)
-                                      .join(', '),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: row.scenes.isEmpty
-                                        ? color.error
-                                        : color.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text('${row.scenes.length}'),
-                      if (row.scenes.isNotEmpty)
-                        IconButton(
-                          tooltip: copy.t('openScene'),
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () => onOpenScene(row.scenes.first),
-                          icon: const Icon(Icons.open_in_new),
-                        ),
-                    ],
+                child: _StructureEntityDetailTile(
+                  copy: copy,
+                  row: row,
+                  scenes: scenes,
+                  catalogItems: catalogItems,
+                  relationships: relationships
+                      .where((relationship) => _relationshipTouchesRef(
+                            relationship,
+                            EntityRef(type: row.item.type, id: row.item.id),
+                          ))
+                      .toList(growable: false),
+                  onOpenScene: onOpenScene,
+                  onCreateRelationship: () => onCreateRelationship(
+                    EntityRef(type: row.item.type, id: row.item.id),
                   ),
+                  onEditRelationship: onEditRelationship,
+                  onDeleteRelationship: onDeleteRelationship,
                 ),
               ),
             ),
+      ],
+    );
+  }
+}
+
+final class _StructureEntityDetailTile extends StatelessWidget {
+  const _StructureEntityDetailTile({
+    required this.copy,
+    required this.row,
+    required this.scenes,
+    required this.catalogItems,
+    required this.relationships,
+    required this.onOpenScene,
+    required this.onCreateRelationship,
+    required this.onEditRelationship,
+    required this.onDeleteRelationship,
+  });
+
+  final WritelerCopy copy;
+  final _CatalogPresenceRow row;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final ValueChanged<Scene> onOpenScene;
+  final VoidCallback onCreateRelationship;
+  final ValueChanged<Relationship> onEditRelationship;
+  final ValueChanged<Relationship> onDeleteRelationship;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: const EdgeInsets.only(left: 30, right: 4, bottom: 10),
+      leading: Icon(_catalogIcon(row.item.type), color: color.primary),
+      title: Text(
+        row.item.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+      subtitle: Text(
+        '${_entityTypeLabel(row.item.type, copy)} - '
+        '${_draftStatusLabel(row.item.status, copy.languageCode)} - '
+        '${row.scenes.length} ${copy.t('appearances')}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: IconButton(
+        tooltip: copy.t('newRelationship'),
+        visualDensity: VisualDensity.compact,
+        onPressed: onCreateRelationship,
+        icon: const Icon(Icons.add_link),
+      ),
+      children: [
+        if (row.item.summary.trim().isNotEmpty) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              row.item.summary,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (row.scenes.isEmpty)
+          _EmptyInlineMessage(message: copy.t('noAppearances'))
+        else
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final scene in row.scenes.take(5))
+                  ActionChip(
+                    avatar: const Icon(Icons.notes_outlined, size: 16),
+                    label: Text(scene.title),
+                    onPressed: () => onOpenScene(scene),
+                  ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 10),
+        _RelationshipMiniList(
+          copy: copy,
+          relationships: relationships,
+          scenes: scenes,
+          catalogItems: catalogItems,
+          onEditRelationship: onEditRelationship,
+          onDeleteRelationship: onDeleteRelationship,
+        ),
       ],
     );
   }
@@ -872,11 +979,21 @@ final class _StructureMotifSection extends StatelessWidget {
 final class _StructureRelationshipSection extends StatelessWidget {
   const _StructureRelationshipSection({
     required this.copy,
+    required this.scenes,
+    required this.catalogItems,
     required this.relationships,
+    required this.onCreateRelationship,
+    required this.onEditRelationship,
+    required this.onDeleteRelationship,
   });
 
   final WritelerCopy copy;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final VoidCallback onCreateRelationship;
+  final ValueChanged<Relationship> onEditRelationship;
+  final ValueChanged<Relationship> onDeleteRelationship;
 
   @override
   Widget build(BuildContext context) {
@@ -887,34 +1004,104 @@ final class _StructureRelationshipSection extends StatelessWidget {
         _StructureSectionHeading(
           icon: Icons.device_hub_outlined,
           title: '${copy.t('relationshipMap')} (${relationships.length})',
+          trailing: IconButton(
+            tooltip: copy.t('newRelationship'),
+            visualDensity: VisualDensity.compact,
+            onPressed: onCreateRelationship,
+            icon: const Icon(Icons.add_link),
+          ),
         ),
         const SizedBox(height: 8),
         if (rows.isEmpty)
           _EmptyInlineMessage(message: copy.t('noRelationshipsYet'))
         else
-          for (final relationship in rows)
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                relationship.direction == RelationshipDirection.directed
-                    ? Icons.arrow_forward
-                    : Icons.sync_alt,
-              ),
-              title: Text(
-                relationship.label?.trim().isNotEmpty == true
-                    ? relationship.label!
-                    : relationship.relationshipType,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                '${_entityTypeLabel(relationship.source.type, copy)} -> '
-                '${_entityTypeLabel(relationship.target.type, copy)}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+          _RelationshipMiniList(
+            copy: copy,
+            relationships: rows,
+            scenes: scenes,
+            catalogItems: catalogItems,
+            onEditRelationship: onEditRelationship,
+            onDeleteRelationship: onDeleteRelationship,
+          ),
+      ],
+    );
+  }
+}
+
+final class _RelationshipMiniList extends StatelessWidget {
+  const _RelationshipMiniList({
+    required this.copy,
+    required this.relationships,
+    required this.onEditRelationship,
+    required this.onDeleteRelationship,
+    this.scenes = const [],
+    this.catalogItems = const [],
+  });
+
+  final WritelerCopy copy;
+  final List<Relationship> relationships;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final ValueChanged<Relationship> onEditRelationship;
+  final ValueChanged<Relationship> onDeleteRelationship;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    if (relationships.isEmpty) {
+      return _EmptyInlineMessage(message: copy.t('noRelationshipsYet'));
+    }
+    return Column(
+      children: [
+        for (final relationship in relationships)
+          ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              relationship.direction == RelationshipDirection.directed
+                  ? Icons.arrow_forward
+                  : Icons.sync_alt,
             ),
+            title: Text(
+              _relationshipTitle(relationship, copy),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              _relationshipSubtitle(
+                relationship,
+                copy,
+                scenes: scenes,
+                catalogItems: catalogItems,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (relationship.strength case final strength?)
+                  Text(
+                    '${(strength * 100).round()}%',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                IconButton(
+                  tooltip: copy.t('editRelationship'),
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => onEditRelationship(relationship),
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+                IconButton(
+                  tooltip: copy.t('deleteRelationship'),
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => onDeleteRelationship(relationship),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -924,10 +1111,12 @@ final class _StructureSectionHeading extends StatelessWidget {
   const _StructureSectionHeading({
     required this.icon,
     required this.title,
+    this.trailing,
   });
 
   final IconData icon;
   final String title;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -944,6 +1133,7 @@ final class _StructureSectionHeading extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
         ),
+        if (trailing != null) trailing!,
       ],
     );
   }
@@ -1147,4 +1337,65 @@ final class _SceneStructureAction {
 
   final _SceneStructureActionKind kind;
   final String? chapterId;
+}
+
+bool _relationshipTouchesRef(Relationship relationship, EntityRef ref) {
+  return (relationship.source.type == ref.type &&
+          relationship.source.id == ref.id) ||
+      (relationship.target.type == ref.type &&
+          relationship.target.id == ref.id);
+}
+
+String _relationshipTitle(Relationship relationship, WritelerCopy copy) {
+  final label = relationship.label?.trim();
+  if (label != null && label.isNotEmpty) return label;
+  return _relationshipTypeLabel(relationship.relationshipType, copy);
+}
+
+String _relationshipSubtitle(
+  Relationship relationship,
+  WritelerCopy copy, {
+  List<Scene> scenes = const [],
+  List<CatalogItem> catalogItems = const [],
+}) {
+  final arrow =
+      relationship.direction == RelationshipDirection.directed ? '->' : '<->';
+  final strength = relationship.strength == null
+      ? ''
+      : ' - ${copy.t('relationshipStrength')}: '
+          '${(relationship.strength! * 100).round()}%';
+  return '${_entityRefDisplay(relationship.source, copy, scenes, catalogItems)} '
+      '$arrow ${_entityRefDisplay(relationship.target, copy, scenes, catalogItems)}'
+      '$strength';
+}
+
+String _entityRefDisplay(
+  EntityRef ref,
+  WritelerCopy copy,
+  List<Scene> scenes,
+  List<CatalogItem> catalogItems,
+) {
+  if (ref.type == EntityType.scene) {
+    final scene = scenes.where((scene) => scene.id == ref.id).firstOrNull;
+    return scene == null ? '${copy.t('scene')} ${ref.id}' : scene.title;
+  }
+  final item = catalogItems
+      .where((item) => item.type == ref.type && item.id == ref.id)
+      .firstOrNull;
+  return item == null
+      ? '${_entityTypeLabel(ref.type, copy)} ${ref.id}'
+      : item.name;
+}
+
+String _relationshipTypeLabel(String value, WritelerCopy copy) {
+  return switch (value) {
+    'appearsIn' => copy.t('relationTypeAppearsIn'),
+    'ally' => copy.t('relationTypeAlly'),
+    'conflict' => copy.t('relationTypeConflict'),
+    'family' => copy.t('relationTypeFamily'),
+    'owns' => copy.t('relationTypeOwns'),
+    'locatedAt' => copy.t('relationTypeLocatedAt'),
+    'foreshadows' => copy.t('relationTypeForeshadows'),
+    _ => value,
+  };
 }

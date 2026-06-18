@@ -1453,6 +1453,16 @@ final class _WritelerShellState extends State<WritelerShell> {
           onDeleteChapter: (chapter) => _deleteChapter(chapter, copy),
           onCreateScene: () => _showCreateSceneDialog(copy),
           onCreateChapter: () => _showCreateChapterDialog(copy),
+          onCreateRelationship: (source) => _showRelationshipDialog(
+            copy,
+            initialSource: source,
+          ),
+          onEditRelationship: (relationship) => _showRelationshipDialog(
+            copy,
+            existing: relationship,
+          ),
+          onDeleteRelationship: (relationship) =>
+              _deleteRelationship(relationship, copy),
         ),
       3 => _CatalogWorkspace(
           copy: copy,

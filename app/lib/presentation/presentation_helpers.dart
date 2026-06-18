@@ -298,6 +298,10 @@ String _metricEventLabel(String eventType, String languageCode) {
       german ? 'Katalogeintrag gelöscht' : 'Catalog item deleted',
     'relationship.linked' => german ? 'Kontext verknüpft' : 'Context linked',
     'relationship.unlinked' => german ? 'Kontext gelöst' : 'Context unlinked',
+    'relationship.saved' =>
+      german ? 'Beziehung gespeichert' : 'Relationship saved',
+    'relationship.deleted' =>
+      german ? 'Beziehung gelöscht' : 'Relationship deleted',
     'ai.suggestion.created' =>
       german ? 'KI-Vorschlag erzeugt' : 'AI suggestion created',
     'export.copied' => german ? 'Export kopiert' : 'Export copied',
