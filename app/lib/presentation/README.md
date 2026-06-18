@@ -1,0 +1,27 @@
+# Writeler Presentation Layer
+
+The presentation layer is split by responsibility while still sharing one Dart
+library through `part` files. This keeps the refactor behavior-neutral: private
+widgets and helpers remain private to `main.dart`, but the code is no longer
+held in one monolithic file.
+
+## File Map
+
+- `app_root.dart`: app root, theme persistence, and theme token definitions.
+- `app_shell.dart`: stateful orchestration, repositories, commands, and routing.
+- `navigation_chrome.dart`: navigation, brand mark, and top bar.
+- `dashboard_workspace.dart`: project dashboard and project overview surfaces.
+- `structure_workspace.dart`: structure cockpit and author-inspection widgets.
+- `catalog_analysis_notes.dart`: catalog, analysis, notes, and shared analysis UI.
+- `ai_workshop.dart`: AI prompt workflow, suggestion review, and AI status UI.
+- `export_settings_workspace.dart`: export, sync, import, provider, and settings UI.
+- `shared_workspace_widgets.dart`: small shared workspace primitives.
+- `editor_workspace.dart`: manuscript editor, scene navigation, autosave, and planning UI.
+- `presentation_helpers.dart`: labels, counters, formatting, and UI-domain adapters.
+
+## Refactoring Rule
+
+New presentation code should live with the workspace it belongs to. Shared
+widgets should only move into `shared_workspace_widgets.dart` when at least two
+workspaces use them. Pure formatting or label helpers belong in
+`presentation_helpers.dart`.
