@@ -78,6 +78,7 @@ import 'shared/writeler_copy.dart';
 part 'presentation/app_root.dart';
 part 'presentation/ai_provider_runtime.dart';
 part 'presentation/app_shell.dart';
+part 'presentation/shell_dialogs.dart';
 part 'presentation/navigation_chrome.dart';
 part 'presentation/dashboard_workspace.dart';
 part 'presentation/structure_workspace.dart';

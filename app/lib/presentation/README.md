@@ -8,7 +8,9 @@ held in one monolithic file.
 ## File Map
 
 - `app_root.dart`: app root, theme persistence, and theme token definitions.
+- `ai_provider_runtime.dart`: AI provider defaults, secret migration, and runtime provider creation.
 - `app_shell.dart`: stateful orchestration, repositories, commands, and routing.
+- `shell_dialogs.dart`: create/edit/delete dialogs used by the shell.
 - `navigation_chrome.dart`: navigation, brand mark, and top bar.
 - `dashboard_workspace.dart`: project dashboard and project overview surfaces.
 - `structure_workspace.dart`: structure cockpit and author-inspection widgets.
