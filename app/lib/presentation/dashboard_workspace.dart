@@ -229,16 +229,19 @@ final class _ProjectOverview extends StatelessWidget {
     final wordProgress = wordTarget == null || wordTarget <= 0
         ? null
         : (words / wordTarget).clamp(0.0, 1.0);
-    final pendingSuggestions = suggestions
+    final pendingSuggestionItems = suggestions
         .where((suggestion) =>
             suggestion.userDecision == SuggestionDecision.pending)
-        .length;
+        .toList(growable: false)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final pendingSuggestions = pendingSuggestionItems.length;
     final planningGaps = scenes
         .where((scene) => _missingScenePlanningLabels(scene, copy).isNotEmpty)
         .toList(growable: false);
     final scenesWithoutText = scenes
         .where((scene) => scene.manuscriptText.trim().isEmpty)
-        .toList(growable: false);
+        .toList(growable: false)
+      ..sort(_compareScenesByReadingOrder);
     final unassignedScenes = scenes
         .where((scene) => scene.chapterId == null)
         .toList(growable: false);
@@ -261,34 +264,58 @@ final class _ProjectOverview extends StatelessWidget {
     final recentScenes = [...scenes]
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     final recentMetrics = metrics.take(6).toList(growable: false);
-    final nextActions = <_DashboardAction>[
-      if (scenes.isNotEmpty)
+    final urgentPlanningGaps = [...planningGaps]
+      ..sort(_compareScenesByPlanningUrgency);
+    final latestPendingSuggestion = pendingSuggestionItems.firstOrNull;
+    final untargetedNotes = notes
+        .where((note) => note.target == null)
+        .toList(growable: false)
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    final nextSceneWithoutText = scenesWithoutText.firstOrNull;
+    final urgentPlanningGap = urgentPlanningGaps.firstOrNull;
+    final untargetedNote = untargetedNotes.firstOrNull;
+    final nextActions = [
+      if (nextSceneWithoutText != null)
+        _DashboardAction(
+          icon: Icons.edit_off_outlined,
+          title: copy.t('nextSceneWithoutText'),
+          body: nextSceneWithoutText.title,
+          onTap: () => onOpenScene(nextSceneWithoutText),
+        ),
+      if (urgentPlanningGap != null)
+        _DashboardAction(
+          icon: Icons.account_tree_outlined,
+          title: copy.t('mostUrgentPlanningGap'),
+          body: '${urgentPlanningGap.title} · ${copy.t('missing')}: '
+              '${_missingScenePlanningLabels(urgentPlanningGap, copy).join(', ')}',
+          onTap: () => onOpenScene(urgentPlanningGap),
+        ),
+      if (latestPendingSuggestion != null)
+        _DashboardAction(
+          icon: Icons.psychology_alt_outlined,
+          title: copy.t('latestOpenAiResponse'),
+          body:
+              '${_aiTaskLabel(latestPendingSuggestion.suggestionType, copy)} · '
+              '${_formatLocalDateTime(latestPendingSuggestion.createdAt)}',
+          onTap: onOpenAiWorkshop,
+        ),
+      if (untargetedNote != null)
+        _DashboardAction(
+          icon: Icons.sticky_note_2_outlined,
+          title: copy.t('noteWithoutTarget'),
+          body: untargetedNote.title,
+          onTap: onOpenNotes,
+        ),
+      if (nextSceneWithoutText == null &&
+          urgentPlanningGap == null &&
+          latestPendingSuggestion == null &&
+          untargetedNote == null &&
+          scenes.isNotEmpty)
         _DashboardAction(
           icon: Icons.edit_note_outlined,
           title: copy.t('continueWriting'),
           body: recentScenes.first.title,
           onTap: () => onOpenScene(recentScenes.first),
-        ),
-      if (planningGaps.isNotEmpty)
-        _DashboardAction(
-          icon: Icons.account_tree_outlined,
-          title: copy.t('reviewStructure'),
-          body: '${planningGaps.length} ${copy.t('planningGaps')}',
-          onTap: onOpenStructure,
-        ),
-      if (pendingSuggestions > 0)
-        _DashboardAction(
-          icon: Icons.psychology_alt_outlined,
-          title: copy.t('reviewSuggestions'),
-          body: '$pendingSuggestions ${copy.t('openSuggestions')}',
-          onTap: onOpenAiWorkshop,
-        ),
-      if (notes.isNotEmpty)
-        _DashboardAction(
-          icon: Icons.sticky_note_2_outlined,
-          title: copy.t('reviewNotes'),
-          body: '${notes.length} ${copy.t('notes')}',
-          onTap: onOpenNotes,
         ),
     ];
 
@@ -954,6 +981,44 @@ final class _DashboardSignalChip extends StatelessWidget {
       backgroundColor: color.surfaceContainerLow,
     );
   }
+}
+
+int _compareScenesByReadingOrder(Scene a, Scene b) {
+  final orderCompare = a.orderIndex.compareTo(b.orderIndex);
+  if (orderCompare != 0) return orderCompare;
+  return a.createdAt.compareTo(b.createdAt);
+}
+
+int _compareScenesByPlanningUrgency(Scene a, Scene b) {
+  final urgencyCompare =
+      _scenePlanningUrgencyScore(b).compareTo(_scenePlanningUrgencyScore(a));
+  if (urgencyCompare != 0) return urgencyCompare;
+  return _compareScenesByReadingOrder(a, b);
+}
+
+int _scenePlanningUrgencyScore(Scene scene) {
+  var score = 0;
+  if (scene.summary.trim().isEmpty) score += 3;
+  if (scene.goal?.trim().isEmpty != false) score += 4;
+  if (scene.conflict?.trim().isEmpty != false) score += 4;
+  if (scene.outcome?.trim().isEmpty != false) score += 4;
+  if (scene.manuscriptText.trim().isNotEmpty) score += 5;
+  score += _draftStatusPlanningUrgency(scene.status);
+  return score;
+}
+
+int _draftStatusPlanningUrgency(DraftStatus status) {
+  return switch (status) {
+    DraftStatus.needsRevision => 6,
+    DraftStatus.drafting => 5,
+    DraftStatus.revised => 4,
+    DraftStatus.reviewed => 3,
+    DraftStatus.outlined => 3,
+    DraftStatus.planned => 2,
+    DraftStatus.idea => 1,
+    DraftStatus.locked => -6,
+    DraftStatus.archived => -10,
+  };
 }
 
 int _linkedSceneCountForCatalogItem(

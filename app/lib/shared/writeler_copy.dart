@@ -50,6 +50,10 @@ final class WritelerCopy {
     'reviewStructure': 'Struktur prüfen',
     'reviewSuggestions': 'KI-Vorschläge prüfen',
     'reviewNotes': 'Notizen sichten',
+    'nextSceneWithoutText': 'Nächste Szene ohne Text',
+    'mostUrgentPlanningGap': 'Dringendste Planungslücke',
+    'latestOpenAiResponse': 'Letzte KI-Antwort offen',
+    'noteWithoutTarget': 'Notiz ohne Ziel',
     'noDashboardActions': 'Keine dringenden nächsten Schritte.',
     'structureFocus': 'Strukturstatus',
     'structureFocusBody':
@@ -386,6 +390,10 @@ final class WritelerCopy {
     'reviewStructure': 'Review structure',
     'reviewSuggestions': 'Review AI suggestions',
     'reviewNotes': 'Review notes',
+    'nextSceneWithoutText': 'Next scene without text',
+    'mostUrgentPlanningGap': 'Most urgent planning gap',
+    'latestOpenAiResponse': 'Latest open AI response',
+    'noteWithoutTarget': 'Note without target',
     'noDashboardActions': 'No urgent next steps.',
     'structureFocus': 'Structure status',
     'structureFocusBody':
