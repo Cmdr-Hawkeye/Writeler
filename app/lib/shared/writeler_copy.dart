@@ -5,6 +5,7 @@ final class WritelerCopy {
 
   static const _de = {
     'appTitle': 'Writeler',
+    'dashboard': 'Dashboard',
     'projects': 'Projekte',
     'project': 'Projekt',
     'editor': 'Editor',
@@ -38,6 +39,33 @@ final class WritelerCopy {
     'emptyTitle': 'Noch kein Projekt geoeffnet',
     'emptyBody':
         'Lege ein lokales Schreibprojekt an und strukturiere es in Kapitel, Szenen und Notizen.',
+    'dashboardBody':
+        'Projektstatus, offene Strukturpunkte und naechste Arbeitsschritte an einem Ort.',
+    'openEditor': 'Editor oeffnen',
+    'projectPulse': 'Projektpuls',
+    'nextActions': 'Naechste Schritte',
+    'nextActionsBody':
+        'Direkte Wege zu den Stellen, die gerade Aufmerksamkeit brauchen.',
+    'continueWriting': 'Weiterschreiben',
+    'reviewStructure': 'Struktur pruefen',
+    'reviewSuggestions': 'KI-Vorschlaege pruefen',
+    'reviewNotes': 'Notizen sichten',
+    'noDashboardActions': 'Keine dringenden naechsten Schritte.',
+    'structureFocus': 'Strukturstatus',
+    'structureFocusBody':
+        'Planung, Zuordnung und Katalogbindung fuer das aktuelle Projekt.',
+    'emptyDraftScenes': 'Szenen ohne Manuskript',
+    'recentScenesBody':
+        'Zuletzt bearbeitete Szenen mit Wortstand und Planungsstatus.',
+    'noRecentScenes': 'Noch keine Szenen im Projekt.',
+    'activityStream': 'Aktivitaet',
+    'activityStreamBody': 'Lokale Ereignisse aus Schreiben, KI und Export.',
+    'noActivityYet': 'Noch keine Aktivitaet fuer dieses Projekt.',
+    'dashboardSignals': 'Signale',
+    'dashboardSignalsBody':
+        'Kurzstatus fuer KI, Notizen und heutige Schreibarbeit.',
+    'aiQueue': 'KI-Warteschlange',
+    'notesQueue': 'Notizen',
     'newProject': 'Neues Projekt',
     'projectTitle': 'Projekttitel',
     'create': 'Anlegen',
@@ -300,6 +328,7 @@ final class WritelerCopy {
 
   static const _en = {
     'appTitle': 'Writeler',
+    'dashboard': 'Dashboard',
     'projects': 'Projects',
     'project': 'Project',
     'editor': 'Editor',
@@ -334,6 +363,33 @@ final class WritelerCopy {
     'emptyTitle': 'No project open',
     'emptyBody':
         'Create a local writing project and organize it into chapters, scenes, and notes.',
+    'dashboardBody':
+        'Project status, open structure points, and next work steps in one place.',
+    'openEditor': 'Open editor',
+    'projectPulse': 'Project pulse',
+    'nextActions': 'Next steps',
+    'nextActionsBody':
+        'Direct routes to the areas that currently need attention.',
+    'continueWriting': 'Continue writing',
+    'reviewStructure': 'Review structure',
+    'reviewSuggestions': 'Review AI suggestions',
+    'reviewNotes': 'Review notes',
+    'noDashboardActions': 'No urgent next steps.',
+    'structureFocus': 'Structure status',
+    'structureFocusBody':
+        'Planning, assignment, and catalog links for the current project.',
+    'emptyDraftScenes': 'Scenes without manuscript',
+    'recentScenesBody':
+        'Recently edited scenes with word count and planning status.',
+    'noRecentScenes': 'No scenes in this project yet.',
+    'activityStream': 'Activity',
+    'activityStreamBody': 'Local events from writing, AI, and export.',
+    'noActivityYet': 'No activity for this project yet.',
+    'dashboardSignals': 'Signals',
+    'dashboardSignalsBody':
+        'Short status for AI, notes, and today writing work.',
+    'aiQueue': 'AI queue',
+    'notesQueue': 'Notes',
     'newProject': 'New Project',
     'projectTitle': 'Project title',
     'create': 'Create',

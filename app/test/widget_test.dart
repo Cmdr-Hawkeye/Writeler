@@ -32,7 +32,7 @@ void main() {
     );
 
     expect(find.text('Writeler'), findsOneWidget);
-    expect(find.text('Projects'), findsOneWidget);
+    expect(find.text('Dashboard'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
     expect(find.text('Scenes'), findsOneWidget);
     expect(find.text('Notes'), findsOneWidget);
