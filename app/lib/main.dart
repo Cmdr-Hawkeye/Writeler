@@ -2583,6 +2583,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           copy: copy,
           chapters: _chapters,
           scenes: _scenes,
+          catalogItems: _catalogItems,
+          relationships: _relationships,
           selectedScene: _selectedScene,
           onSelectScene: (scene) {
             _selectScene(scene);
@@ -4131,11 +4133,91 @@ int _linkedSceneCountForCatalogItem(
       .length;
 }
 
+List<Scene> _linkedScenesForCatalogItem(
+  CatalogItem item,
+  List<Relationship> relationships,
+  List<Scene> scenes,
+) {
+  final sceneIds = relationships
+      .where(
+        (relationship) =>
+            relationship.relationshipType == 'appearsIn' &&
+            ((relationship.source.type == EntityType.scene &&
+                    relationship.target.type == item.type &&
+                    relationship.target.id == item.id) ||
+                (relationship.target.type == EntityType.scene &&
+                    relationship.source.type == item.type &&
+                    relationship.source.id == item.id)),
+      )
+      .map((relationship) => relationship.source.type == EntityType.scene
+          ? relationship.source.id
+          : relationship.target.id)
+      .toSet();
+  final linked = scenes.where((scene) => sceneIds.contains(scene.id)).toList();
+  linked.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+  return linked;
+}
+
+final class _StructureMotifRow {
+  const _StructureMotifRow({
+    required this.label,
+    required this.count,
+    required this.share,
+  });
+
+  final String label;
+  final int count;
+  final double share;
+}
+
+List<_StructureMotifRow> _structureMotifRows(
+  List<Scene> scenes,
+  WritelerCopy copy,
+) {
+  final counts = <String, int>{};
+  for (final scene in scenes) {
+    final sceneType = scene.sceneType.trim();
+    if (sceneType.isNotEmpty) {
+      final label = '${copy.t('sceneType')}: $sceneType';
+      counts[label] = (counts[label] ?? 0) + 1;
+    }
+    final tone = scene.emotionalTone?.trim();
+    if (tone != null && tone.isNotEmpty) {
+      final label = '${copy.t('emotionalTone')}: $tone';
+      counts[label] = (counts[label] ?? 0) + 1;
+    }
+    final status =
+        '${copy.t('status')}: ${_draftStatusLabel(scene.status, copy.languageCode)}';
+    counts[status] = (counts[status] ?? 0) + 1;
+  }
+  if (counts.isEmpty) return const [];
+  var maxCount = 1;
+  for (final count in counts.values) {
+    if (count > maxCount) maxCount = count;
+  }
+  final rows = [
+    for (final entry in counts.entries)
+      _StructureMotifRow(
+        label: entry.key,
+        count: entry.value,
+        share: entry.value / maxCount,
+      ),
+  ];
+  rows.sort((a, b) {
+    final countCompare = b.count.compareTo(a.count);
+    if (countCompare != 0) return countCompare;
+    return a.label.compareTo(b.label);
+  });
+  return rows;
+}
+
 final class _SceneBoard extends StatelessWidget {
   const _SceneBoard({
     required this.copy,
     required this.chapters,
     required this.scenes,
+    required this.catalogItems,
+    required this.relationships,
     required this.selectedScene,
     required this.onSelectScene,
     required this.onMoveSceneUp,
@@ -4150,6 +4232,8 @@ final class _SceneBoard extends StatelessWidget {
   final WritelerCopy copy;
   final List<Chapter> chapters;
   final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
   final Scene? selectedScene;
   final ValueChanged<Scene> onSelectScene;
   final ValueChanged<Scene> onMoveSceneUp;
@@ -4174,10 +4258,29 @@ final class _SceneBoard extends StatelessWidget {
             scene.conflict?.trim().isEmpty != false ||
             scene.outcome?.trim().isEmpty != false)
         .toList();
+    final openConflictScenes = scenes
+        .where((scene) =>
+            scene.conflict?.trim().isNotEmpty == true &&
+            scene.outcome?.trim().isNotEmpty != true)
+        .toList();
     final unscheduledScenes =
         scenes.where((scene) => scene.storyDateStart == null).toList();
     final unassignedScenes =
         scenes.where((scene) => scene.chapterId == null).length;
+    final entityRows = [
+      for (final item in catalogItems)
+        _CatalogPresenceRow(
+          item: item,
+          scenes: _linkedScenesForCatalogItem(item, relationships, scenes),
+        ),
+    ]..sort((a, b) {
+        final countCompare = b.scenes.length.compareTo(a.scenes.length);
+        if (countCompare != 0) return countCompare;
+        final typeCompare = a.item.type.index.compareTo(b.item.type.index);
+        if (typeCompare != 0) return typeCompare;
+        return a.item.name.compareTo(b.item.name);
+      });
+    final motifRows = _structureMotifRows(scenes, copy);
     final groups = <_SceneStructureGroup>[
       for (final chapter in orderedChapters)
         _SceneStructureGroup(
@@ -4218,8 +4321,11 @@ final class _SceneBoard extends StatelessWidget {
           scenes: scenes,
           chapters: orderedChapters,
           planningGaps: planningGaps.length,
+          openConflicts: openConflictScenes.length,
           unassignedScenes: unassignedScenes,
           datedScenes: datedScenes,
+          catalogItems: catalogItems.length,
+          relationships: relationships.length,
         ),
         const Divider(height: 1),
         if (chapters.isNotEmpty)
@@ -4296,10 +4402,17 @@ final class _SceneBoard extends StatelessWidget {
               final inspector = _StructureInspector(
                 copy: copy,
                 planningGapScenes: planningGaps,
+                openConflictScenes: openConflictScenes,
                 unscheduledScenes: unscheduledScenes,
                 datedScenes: datedScenes,
+                entityRows: entityRows,
+                motifRows: motifRows,
+                relationships: relationships,
                 onOpenScene: onSelectScene,
               );
+              if (constraints.maxHeight < 320) {
+                return structureList;
+              }
               if (constraints.maxWidth < 980) {
                 final inspectorHeight =
                     (constraints.maxHeight * 0.42).clamp(120.0, 260.0);
@@ -4339,16 +4452,22 @@ final class _StructureCockpitSummary extends StatelessWidget {
     required this.scenes,
     required this.chapters,
     required this.planningGaps,
+    required this.openConflicts,
     required this.unassignedScenes,
     required this.datedScenes,
+    required this.catalogItems,
+    required this.relationships,
   });
 
   final WritelerCopy copy;
   final List<Scene> scenes;
   final List<Chapter> chapters;
   final int planningGaps;
+  final int openConflicts;
   final int unassignedScenes;
   final List<Scene> datedScenes;
+  final int catalogItems;
+  final int relationships;
 
   @override
   Widget build(BuildContext context) {
@@ -4384,9 +4503,24 @@ final class _StructureCockpitSummary extends StatelessWidget {
             value: '$planningGaps',
           ),
           _StructureChip(
+            icon: Icons.warning_amber_outlined,
+            label: copy.t('openConflicts'),
+            value: '$openConflicts',
+          ),
+          _StructureChip(
             icon: Icons.folder_off_outlined,
             label: copy.t('unassignedScenes'),
             value: '$unassignedScenes',
+          ),
+          _StructureChip(
+            icon: Icons.category_outlined,
+            label: copy.t('catalog'),
+            value: '$catalogItems',
+          ),
+          _StructureChip(
+            icon: Icons.hub_outlined,
+            label: copy.t('relationships'),
+            value: '$relationships',
           ),
           _StructureChip(
             icon: Icons.timeline_outlined,
@@ -4571,15 +4705,23 @@ final class _StructureInspector extends StatelessWidget {
   const _StructureInspector({
     required this.copy,
     required this.planningGapScenes,
+    required this.openConflictScenes,
     required this.unscheduledScenes,
     required this.datedScenes,
+    required this.entityRows,
+    required this.motifRows,
+    required this.relationships,
     required this.onOpenScene,
   });
 
   final WritelerCopy copy;
   final List<Scene> planningGapScenes;
+  final List<Scene> openConflictScenes;
   final List<Scene> unscheduledScenes;
   final List<Scene> datedScenes;
+  final List<_CatalogPresenceRow> entityRows;
+  final List<_StructureMotifRow> motifRows;
+  final List<Relationship> relationships;
   final ValueChanged<Scene> onOpenScene;
 
   @override
@@ -4590,9 +4732,16 @@ final class _StructureInspector extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            copy.t('structureInspector'),
+            copy.t('authorStructureCockpit'),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            copy.t('authorStructureCockpitBody'),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
           const SizedBox(height: 14),
@@ -4612,6 +4761,16 @@ final class _StructureInspector extends StatelessWidget {
                 const SizedBox(height: 18),
                 _StructureSceneSection(
                   copy: copy,
+                  title: copy.t('openConflicts'),
+                  emptyText: copy.t('noOpenConflicts'),
+                  icon: Icons.warning_amber_outlined,
+                  scenes: openConflictScenes,
+                  subtitleBuilder: (scene) => scene.conflict ?? '',
+                  onOpenScene: onOpenScene,
+                ),
+                const SizedBox(height: 18),
+                _StructureSceneSection(
+                  copy: copy,
                   title: copy.t('unscheduled'),
                   emptyText: copy.t('noUnscheduledScenes'),
                   icon: Icons.event_busy_outlined,
@@ -4625,6 +4784,19 @@ final class _StructureInspector extends StatelessWidget {
                   copy: copy,
                   scenes: datedScenes,
                   onOpenScene: onOpenScene,
+                ),
+                const SizedBox(height: 18),
+                _StructureEntitySection(
+                  copy: copy,
+                  rows: entityRows,
+                  onOpenScene: onOpenScene,
+                ),
+                const SizedBox(height: 18),
+                _StructureMotifSection(copy: copy, rows: motifRows),
+                const SizedBox(height: 18),
+                _StructureRelationshipSection(
+                  copy: copy,
+                  relationships: relationships,
                 ),
               ],
             ),
@@ -4751,6 +4923,236 @@ final class _StructureTimelineSection extends StatelessWidget {
               subtitle: Text(_formatLocalDate(scene.storyDateStart!)),
               onTap: () => onOpenScene(scene),
             ),
+      ],
+    );
+  }
+}
+
+final class _StructureEntitySection extends StatelessWidget {
+  const _StructureEntitySection({
+    required this.copy,
+    required this.rows,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final List<_CatalogPresenceRow> rows;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _StructureSectionHeading(
+          icon: Icons.hub_outlined,
+          title: '${copy.t('entityWeb')} (${rows.length})',
+        ),
+        const SizedBox(height: 8),
+        if (rows.isEmpty)
+          _EmptyInlineMessage(message: copy.t('catalogEmptyBody'))
+        else
+          for (final row in rows.take(8))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: color.outlineVariant),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(_catalogIcon(row.item.type),
+                          color: color.primary, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              row.item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              row.scenes.isEmpty
+                                  ? copy.t('noAppearances')
+                                  : row.scenes
+                                      .take(3)
+                                      .map((scene) => scene.title)
+                                      .join(', '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: row.scenes.isEmpty
+                                        ? color.error
+                                        : color.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text('${row.scenes.length}'),
+                      if (row.scenes.isNotEmpty)
+                        IconButton(
+                          tooltip: copy.t('openScene'),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => onOpenScene(row.scenes.first),
+                          icon: const Icon(Icons.open_in_new),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+final class _StructureMotifSection extends StatelessWidget {
+  const _StructureMotifSection({
+    required this.copy,
+    required this.rows,
+  });
+
+  final WritelerCopy copy;
+  final List<_StructureMotifRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _StructureSectionHeading(
+          icon: Icons.blur_on_outlined,
+          title: copy.t('motifTracker'),
+        ),
+        const SizedBox(height: 8),
+        if (rows.isEmpty)
+          _EmptyInlineMessage(message: copy.t('noMotifsYet'))
+        else
+          for (final row in rows.take(8))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 9),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          row.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 5),
+                        LinearProgressIndicator(value: row.share),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${row.count}',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+final class _StructureRelationshipSection extends StatelessWidget {
+  const _StructureRelationshipSection({
+    required this.copy,
+    required this.relationships,
+  });
+
+  final WritelerCopy copy;
+  final List<Relationship> relationships;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = relationships.take(8).toList(growable: false);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _StructureSectionHeading(
+          icon: Icons.device_hub_outlined,
+          title: '${copy.t('relationshipMap')} (${relationships.length})',
+        ),
+        const SizedBox(height: 8),
+        if (rows.isEmpty)
+          _EmptyInlineMessage(message: copy.t('noRelationshipsYet'))
+        else
+          for (final relationship in rows)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                relationship.direction == RelationshipDirection.directed
+                    ? Icons.arrow_forward
+                    : Icons.sync_alt,
+              ),
+              title: Text(
+                relationship.label?.trim().isNotEmpty == true
+                    ? relationship.label!
+                    : relationship.relationshipType,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                '${_entityTypeLabel(relationship.source.type, copy)} -> '
+                '${_entityTypeLabel(relationship.target.type, copy)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+final class _StructureSectionHeading extends StatelessWidget {
+  const _StructureSectionHeading({
+    required this.icon,
+    required this.title,
+  });
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: color.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
       ],
     );
   }

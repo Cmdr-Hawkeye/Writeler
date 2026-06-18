@@ -41,6 +41,9 @@ void main() {
   });
 
   testWidgets('new project action creates a local project row', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(
       WritelerApp(
         projectRepository: InMemoryProjectRepository(),
@@ -72,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Structure cockpit'), findsOneWidget);
-    expect(find.text('Structure inspector'), findsOneWidget);
+    expect(find.text('Author cockpit'), findsOneWidget);
   });
 
   testWidgets('stored design theme is applied', (tester) async {
