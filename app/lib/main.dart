@@ -150,22 +150,9 @@ final class WritelerApp extends StatelessWidget {
         Locale('de'),
         Locale('en'),
       ],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2F6F73),
-          brightness: Brightness.light,
-        ),
-        fontFamily: 'Roboto',
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF7BC8B8),
-          brightness: Brightness.dark,
-        ),
-        fontFamily: 'Roboto',
-        useMaterial3: true,
-      ),
+      theme: _buildWritelerTheme(Brightness.light),
+      darkTheme: _buildWritelerTheme(Brightness.dark),
+      themeMode: ThemeMode.dark,
       home: WritelerShell(
         projectRepository: projectRepository,
         sceneRepository: sceneRepository,
@@ -180,6 +167,242 @@ final class WritelerApp extends StatelessWidget {
       ),
     );
   }
+}
+
+ThemeData _buildWritelerTheme(Brightness brightness) {
+  final dark = brightness == Brightness.dark;
+  final seed = dark ? const Color(0xFF7CE7D7) : const Color(0xFF176B62);
+  final baseScheme = ColorScheme.fromSeed(
+    seedColor: seed,
+    brightness: brightness,
+  );
+  final scheme = baseScheme.copyWith(
+    primary: dark ? const Color(0xFF8DEBDD) : const Color(0xFF075D56),
+    onPrimary: dark ? const Color(0xFF062321) : Colors.white,
+    secondary: dark ? const Color(0xFFFFC979) : const Color(0xFF765019),
+    tertiary: dark ? const Color(0xFFB7C7FF) : const Color(0xFF4F5F99),
+    surface: dark ? const Color(0xFF07110F) : const Color(0xFFF7FAF8),
+    surfaceContainerLowest:
+        dark ? const Color(0xFF040807) : const Color(0xFFFFFFFF),
+    surfaceContainerLow:
+        dark ? const Color(0xFF0A1714) : const Color(0xFFF0F5F2),
+    surfaceContainer: dark ? const Color(0xFF0E1D1A) : const Color(0xFFEAF0ED),
+    surfaceContainerHigh:
+        dark ? const Color(0xFF132723) : const Color(0xFFE2EAE6),
+    surfaceContainerHighest:
+        dark ? const Color(0xFF19312C) : const Color(0xFFD9E3DE),
+    outline: dark ? const Color(0xFF44635D) : const Color(0xFF8AA29B),
+    outlineVariant: dark ? const Color(0xFF223A35) : const Color(0xFFC7D4CF),
+    error: dark ? const Color(0xFFFFA0A8) : const Color(0xFFBA1A1A),
+  );
+  final textTheme =
+      (dark ? Typography.material2021().white : Typography.material2021().black)
+          .apply(
+    fontFamily: 'Roboto',
+    displayColor: scheme.onSurface,
+    bodyColor: scheme.onSurface,
+  );
+
+  const radius = 8.0;
+  final outlineBorder = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(radius),
+    borderSide: BorderSide(color: scheme.outlineVariant),
+  );
+
+  return ThemeData(
+    brightness: brightness,
+    colorScheme: scheme,
+    scaffoldBackgroundColor: scheme.surface,
+    canvasColor: scheme.surface,
+    fontFamily: 'Roboto',
+    textTheme: textTheme.copyWith(
+      headlineMedium: textTheme.headlineMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
+      headlineSmall: textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
+      titleLarge: textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
+      titleMedium: textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
+      bodyMedium: textTheme.bodyMedium?.copyWith(height: 1.45),
+      bodyLarge: textTheme.bodyLarge?.copyWith(height: 1.5),
+    ),
+    useMaterial3: true,
+    visualDensity: VisualDensity.standard,
+    dividerTheme: DividerThemeData(
+      color: scheme.outlineVariant.withValues(alpha: dark ? 0.72 : 0.9),
+      thickness: 1,
+      space: 1,
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: Colors.transparent,
+      indicatorColor: scheme.primary.withValues(alpha: dark ? 0.18 : 0.12),
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      selectedIconTheme: IconThemeData(color: scheme.primary, size: 23),
+      unselectedIconTheme:
+          IconThemeData(color: scheme.onSurfaceVariant, size: 22),
+      selectedLabelTextStyle: TextStyle(
+        color: scheme.primary,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
+      unselectedLabelTextStyle: TextStyle(
+        color: scheme.onSurfaceVariant,
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+      ),
+    ),
+    listTileTheme: ListTileThemeData(
+      minLeadingWidth: 28,
+      minVerticalPadding: 10,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      selectedTileColor: scheme.primary.withValues(alpha: dark ? 0.14 : 0.09),
+      iconColor: scheme.onSurfaceVariant,
+      selectedColor: scheme.primary,
+      titleTextStyle: textTheme.bodyLarge?.copyWith(
+        color: scheme.onSurface,
+        fontWeight: FontWeight.w600,
+      ),
+      subtitleTextStyle: textTheme.bodyMedium?.copyWith(
+        color: scheme.onSurfaceVariant,
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: scheme.surfaceContainerLow,
+      border: outlineBorder,
+      enabledBorder: outlineBorder,
+      focusedBorder: outlineBorder.copyWith(
+        borderSide: BorderSide(color: scheme.primary, width: 1.6),
+      ),
+      errorBorder: outlineBorder.copyWith(
+        borderSide: BorderSide(color: scheme.error),
+      ),
+      focusedErrorBorder: outlineBorder.copyWith(
+        borderSide: BorderSide(color: scheme.error, width: 1.6),
+      ),
+      labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+      floatingLabelStyle: TextStyle(color: scheme.primary),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(48, 44),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(48, 44),
+        foregroundColor: scheme.primary,
+        side: BorderSide(color: scheme.outline),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        minimumSize: const Size(44, 40),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        minimumSize: const Size(44, 44),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+        ),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: scheme.surfaceContainerHigh,
+      selectedColor: scheme.primary.withValues(alpha: dark ? 0.18 : 0.12),
+      side: BorderSide(color: scheme.outlineVariant),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      labelStyle: TextStyle(color: scheme.onSurface),
+      secondaryLabelStyle: TextStyle(color: scheme.primary),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
+        ),
+        side: WidgetStatePropertyAll(BorderSide(color: scheme.outlineVariant)),
+      ),
+    ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: scheme.surfaceContainerLow,
+        border: outlineBorder,
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: dark ? const Color(0xFF19312C) : scheme.inverseSurface,
+      contentTextStyle: TextStyle(color: dark ? scheme.onSurface : null),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
+    ),
+    tooltipTheme: TooltipThemeData(
+      decoration: BoxDecoration(
+        color: scheme.inverseSurface,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      textStyle: TextStyle(color: scheme.onInverseSurface),
+    ),
+    scrollbarTheme: ScrollbarThemeData(
+      thumbVisibility: WidgetStateProperty.all(false),
+      thickness: WidgetStateProperty.all(7),
+      radius: const Radius.circular(radius),
+      thumbColor: WidgetStateProperty.all(
+        scheme.primary.withValues(alpha: dark ? 0.44 : 0.34),
+      ),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? scheme.primary
+            : scheme.outline,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? scheme.primary.withValues(alpha: 0.34)
+            : scheme.surfaceContainerHighest,
+      ),
+    ),
+  );
 }
 
 final class WritelerShell extends StatefulWidget {
@@ -1705,112 +1928,160 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  String _workspaceTitle(WritelerCopy copy) => switch (_selectedRailIndex) {
+        0 => copy.t('projects'),
+        1 => copy.t('manuscript'),
+        2 => copy.t('structureCockpit'),
+        3 => copy.t('characters'),
+        4 => copy.t('locations'),
+        5 => copy.t('objects'),
+        6 => copy.t('analysis'),
+        7 => copy.t('notesCockpit'),
+        8 => copy.t('aiWorkshop'),
+        9 => copy.t('exports'),
+        _ => copy.t('settings'),
+      };
+
+  IconData _workspaceIcon() => switch (_selectedRailIndex) {
+        0 => Icons.library_books_outlined,
+        1 => Icons.edit_note_outlined,
+        2 => Icons.auto_awesome_motion_outlined,
+        3 => Icons.person_outline,
+        4 => Icons.place_outlined,
+        5 => Icons.category_outlined,
+        6 => Icons.query_stats_outlined,
+        7 => Icons.sticky_note_2_outlined,
+        8 => Icons.psychology_alt_outlined,
+        9 => Icons.ios_share_outlined,
+        _ => Icons.tune_outlined,
+      };
+
+  int _pendingSuggestionCount() => _suggestions
+      .where(
+        (suggestion) => suggestion.userDecision == SuggestionDecision.pending,
+      )
+      .length;
+
   @override
   Widget build(BuildContext context) {
     final copy = WritelerCopy(Localizations.localeOf(context).languageCode);
+    final color = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: _selectedRailIndex,
-            scrollable: true,
-            onDestinationSelected: (index) =>
-                setState(() => _selectedRailIndex = index),
-            labelType: NavigationRailLabelType.all,
-            destinations: [
-              NavigationRailDestination(
-                icon: const Icon(Icons.library_books_outlined),
-                selectedIcon: const Icon(Icons.library_books),
-                label: Text(copy.t('projects')),
+      backgroundColor: color.surface,
+      body: Material(
+        color: color.surface,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: color.primary.withValues(alpha: 0.22),
+                width: 2,
               ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.edit_note_outlined),
-                selectedIcon: const Icon(Icons.edit_note),
-                label: Text(copy.t('editor')),
+            ),
+          ),
+          child: Row(
+            children: [
+              _StudioRailFrame(
+                child: NavigationRail(
+                  selectedIndex: _selectedRailIndex,
+                  scrollable: true,
+                  minWidth: 96,
+                  groupAlignment: -0.84,
+                  leading: const Padding(
+                    padding: EdgeInsets.only(top: 14, bottom: 18),
+                    child: _BrandMark(),
+                  ),
+                  onDestinationSelected: (index) =>
+                      setState(() => _selectedRailIndex = index),
+                  labelType: NavigationRailLabelType.all,
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.library_books_outlined),
+                      selectedIcon: const Icon(Icons.library_books),
+                      label: Text(copy.t('projects')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.edit_note_outlined),
+                      selectedIcon: const Icon(Icons.edit_note),
+                      label: Text(copy.t('editor')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.auto_awesome_motion_outlined),
+                      selectedIcon: const Icon(Icons.auto_awesome_motion),
+                      label: Text(copy.t('scenes')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.person_outline),
+                      selectedIcon: const Icon(Icons.person),
+                      label: Text(copy.t('characters')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.place_outlined),
+                      selectedIcon: const Icon(Icons.place),
+                      label: Text(copy.t('locations')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.category_outlined),
+                      selectedIcon: const Icon(Icons.category),
+                      label: Text(copy.t('objects')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.query_stats_outlined),
+                      selectedIcon: const Icon(Icons.query_stats),
+                      label: Text(copy.t('analysis')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.sticky_note_2_outlined),
+                      selectedIcon: const Icon(Icons.sticky_note_2),
+                      label: Text(copy.t('notes')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.psychology_alt_outlined),
+                      selectedIcon: const Icon(Icons.psychology_alt),
+                      label: Text(copy.t('aiWorkshop')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.ios_share_outlined),
+                      selectedIcon: const Icon(Icons.ios_share),
+                      label: Text(copy.t('exports')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.tune_outlined),
+                      selectedIcon: const Icon(Icons.tune),
+                      label: Text(copy.t('settings')),
+                    ),
+                  ],
+                ),
               ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.auto_awesome_motion_outlined),
-                selectedIcon: const Icon(Icons.auto_awesome_motion),
-                label: Text(copy.t('scenes')),
-              ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.person_outline),
-                selectedIcon: const Icon(Icons.person),
-                label: Text(copy.t('characters')),
-              ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.place_outlined),
-                selectedIcon: const Icon(Icons.place),
-                label: Text(copy.t('locations')),
-              ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.category_outlined),
-                selectedIcon: const Icon(Icons.category),
-                label: Text(copy.t('objects')),
-              ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.query_stats_outlined),
-                selectedIcon: const Icon(Icons.query_stats),
-                label: Text(copy.t('analysis')),
-              ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.sticky_note_2_outlined),
-                selectedIcon: const Icon(Icons.sticky_note_2),
-                label: Text(copy.t('notes')),
-              ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.psychology_alt_outlined),
-                selectedIcon: const Icon(Icons.psychology_alt),
-                label: Text(copy.t('aiWorkshop')),
-              ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.ios_share_outlined),
-                selectedIcon: const Icon(Icons.ios_share),
-                label: Text(copy.t('exports')),
-              ),
-              NavigationRailDestination(
-                icon: const Icon(Icons.tune_outlined),
-                selectedIcon: const Icon(Icons.tune),
-                label: Text(copy.t('settings')),
+              Expanded(
+                child: Column(
+                  children: [
+                    _StudioTopBar(
+                      copy: copy,
+                      workspaceTitle: _workspaceTitle(copy),
+                      workspaceIcon: _workspaceIcon(),
+                      project: _selectedProject,
+                      scenes: _scenes,
+                      words: _scenes.fold<int>(
+                        0,
+                        (sum, scene) => sum + scene.actualWordCount,
+                      ),
+                      pendingSuggestions: _pendingSuggestionCount(),
+                      providerConfig:
+                          _activeProviderConfig ?? _defaultProviderConfig(),
+                      onCreateProject: () => _showCreateProjectDialog(copy),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: _buildSelectedWorkspace(copy),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const VerticalDivider(width: 1),
-          Expanded(
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 64,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        Text(
-                          copy.t('appTitle'),
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                        ),
-                        const Spacer(),
-                        FilledButton.icon(
-                          onPressed: () => _showCreateProjectDialog(copy),
-                          icon: const Icon(Icons.add),
-                          label: Text(copy.t('newProject')),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: _buildSelectedWorkspace(copy),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -2024,6 +2295,272 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 }
 
+final class _StudioRailFrame extends StatelessWidget {
+  const _StudioRailFrame({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLowest,
+        border: Border(
+          right: BorderSide(color: color.outlineVariant),
+        ),
+      ),
+      child: SafeArea(
+        right: false,
+        child: child,
+      ),
+    );
+  }
+}
+
+final class _BrandMark extends StatelessWidget {
+  const _BrandMark();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: 'Writeler',
+      child: Semantics(
+        label: 'Writeler',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: color.primary.withValues(alpha: 0.12),
+                border: Border.all(
+                  color: color.primary.withValues(alpha: 0.36),
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SizedBox(
+                width: 46,
+                height: 46,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      Icons.auto_stories_outlined,
+                      color: color.primary,
+                      size: 25,
+                    ),
+                    Positioned(
+                      right: 9,
+                      bottom: 8,
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: color.secondary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Writeler',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _StudioTopBar extends StatelessWidget {
+  const _StudioTopBar({
+    required this.copy,
+    required this.workspaceTitle,
+    required this.workspaceIcon,
+    required this.project,
+    required this.scenes,
+    required this.words,
+    required this.pendingSuggestions,
+    required this.providerConfig,
+    required this.onCreateProject,
+  });
+
+  final WritelerCopy copy;
+  final String workspaceTitle;
+  final IconData workspaceIcon;
+  final Project? project;
+  final List<Scene> scenes;
+  final int words;
+  final int pendingSuggestions;
+  final AIProviderConfig providerConfig;
+  final VoidCallback onCreateProject;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final availableWidth = MediaQuery.sizeOf(context).width;
+    final showStatus = availableWidth >= 1080;
+    final showAiStatus = availableWidth >= 1320;
+    final projectTitle = project?.title ?? copy.t('selectProject');
+    final aiLabel = providerConfig.kind == AIProviderKind.mock
+        ? 'Mock'
+        : providerConfig.displayName;
+
+    return Container(
+      height: 76,
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLowest,
+        border: Border(
+          bottom: BorderSide(color: color.outlineVariant),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: color.primary.withValues(alpha: 0.24)),
+            ),
+            child: Icon(workspaceIcon, color: color.primary, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  workspaceTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  projectTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          if (project != null && showStatus) ...[
+            _StudioStatusPill(
+              icon: Icons.auto_awesome_motion_outlined,
+              label: copy.t('scenes'),
+              value: '${scenes.length}',
+            ),
+            _StudioStatusPill(
+              icon: Icons.notes_outlined,
+              label: copy.t('words'),
+              value: '$words',
+            ),
+            _StudioStatusPill(
+              icon: Icons.psychology_alt_outlined,
+              label: copy.t('openSuggestions'),
+              value: '$pendingSuggestions',
+            ),
+            if (showAiStatus)
+              _StudioStatusPill(
+                icon: providerConfig.enabled
+                    ? Icons.bolt_outlined
+                    : Icons.power_settings_new_outlined,
+                label: copy.t('aiEnabled'),
+                value: aiLabel,
+              ),
+            const SizedBox(width: 10),
+          ],
+          FilledButton.icon(
+            onPressed: onCreateProject,
+            icon: const Icon(Icons.add),
+            label: Text(copy.t('newProject')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _StudioStatusPill extends StatelessWidget {
+  const _StudioStatusPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Tooltip(
+        message: '$label: $value',
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 42, maxWidth: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.outlineVariant),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 17, color: color.primary),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: color.onSurface,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 final class _WorkspaceView extends StatelessWidget {
   const _WorkspaceView({
     required this.copy,
@@ -2141,16 +2678,29 @@ final class _EmptyWorkspace extends StatelessWidget {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 680),
-        child: Padding(
+        child: Container(
           padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: color.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.outlineVariant),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.menu_book_outlined,
-                color: color.primary,
-                size: 40,
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: color.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.menu_book_outlined,
+                  color: color.primary,
+                  size: 30,
+                ),
               ),
               const SizedBox(height: 20),
               Text(
@@ -2334,7 +2884,7 @@ final class _ProjectOverview extends StatelessWidget {
                               leading: const Icon(Icons.notes_outlined),
                               title: Text(scene.title),
                               subtitle: Text(
-                                '${_draftStatusLabel(scene.status, copy.languageCode)} · '
+                                '${_draftStatusLabel(scene.status, copy.languageCode)} - '
                                 '${scene.actualWordCount} ${copy.t('words')}',
                               ),
                               dense: true,
@@ -2364,26 +2914,29 @@ final class _MetricTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
 
-    return Container(
-      width: 160,
-      padding: const EdgeInsets.all(16),
+    return DecoratedBox(
       decoration: BoxDecoration(
-        border: Border.all(color: color.outlineVariant),
+        color: color.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.outlineVariant),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label, style: TextStyle(color: color.onSurfaceVariant)),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-        ],
+      child: Container(
+        width: 160,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: TextStyle(color: color.onSurfaceVariant)),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2559,11 +3112,13 @@ final class _SceneBoard extends StatelessWidget {
                 onOpenScene: onSelectScene,
               );
               if (constraints.maxWidth < 980) {
+                final inspectorHeight =
+                    (constraints.maxHeight * 0.42).clamp(120.0, 260.0);
                 return Column(
                   children: [
                     Expanded(child: structureList),
                     const Divider(height: 1),
-                    SizedBox(height: 260, child: inspector),
+                    SizedBox(height: inspectorHeight, child: inspector),
                   ],
                 );
               }
@@ -4420,96 +4975,129 @@ final class _AIWorkshop extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  scene == null
-                      ? copy.t('aiNeedsScene')
-                      : '${copy.t('aiContext')}: ${scene.title}',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                _AIProviderStatusLine(
-                  copy: copy,
-                  config: activeProviderConfig,
-                ),
-                const SizedBox(height: 12),
-                Shortcuts(
-                  shortcuts: const {
-                    SingleActivator(LogicalKeyboardKey.enter, control: true):
-                        _SubmitAiPromptIntent(),
-                    SingleActivator(LogicalKeyboardKey.enter, meta: true):
-                        _SubmitAiPromptIntent(),
-                  },
-                  child: Actions(
-                    actions: {
-                      _SubmitAiPromptIntent:
-                          CallbackAction<_SubmitAiPromptIntent>(
-                        onInvoke: (intent) {
-                          if (aiAvailable && !isRequesting) {
-                            onSubmitPrompt();
-                          }
-                          return null;
-                        },
-                      ),
-                    },
-                    child: TextField(
-                      controller: promptController,
-                      minLines: 2,
-                      maxLines: 4,
-                      textInputAction: TextInputAction.newline,
-                      decoration: InputDecoration(
-                        labelText: copy.t('aiPrompt'),
-                        helperText: copy.t('aiPromptSubmitHint'),
-                        border: const OutlineInputBorder(),
-                      ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    FilledButton.icon(
-                      onPressed:
-                          aiAvailable && !isRequesting ? onSubmitPrompt : null,
-                      icon: const Icon(Icons.send_outlined),
-                      label: Text(copy.t('submitAiPrompt')),
-                    ),
-                    for (final action in primaryActions)
-                      OutlinedButton.icon(
-                        onPressed: aiAvailable && !isRequesting
-                            ? () => onRequestTask(action.task)
-                            : null,
-                        icon: Icon(action.icon),
-                        label: Text(_aiTaskLabel(action.task.name, copy)),
-                      ),
-                    PopupMenuButton<AITaskKind>(
-                      enabled: aiAvailable && !isRequesting,
-                      tooltip: copy.t('moreAiChecks'),
-                      onSelected: onRequestTask,
-                      itemBuilder: (context) => [
-                        for (final action in secondaryActions)
-                          PopupMenuItem(
-                            value: action.task,
-                            child: ListTile(
-                              dense: true,
-                              leading: Icon(action.icon),
-                              title: Text(_aiTaskLabel(action.task.name, copy)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.psychology_alt_outlined,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                scene == null
+                                    ? copy.t('aiNeedsScene')
+                                    : '${copy.t('aiContext')}: ${scene.title}',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        _AIProviderStatusLine(
+                          copy: copy,
+                          config: activeProviderConfig,
+                        ),
+                        const SizedBox(height: 14),
+                        Shortcuts(
+                          shortcuts: const {
+                            SingleActivator(LogicalKeyboardKey.enter,
+                                control: true): _SubmitAiPromptIntent(),
+                            SingleActivator(LogicalKeyboardKey.enter,
+                                meta: true): _SubmitAiPromptIntent(),
+                          },
+                          child: Actions(
+                            actions: {
+                              _SubmitAiPromptIntent:
+                                  CallbackAction<_SubmitAiPromptIntent>(
+                                onInvoke: (intent) {
+                                  if (aiAvailable && !isRequesting) {
+                                    onSubmitPrompt();
+                                  }
+                                  return null;
+                                },
+                              ),
+                            },
+                            child: TextField(
+                              controller: promptController,
+                              minLines: 2,
+                              maxLines: 4,
+                              textInputAction: TextInputAction.newline,
+                              decoration: InputDecoration(
+                                labelText: copy.t('aiPrompt'),
+                                helperText: copy.t('aiPromptSubmitHint'),
+                                border: const OutlineInputBorder(),
+                              ),
                             ),
                           ),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: aiAvailable && !isRequesting
+                                  ? onSubmitPrompt
+                                  : null,
+                              icon: const Icon(Icons.send_outlined),
+                              label: Text(copy.t('submitAiPrompt')),
+                            ),
+                            for (final action in primaryActions)
+                              OutlinedButton.icon(
+                                onPressed: aiAvailable && !isRequesting
+                                    ? () => onRequestTask(action.task)
+                                    : null,
+                                icon: Icon(action.icon),
+                                label:
+                                    Text(_aiTaskLabel(action.task.name, copy)),
+                              ),
+                            PopupMenuButton<AITaskKind>(
+                              enabled: aiAvailable && !isRequesting,
+                              tooltip: copy.t('moreAiChecks'),
+                              onSelected: onRequestTask,
+                              itemBuilder: (context) => [
+                                for (final action in secondaryActions)
+                                  PopupMenuItem(
+                                    value: action.task,
+                                    child: ListTile(
+                                      dense: true,
+                                      leading: Icon(action.icon),
+                                      title: Text(
+                                        _aiTaskLabel(action.task.name, copy),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                              child: _AiMenuAnchor(copy: copy),
+                            ),
+                          ],
+                        ),
+                        if (isRequesting || lastError != null) ...[
+                          const SizedBox(height: 12),
+                          _AIRequestStatus(
+                            copy: copy,
+                            isRequesting: isRequesting,
+                            message: lastError,
+                          ),
+                        ],
                       ],
-                      child: _AiMenuAnchor(copy: copy),
                     ),
-                  ],
-                ),
-                if (isRequesting || lastError != null) ...[
-                  const SizedBox(height: 12),
-                  _AIRequestStatus(
-                    copy: copy,
-                    isRequesting: isRequesting,
-                    message: lastError,
                   ),
-                ],
+                ),
                 const SizedBox(height: 24),
                 Expanded(
                   child: LayoutBuilder(
@@ -4577,34 +5165,44 @@ final class _AISuggestionsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(copy.t('suggestions'),
-            style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Expanded(
-          child: suggestions.isEmpty
-              ? Text(copy.t('noSuggestions'),
-                  style: TextStyle(color: color.onSurfaceVariant))
-              : ListView.separated(
-                  itemCount: suggestions.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final suggestion = suggestions[index];
-                    return _AISuggestionTile(
-                      copy: copy,
-                      suggestion: suggestion,
-                      scenes: scenes,
-                      onAcceptSuggestion: onAcceptSuggestion,
-                      onConvertSuggestion: onConvertSuggestion,
-                      onRejectSuggestion: onRejectSuggestion,
-                    );
-                  },
-                ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(copy.t('suggestions'),
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Expanded(
+              child: suggestions.isEmpty
+                  ? Text(copy.t('noSuggestions'),
+                      style: TextStyle(color: color.onSurfaceVariant))
+                  : ListView.separated(
+                      itemCount: suggestions.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final suggestion = suggestions[index];
+                        return _AISuggestionTile(
+                          copy: copy,
+                          suggestion: suggestion,
+                          scenes: scenes,
+                          onAcceptSuggestion: onAcceptSuggestion,
+                          onConvertSuggestion: onConvertSuggestion,
+                          onRejectSuggestion: onRejectSuggestion,
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -4625,68 +5223,82 @@ final class _AINotesPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(copy.t('notes'), style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Expanded(
-          child: notes.isEmpty
-              ? Text(
-                  copy.t('noNotes'),
-                  style: TextStyle(color: color.onSurfaceVariant),
-                )
-              : ListView.separated(
-                  itemCount: notes.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final note = notes[index];
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.sticky_note_2_outlined),
-                      title: Text(
-                        note.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (_noteTargetLabel(note, scenes) case final target?)
-                            Text(
-                              target,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: color.primary),
-                            ),
-                          Text(
-                            note.body,
-                            maxLines: 3,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(copy.t('notes'),
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Expanded(
+              child: notes.isEmpty
+                  ? Text(
+                      copy.t('noNotes'),
+                      style: TextStyle(color: color.onSurfaceVariant),
+                    )
+                  : ListView.separated(
+                      itemCount: notes.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final note = notes[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.sticky_note_2_outlined),
+                          title: Text(
+                            note.title,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          Text(
-                            _formatLocalDateTime(note.createdAt),
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_noteTargetLabel(note, scenes)
+                                  case final target?)
+                                Text(
+                                  target,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(color: color.primary),
+                                ),
+                              Text(
+                                note.body,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                _formatLocalDateTime(note.createdAt),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: color.onSurfaceVariant,
                                     ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      trailing: IconButton(
-                        tooltip: copy.t('delete'),
-                        onPressed: () => onDeleteNote(note),
-                        icon: const Icon(Icons.delete_outline),
-                      ),
-                    );
-                  },
-                ),
+                          trailing: IconButton(
+                            tooltip: copy.t('delete'),
+                            onPressed: () => onDeleteNote(note),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -4712,7 +5324,7 @@ final class _AiMenuAnchor extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(color: color.outline),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
@@ -5365,9 +5977,9 @@ final class _ImportArchivePreview extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     '${copy.t('archiveSchema')}: ${preview.schema}\n'
-                    '${copy.t('chapters')}: ${preview.chapterCount} · '
+                    '${copy.t('chapters')}: ${preview.chapterCount} - '
                     '${copy.t('scenes')}: ${preview.sceneCount}\n'
-                    '${copy.t('catalog')}: ${preview.catalogItemCount} · '
+                    '${copy.t('catalog')}: ${preview.catalogItemCount} - '
                     '${copy.t('relationships')}: ${preview.relationshipCount}\n'
                     '${copy.t('notes')}: ${preview.noteCount}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -5561,7 +6173,7 @@ final class _SettingsWorkspace extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           '${copy.t('activeProvider')}: '
-          '${activeProviderConfig?.displayName ?? providerNameController.text} · '
+          '${activeProviderConfig?.displayName ?? providerNameController.text} - '
           '${activeProviderConfig?.modelName ?? modelNameController.text}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
@@ -5585,19 +6197,33 @@ final class _WorkspaceHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 64,
+    final color = Theme.of(context).colorScheme;
+    return Container(
+      height: 68,
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLowest,
+        border: Border(
+          bottom: BorderSide(color: color.outlineVariant),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           children: [
+            Container(
+              width: 4,
+              height: 28,
+              decoration: BoxDecoration(
+                color: color.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(width: 14),
             Expanded(
-              child: Text(
-                title,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+              child: Semantics(
+                label: title,
+                header: true,
+                child: const SizedBox.shrink(),
               ),
             ),
             if (actionLabel != null && actionIcon != null)
@@ -5683,19 +6309,20 @@ final class _ProjectLibrary extends StatelessWidget {
               Icons.menu_book_outlined,
               color: selected ? color.primary : color.onSurfaceVariant,
             ),
-            title: Text(project.title),
-            subtitle: Text('${copy.t('localOnly')} - ${project.projectType}'),
-            trailing: Wrap(
-              spacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(project.status.name),
-                IconButton(
-                  tooltip: copy.t('deleteProject'),
-                  onPressed: () => onDelete(project),
-                  icon: const Icon(Icons.delete_outline),
-                ),
-              ],
+            title: Text(
+              project.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              '${copy.t('localOnly')} - ${project.projectType}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: IconButton(
+              tooltip: copy.t('deleteProject'),
+              onPressed: () => onDelete(project),
+              icon: const Icon(Icons.delete_outline),
             ),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -6008,8 +6635,11 @@ final class _SceneEditorState extends State<_SceneEditor> {
     final scene = widget.scene;
     final color = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(24),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.all(_focusMode ? 32 : 24),
+      color: _focusMode ? color.surfaceContainerLowest : Colors.transparent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -6083,19 +6713,38 @@ final class _SceneEditorState extends State<_SceneEditor> {
           ],
           const SizedBox(height: 12),
           Expanded(
-            child: TextField(
-              controller: widget.controller,
-              expands: true,
-              maxLines: null,
-              minLines: null,
-              textAlignVertical: TextAlignVertical.top,
-              decoration: InputDecoration(
-                labelText: copy.t('manuscript'),
-                alignLabelWithHint: true,
-                filled: true,
-                fillColor:
-                    color.surfaceContainerHighest.withValues(alpha: 0.28),
-                border: const OutlineInputBorder(),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: _focusMode
+                    ? color.surfaceContainerLowest
+                    : color.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _focusMode
+                      ? color.primary.withValues(alpha: 0.42)
+                      : color.outlineVariant,
+                ),
+              ),
+              child: TextField(
+                controller: widget.controller,
+                expands: true,
+                maxLines: null,
+                minLines: null,
+                textAlignVertical: TextAlignVertical.top,
+                cursorColor: color.primary,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: _focusMode ? 19 : 17,
+                      height: 1.7,
+                    ),
+                decoration: InputDecoration(
+                  labelText: copy.t('manuscript'),
+                  alignLabelWithHint: true,
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.all(22),
+                ),
               ),
             ),
           ),
@@ -6135,7 +6784,12 @@ final class _ManuscriptToolbar extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        border: Border.all(color: color.outlineVariant),
+        color: color.surfaceContainerLow,
+        border: Border.all(
+          color: focusMode
+              ? color.primary.withValues(alpha: 0.46)
+              : color.outlineVariant,
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
