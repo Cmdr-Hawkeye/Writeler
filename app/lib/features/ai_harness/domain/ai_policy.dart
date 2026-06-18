@@ -62,9 +62,9 @@ final class AIPolicy {
 
   String systemBoundary({String languageCode = 'en'}) {
     if (languageCode == 'de') {
-      return 'Unterstuetze den Autor mit Struktur, Analyse, Alternativen und Fragen. '
-          'Erzeuge keinen finalen Manuskripttext als Ersatz fuer die Autorin oder den Autor. '
-          'Alle Vorschlaege muessen ausdruecklich geprueft werden.';
+      return 'Unterstütze den Autor mit Struktur, Analyse, Alternativen und Fragen. '
+          'Erzeuge keinen finalen Manuskripttext als Ersatz für die Autorin oder den Autor. '
+          'Alle Vorschläge müssen ausdrücklich geprüft werden.';
     }
     return 'Assist the author with structure, analysis, alternatives, and questions. '
         'Do not produce final manuscript text as a replacement for the author. '

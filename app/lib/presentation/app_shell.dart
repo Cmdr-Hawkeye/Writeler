@@ -48,6 +48,11 @@ final class _WritelerShellState extends State<WritelerShell> {
   late final ProjectExporter _projectExporter = const ProjectExporter();
   late final ProjectArchiveCodec _archiveCodec = const ProjectArchiveCodec();
   late final ManualSyncAdapter _syncAdapter = const ManualSyncAdapter();
+  late final _AIProviderRuntime _aiProviderRuntime = _AIProviderRuntime(
+    configRepository: widget.aiProviderConfigRepository,
+    secretVault: widget.secretVault,
+    transport: const HttpModelHttpTransport(),
+  );
   late final TextEditingController _manuscriptController =
       TextEditingController();
   late final TextEditingController _summaryController = TextEditingController();
@@ -247,7 +252,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _loadProjects() async {
-    final providerConfig = await _normalizeProviderConfigSecrets(
+    final providerConfig = await _aiProviderRuntime.normalizeConfigSecrets(
       await widget.aiProviderConfigRepository.findById('default'),
     );
     final projects = await widget.projectRepository.listActive();
@@ -256,43 +261,12 @@ final class _WritelerShellState extends State<WritelerShell> {
     setState(() {
       _projects = projects;
       _selectedProject = selectedProject;
-      _syncProviderConfig(providerConfig ?? _defaultProviderConfig());
+      _syncProviderConfig(providerConfig ?? _aiProviderRuntime.defaultConfig());
     });
     if (selectedProject != null) {
       await _loadProjectData(selectedProject.id);
     }
   }
-
-  AIProviderConfig _defaultProviderConfig() {
-    final preset = AIProviderPreset.forKind(AIProviderKind.mock);
-    return AIProviderConfig(
-      id: 'default',
-      kind: preset.kind,
-      displayName: preset.displayName,
-      modelName: preset.modelName,
-      baseUrl: preset.baseUrl,
-    );
-  }
-
-  Future<AIProviderConfig?> _normalizeProviderConfigSecrets(
-      AIProviderConfig? config) async {
-    final apiKeyRef = config?.encryptedApiKeyRef;
-    if (config == null || apiKeyRef == null || _isSecretVaultRef(apiKeyRef)) {
-      return config;
-    }
-
-    final ref = _providerApiKeyRef(config.id);
-    await widget.secretVault.write(ref: ref, secret: apiKeyRef);
-    final migrated = config.copyWith(encryptedApiKeyRef: ref);
-    await widget.aiProviderConfigRepository.save(migrated);
-    return migrated;
-  }
-
-  String _providerApiKeyRef(String providerId) {
-    return 'secret://ai-provider/$providerId/api-key';
-  }
-
-  bool _isSecretVaultRef(String value) => value.startsWith('secret://');
 
   void _syncProviderConfig(AIProviderConfig config) {
     _activeProviderConfig = config;
@@ -319,84 +293,9 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   Future<RequestAISuggestion> _createSuggestionRequester() async {
     return RequestAISuggestion(
-      provider: await _activeLanguageModelProvider(),
+      provider: await _aiProviderRuntime.createProvider(_activeProviderConfig),
       repository: widget.aiSuggestionRepository,
     );
-  }
-
-  Future<LanguageModelProvider> _activeLanguageModelProvider() async {
-    final config = _activeProviderConfig ?? _defaultProviderConfig();
-    if (!config.enabled) {
-      throw const DomainFailure('AI provider is disabled in settings.');
-    }
-
-    switch (config.kind) {
-      case AIProviderKind.mock:
-        return const MockLanguageModelProvider();
-      case AIProviderKind.openAICompatible:
-      case AIProviderKind.openRouter:
-        final apiKey = await _readApiKey(config, required: true);
-        return OpenAICompatibleLanguageModelProvider.fromConfig(
-          config,
-          apiKey: apiKey,
-          transport: const HttpModelHttpTransport(),
-        );
-      case AIProviderKind.anthropic:
-        final apiKey = await _readApiKey(config, required: true);
-        return AnthropicLanguageModelProvider.fromConfig(
-          config,
-          apiKey: apiKey,
-          transport: const HttpModelHttpTransport(),
-        );
-      case AIProviderKind.gemini:
-        final apiKey = await _readApiKey(config, required: true);
-        return GeminiLanguageModelProvider.fromConfig(
-          config,
-          apiKey: apiKey,
-          transport: const HttpModelHttpTransport(),
-        );
-      case AIProviderKind.ollama:
-        return OllamaLanguageModelProvider.fromConfig(
-          config,
-          transport: const HttpModelHttpTransport(),
-        );
-    }
-  }
-
-  Future<String?> _readApiKey(
-    AIProviderConfig config, {
-    bool required = false,
-  }) async {
-    final ref = config.encryptedApiKeyRef;
-    if (ref == null) {
-      if (required) {
-        throw const DomainFailure(
-          'AI_API_KEY_MISSING',
-        );
-      }
-      return null;
-    }
-    final secret = await widget.secretVault.read(ref);
-    if (secret == null || secret.isEmpty) {
-      throw const DomainFailure(
-        'AI_API_KEY_MISSING',
-      );
-    }
-    final normalizedSecret = _normalizeProviderApiKey(secret);
-    if (normalizedSecret.isEmpty) {
-      throw const DomainFailure(
-        'AI_API_KEY_MISSING',
-      );
-    }
-    return normalizedSecret;
-  }
-
-  String _normalizeProviderApiKey(String value) {
-    var normalized = value.trim();
-    while (normalized.toLowerCase().startsWith('bearer ')) {
-      normalized = normalized.substring('bearer '.length).trim();
-    }
-    return normalized;
   }
 
   Future<void> _loadProjectData(String projectId) async {
@@ -1739,12 +1638,13 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   Future<void> _saveProviderConfig(WritelerCopy copy) async {
     const providerId = 'default';
-    final apiKeyInput = _normalizeProviderApiKey(_apiKeyRefController.text);
+    final apiKeyInput =
+        _aiProviderRuntime.normalizeApiKey(_apiKeyRefController.text);
     final existingApiKeyRef = _activeProviderConfig?.encryptedApiKeyRef;
     String? apiKeyRef = existingApiKeyRef;
 
     if (apiKeyInput.isNotEmpty) {
-      apiKeyRef = _providerApiKeyRef(providerId);
+      apiKeyRef = _aiProviderRuntime.providerApiKeyRef(providerId);
       await widget.secretVault.write(ref: apiKeyRef, secret: apiKeyInput);
     }
 
@@ -2032,7 +1932,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           suggestions: _suggestions,
           notes: _notes,
           activeProviderConfig:
-              _activeProviderConfig ?? _defaultProviderConfig(),
+              _activeProviderConfig ?? _aiProviderRuntime.defaultConfig(),
           promptController: _aiPromptController,
           isRequesting: _isRequestingAi,
           lastError: _lastAiError,

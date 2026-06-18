@@ -83,7 +83,7 @@ final class RequestAISuggestion {
     return [
       policy.systemBoundary(languageCode: languageCode),
       german
-          ? 'Antworte auf Deutsch. Schreibe konkret, knapp und handlungsorientiert. Nutze die vorhandenen Szenendaten; wenn etwas fehlt, benenne die Luecke.'
+          ? 'Antworte auf Deutsch. Schreibe konkret, knapp und handlungsorientiert. Nutze die vorhandenen Szenendaten; wenn etwas fehlt, benenne die Lücke.'
           : 'Answer in English. Be concrete, concise, and actionable. Use the available scene data; if something is missing, name the gap.',
       german
           ? 'Aufgabe: ${_taskInstruction(task, german: true)}'
@@ -119,10 +119,10 @@ final class RequestAISuggestion {
           : 'User request: ${_fallback(userPrompt, 'no extra instruction')}',
       if (task == AITaskKind.sceneGoalConflictOutcome)
         german
-            ? 'Strukturfelder: Beginne deine Antwort mit einem JSON-Block mit genau diesem Objekt: {"scenePatch":{"summary":"","goal":"","conflict":"","outcome":""}}. Danach duerfen kurze nummerierte Hinweise folgen. Schreibe keine Manuskriptprosa.'
+            ? 'Strukturfelder: Beginne deine Antwort mit einem JSON-Block mit genau diesem Objekt: {"scenePatch":{"summary":"","goal":"","conflict":"","outcome":""}}. Danach dürfen kurze nummerierte Hinweise folgen. Schreibe keine Manuskriptprosa.'
             : 'Planning fields: Start your response with a JSON block with exactly this object: {"scenePatch":{"summary":"","goal":"","conflict":"","outcome":""}}. After that, you may add short numbered notes. Do not write manuscript prose.',
       german
-          ? 'Format: Gib 3 bis 6 nummerierte Punkte aus. Jeder Punkt soll eine konkrete Beobachtung oder Option enthalten, keine allgemeinen Ratschlaege.'
+          ? 'Format: Gib 3 bis 6 nummerierte Punkte aus. Jeder Punkt soll eine konkrete Beobachtung oder Option enthalten, keine allgemeinen Ratschläge.'
           : 'Format: Return 3 to 6 numbered points. Each point should contain a concrete observation or option, not generic advice.',
     ].join('\n');
   }
@@ -133,19 +133,19 @@ final class RequestAISuggestion {
           ? 'Entwickle mehrere Szenenideen oder Varianten, die zur vorhandenen Szene passen.'
           : 'Develop several scene ideas or variants that fit the existing scene.',
       AITaskKind.sceneGoalConflictOutcome => german
-          ? 'Pruefe Ziel, Konflikt und Ausgang der Szene. Schlage konkrete Schaerfungen vor.'
+          ? 'Prüfe Ziel, Konflikt und Ausgang der Szene. Schlage konkrete Schärfungen vor.'
           : 'Review the scene goal, conflict, and outcome. Suggest concrete refinements.',
       AITaskKind.customScenePrompt => german
           ? 'Bearbeite den Nutzerauftrag zur Szene.'
           : 'Handle the user request for the scene.',
       AITaskKind.characterProfile => german
-          ? 'Pruefe Figurenprofil und Figurenfunktion im Szenenkontext.'
+          ? 'Prüfe Figurenprofil und Figurenfunktion im Szenenkontext.'
           : 'Review character profile and function in scene context.',
       AITaskKind.consistencyCheck => german
           ? 'Suche nach Anschluss-, Logik- und Konsistenzproblemen.'
           : 'Look for continuity, logic, and consistency problems.',
       AITaskKind.timelineCheck => german
-          ? 'Pruefe zeitliche Abfolge, Dauer und Datumslogik.'
+          ? 'Prüfe zeitliche Abfolge, Dauer und Datumslogik.'
           : 'Review chronology, duration, and date logic.',
       AITaskKind.storylineVariants => german
           ? 'Entwickle alternative Storyline-Varianten mit Folgen.'
@@ -160,13 +160,13 @@ final class RequestAISuggestion {
           ? 'Formuliere starke Fragen, die der Autor entscheiden sollte.'
           : 'Formulate strong questions the author should decide.',
       AITaskKind.researchStructuring => german
-          ? 'Strukturiere offene Recherchefragen und naechste Schritte.'
+          ? 'Strukturiere offene Recherchefragen und nächste Schritte.'
           : 'Structure open research questions and next steps.',
       AITaskKind.plotGapReview => german
-          ? 'Suche Plot-Luecken, fehlende Motivation und unklare Kausalitaet.'
+          ? 'Suche Plot-Lücken, fehlende Motivation und unklare Kausalität.'
           : 'Look for plot gaps, missing motivation, and unclear causality.',
       AITaskKind.dialogueIntentAnalysis => german
-          ? 'Pruefe Dialogabsicht, Subtext und Machtverschiebung.'
+          ? 'Prüfe Dialogabsicht, Subtext und Machtverschiebung.'
           : 'Review dialogue intent, subtext, and power shifts.',
     };
   }

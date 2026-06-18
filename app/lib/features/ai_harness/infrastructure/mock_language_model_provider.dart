@@ -44,10 +44,10 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
                     ? 'Die Figur will eine klare Information sichern, bevor die Gelegenheit verloren geht.'
                     : 'The character wants to secure a clear piece of information before the chance is lost.',
                 'conflict': german
-                    ? 'Eine Gegenkraft zwingt sie, zwischen Tempo und Kontrolle zu waehlen.'
+                    ? 'Eine Gegenkraft zwingt sie, zwischen Tempo und Kontrolle zu wählen.'
                     : 'An opposing force makes them choose between speed and control.',
                 'outcome': german
-                    ? 'Am Ende ist die Lage veraendert und die naechste Entscheidung unausweichlich.'
+                    ? 'Am Ende ist die Lage verändert und die nächste Entscheidung unausweichlich.'
                     : 'By the end, the situation has changed and the next decision is unavoidable.',
               },
             }
@@ -57,7 +57,7 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
                     ? 'Was will die Perspektivfigur vor Beginn der Szene?'
                     : 'What does the point-of-view character want before the scene begins?',
                 german
-                    ? 'Was veraendert sich bis zum Ende der Szene?'
+                    ? 'Was verändert sich bis zum Ende der Szene?'
                     : 'What changes by the end of the scene?',
               ],
             },
@@ -73,9 +73,9 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
     if (prompt.contains('sceneideas') || prompt.contains('szenenideen')) {
       return german
           ? 'Demo-Antwort des lokalen Mock-Providers:\n'
-              '1. Variante: Erhoehe den Druck, indem eine konkrete Frist sichtbar wird.\n'
-              '2. Variante: Lass eine Figur ein widerspruechliches Ziel verfolgen.\n'
-              '3. Naechster Schritt: Entscheide, welche Information am Szenenende neu ist.'
+              '1. Variante: Erhöhe den Druck, indem eine konkrete Frist sichtbar wird.\n'
+              '2. Variante: Lass eine Figur ein widersprüchliches Ziel verfolgen.\n'
+              '3. Nächster Schritt: Entscheide, welche Information am Szenenende neu ist.'
           : 'Demo response from the local mock provider:\n'
               '1. Variant: Raise pressure by making a concrete deadline visible.\n'
               '2. Variant: Let one character pursue a conflicting goal.\n'
@@ -86,8 +86,8 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
       return german
           ? 'Demo-Antwort des lokalen Mock-Providers:\n'
               '1. Ziel: Formuliere, was die Figur in dieser Szene aktiv erreichen will.\n'
-              '2. Konflikt: Benenne die Gegenkraft, die jetzt und nicht spaeter wirkt.\n'
-              '3. Ausgang: Halte fest, welche Lage sich nach der Szene unumkehrbar veraendert.'
+              '2. Konflikt: Benenne die Gegenkraft, die jetzt und nicht später wirkt.\n'
+              '3. Ausgang: Halte fest, welche Lage sich nach der Szene unumkehrbar verändert.'
           : 'Demo response from the local mock provider:\n'
               '1. Goal: Name what the character actively wants in this scene.\n'
               '2. Conflict: Name the opposing force acting now, not later.\n'
@@ -98,9 +98,9 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
         prompt.contains('consistency')) {
       return german
           ? 'Demo-Antwort des lokalen Mock-Providers:\n'
-              '1. Pruefe, ob Ziel, Konflikt und Ausgang dieselbe Kausalitaetskette bilden.\n'
-              '2. Markiere Begriffe, Fakten oder Beziehungen, die spaeter wieder auftauchen muessen.\n'
-              '3. Notiere eine offene Anschlussfrage fuer die naechste Szene.'
+              '1. Prüfe, ob Ziel, Konflikt und Ausgang dieselbe Kausalitätskette bilden.\n'
+              '2. Markiere Begriffe, Fakten oder Beziehungen, die später wieder auftauchen müssen.\n'
+              '3. Notiere eine offene Anschlussfrage für die nächste Szene.'
           : 'Demo response from the local mock provider:\n'
               '1. Check whether goal, conflict, and outcome form one causal chain.\n'
               '2. Mark facts, terms, or relationships that must recur later.\n'
@@ -111,16 +111,18 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
         prompt.contains('chronology')) {
       return german
           ? 'Demo-Antwort des lokalen Mock-Providers:\n'
-              '1. Klaere, wann die Szene relativ zur vorherigen Szene beginnt.\n'
-              '2. Pruefe, ob Dauer, Ortswechsel und Erholungszeit plausibel sind.\n'
+              '1. Kläre, wann die Szene relativ zur vorherigen Szene beginnt.\n'
+              '2. Prüfe, ob Dauer, Ortswechsel und Erholungszeit plausibel sind.\n'
               '3. Gib der Szene ein fixes Datum oder ein relatives Zeitfenster.'
           : 'Demo response from the local mock provider:\n'
               '1. Clarify when the scene starts relative to the previous scene.\n'
               '2. Check whether duration, travel, and recovery time are plausible.\n'
               '3. Give the scene a fixed date or a relative time window.';
     }
-    if (prompt.contains('plot-luecken') ||
+    if (prompt.contains('plot-lücken') ||
+        prompt.contains('plot-luecken') ||
         prompt.contains('plot gaps') ||
+        prompt.contains('kausalität') ||
         prompt.contains('kausalitaet')) {
       return german
           ? 'Demo-Antwort des lokalen Mock-Providers:\n'
@@ -149,9 +151,9 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
         prompt.contains('rhythm')) {
       return german
           ? 'Demo-Antwort des lokalen Mock-Providers:\n'
-              '1. Pruefe, ob Satzlaenge und Rhythmus zum Druck der Szene passen.\n'
+              '1. Prüfe, ob Satzlänge und Rhythmus zum Druck der Szene passen.\n'
               '2. Markiere eine Stelle, an der Ton oder Perspektive kippen darf.\n'
-              '3. Achte darauf, dass Stilhinweise keine Autorensaetze ersetzen.'
+              '3. Achte darauf, dass Stilhinweise keine Autorensätze ersetzen.'
           : 'Demo response from the local mock provider:\n'
               '1. Check whether sentence length and rhythm match the scene pressure.\n'
               '2. Mark one place where tone or perspective may shift.\n'

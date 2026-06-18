@@ -284,10 +284,10 @@ String _metricEventLabel(String eventType, String languageCode) {
     'project.created' => german ? 'Projekt angelegt' : 'Project created',
     'project.imported' => german ? 'Projekt importiert' : 'Project imported',
     'chapter.created' => german ? 'Kapitel angelegt' : 'Chapter created',
-    'chapter.deleted' => german ? 'Kapitel geloescht' : 'Chapter deleted',
+    'chapter.deleted' => german ? 'Kapitel gelöscht' : 'Chapter deleted',
     'scene.created' => german ? 'Szene angelegt' : 'Scene created',
     'scene.saved' => german ? 'Szene gespeichert' : 'Scene saved',
-    'scene.deleted' => german ? 'Szene geloescht' : 'Scene deleted',
+    'scene.deleted' => german ? 'Szene gelöscht' : 'Scene deleted',
     'scene.reordered' => german ? 'Szene sortiert' : 'Scene reordered',
     'scene.moved' => german ? 'Szene verschoben' : 'Scene moved',
     'catalog.created' =>
@@ -295,9 +295,9 @@ String _metricEventLabel(String eventType, String languageCode) {
     'catalog.updated' =>
       german ? 'Katalogeintrag gespeichert' : 'Catalog item saved',
     'catalog.deleted' =>
-      german ? 'Katalogeintrag geloescht' : 'Catalog item deleted',
-    'relationship.linked' => german ? 'Kontext verknuepft' : 'Context linked',
-    'relationship.unlinked' => german ? 'Kontext geloest' : 'Context unlinked',
+      german ? 'Katalogeintrag gelöscht' : 'Catalog item deleted',
+    'relationship.linked' => german ? 'Kontext verknüpft' : 'Context linked',
+    'relationship.unlinked' => german ? 'Kontext gelöst' : 'Context unlinked',
     'ai.suggestion.created' =>
       german ? 'KI-Vorschlag erzeugt' : 'AI suggestion created',
     'export.copied' => german ? 'Export kopiert' : 'Export copied',
