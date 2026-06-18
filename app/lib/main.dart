@@ -152,7 +152,7 @@ final class WritelerApp extends StatelessWidget {
       ],
       theme: _buildWritelerTheme(Brightness.light),
       darkTheme: _buildWritelerTheme(Brightness.dark),
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       home: WritelerShell(
         projectRepository: projectRepository,
         sceneRepository: sceneRepository,
@@ -171,28 +171,28 @@ final class WritelerApp extends StatelessWidget {
 
 ThemeData _buildWritelerTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
-  final seed = dark ? const Color(0xFF7CE7D7) : const Color(0xFF176B62);
+  final seed = dark ? const Color(0xFF9BE7D8) : const Color(0xFF2A8C7D);
   final baseScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: brightness,
   );
   final scheme = baseScheme.copyWith(
-    primary: dark ? const Color(0xFF8DEBDD) : const Color(0xFF075D56),
+    primary: dark ? const Color(0xFFA7EEE1) : const Color(0xFF087467),
     onPrimary: dark ? const Color(0xFF062321) : Colors.white,
-    secondary: dark ? const Color(0xFFFFC979) : const Color(0xFF765019),
-    tertiary: dark ? const Color(0xFFB7C7FF) : const Color(0xFF4F5F99),
-    surface: dark ? const Color(0xFF07110F) : const Color(0xFFF7FAF8),
+    secondary: dark ? const Color(0xFFFFCE7A) : const Color(0xFF7D5A16),
+    tertiary: dark ? const Color(0xFFAFCBFF) : const Color(0xFF35618C),
+    surface: dark ? const Color(0xFF081312) : const Color(0xFFF6FAFB),
     surfaceContainerLowest:
-        dark ? const Color(0xFF040807) : const Color(0xFFFFFFFF),
+        dark ? const Color(0xFF040908) : const Color(0xFFFFFFFF),
     surfaceContainerLow:
-        dark ? const Color(0xFF0A1714) : const Color(0xFFF0F5F2),
-    surfaceContainer: dark ? const Color(0xFF0E1D1A) : const Color(0xFFEAF0ED),
+        dark ? const Color(0xFF0A1715) : const Color(0xFFF0F7F8),
+    surfaceContainer: dark ? const Color(0xFF0F201D) : const Color(0xFFE9F2F3),
     surfaceContainerHigh:
-        dark ? const Color(0xFF132723) : const Color(0xFFE2EAE6),
+        dark ? const Color(0xFF152A27) : const Color(0xFFDDE9EA),
     surfaceContainerHighest:
-        dark ? const Color(0xFF19312C) : const Color(0xFFD9E3DE),
-    outline: dark ? const Color(0xFF44635D) : const Color(0xFF8AA29B),
-    outlineVariant: dark ? const Color(0xFF223A35) : const Color(0xFFC7D4CF),
+        dark ? const Color(0xFF1B3430) : const Color(0xFFD1E0E2),
+    outline: dark ? const Color(0xFF4D6864) : const Color(0xFF8BA2A5),
+    outlineVariant: dark ? const Color(0xFF243C38) : const Color(0xFFC9D8DA),
     error: dark ? const Color(0xFFFFA0A8) : const Color(0xFFBA1A1A),
   );
   final textTheme =
@@ -495,6 +495,85 @@ final class _WritelerShellState extends State<WritelerShell> {
   bool _providerEnabled = true;
   bool _providerHasStoredApiKey = false;
   Timer? _loadTimer;
+  late final List<_WorkspaceNavItem> _navItems = [
+    _WorkspaceNavItem(
+      index: 0,
+      icon: Icons.library_books_outlined,
+      selectedIcon: Icons.library_books,
+      labelBuilder: (copy) => copy.t('projects'),
+      group: _WorkspaceNavGroup.organize,
+    ),
+    _WorkspaceNavItem(
+      index: 1,
+      icon: Icons.edit_note_outlined,
+      selectedIcon: Icons.edit_note,
+      labelBuilder: (copy) => copy.t('editor'),
+      group: _WorkspaceNavGroup.write,
+    ),
+    _WorkspaceNavItem(
+      index: 2,
+      icon: Icons.auto_awesome_motion_outlined,
+      selectedIcon: Icons.auto_awesome_motion,
+      labelBuilder: (copy) => copy.t('scenes'),
+      group: _WorkspaceNavGroup.write,
+    ),
+    _WorkspaceNavItem(
+      index: 3,
+      icon: Icons.person_outline,
+      selectedIcon: Icons.person,
+      labelBuilder: (copy) => copy.t('characters'),
+      group: _WorkspaceNavGroup.world,
+    ),
+    _WorkspaceNavItem(
+      index: 4,
+      icon: Icons.place_outlined,
+      selectedIcon: Icons.place,
+      labelBuilder: (copy) => copy.t('locations'),
+      group: _WorkspaceNavGroup.world,
+    ),
+    _WorkspaceNavItem(
+      index: 5,
+      icon: Icons.category_outlined,
+      selectedIcon: Icons.category,
+      labelBuilder: (copy) => copy.t('objects'),
+      group: _WorkspaceNavGroup.world,
+    ),
+    _WorkspaceNavItem(
+      index: 6,
+      icon: Icons.query_stats_outlined,
+      selectedIcon: Icons.query_stats,
+      labelBuilder: (copy) => copy.t('analysis'),
+      group: _WorkspaceNavGroup.review,
+    ),
+    _WorkspaceNavItem(
+      index: 7,
+      icon: Icons.sticky_note_2_outlined,
+      selectedIcon: Icons.sticky_note_2,
+      labelBuilder: (copy) => copy.t('notes'),
+      group: _WorkspaceNavGroup.review,
+    ),
+    _WorkspaceNavItem(
+      index: 8,
+      icon: Icons.psychology_alt_outlined,
+      selectedIcon: Icons.psychology_alt,
+      labelBuilder: (copy) => copy.t('aiWorkshop'),
+      group: _WorkspaceNavGroup.review,
+    ),
+    _WorkspaceNavItem(
+      index: 9,
+      icon: Icons.ios_share_outlined,
+      selectedIcon: Icons.ios_share,
+      labelBuilder: (copy) => copy.t('exports'),
+      group: _WorkspaceNavGroup.output,
+    ),
+    _WorkspaceNavItem(
+      index: 10,
+      icon: Icons.tune_outlined,
+      selectedIcon: Icons.tune,
+      labelBuilder: (copy) => copy.t('settings'),
+      group: _WorkspaceNavGroup.output,
+    ),
+  ];
 
   @override
   void initState() {
@@ -1956,12 +2035,6 @@ final class _WritelerShellState extends State<WritelerShell> {
         _ => Icons.tune_outlined,
       };
 
-  int _pendingSuggestionCount() => _suggestions
-      .where(
-        (suggestion) => suggestion.userDecision == SuggestionDecision.pending,
-      )
-      .length;
-
   @override
   Widget build(BuildContext context) {
     final copy = WritelerCopy(Localizations.localeOf(context).languageCode);
@@ -1975,84 +2048,18 @@ final class _WritelerShellState extends State<WritelerShell> {
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: color.primary.withValues(alpha: 0.22),
-                width: 2,
+                color: color.outlineVariant.withValues(alpha: 0.7),
               ),
             ),
           ),
           child: Row(
             children: [
-              _StudioRailFrame(
-                child: NavigationRail(
-                  selectedIndex: _selectedRailIndex,
-                  scrollable: true,
-                  minWidth: 96,
-                  groupAlignment: -0.84,
-                  leading: const Padding(
-                    padding: EdgeInsets.only(top: 14, bottom: 18),
-                    child: _BrandMark(),
-                  ),
-                  onDestinationSelected: (index) =>
-                      setState(() => _selectedRailIndex = index),
-                  labelType: NavigationRailLabelType.all,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.library_books_outlined),
-                      selectedIcon: const Icon(Icons.library_books),
-                      label: Text(copy.t('projects')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.edit_note_outlined),
-                      selectedIcon: const Icon(Icons.edit_note),
-                      label: Text(copy.t('editor')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.auto_awesome_motion_outlined),
-                      selectedIcon: const Icon(Icons.auto_awesome_motion),
-                      label: Text(copy.t('scenes')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.person_outline),
-                      selectedIcon: const Icon(Icons.person),
-                      label: Text(copy.t('characters')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.place_outlined),
-                      selectedIcon: const Icon(Icons.place),
-                      label: Text(copy.t('locations')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.category_outlined),
-                      selectedIcon: const Icon(Icons.category),
-                      label: Text(copy.t('objects')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.query_stats_outlined),
-                      selectedIcon: const Icon(Icons.query_stats),
-                      label: Text(copy.t('analysis')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.sticky_note_2_outlined),
-                      selectedIcon: const Icon(Icons.sticky_note_2),
-                      label: Text(copy.t('notes')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.psychology_alt_outlined),
-                      selectedIcon: const Icon(Icons.psychology_alt),
-                      label: Text(copy.t('aiWorkshop')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.ios_share_outlined),
-                      selectedIcon: const Icon(Icons.ios_share),
-                      label: Text(copy.t('exports')),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.tune_outlined),
-                      selectedIcon: const Icon(Icons.tune),
-                      label: Text(copy.t('settings')),
-                    ),
-                  ],
-                ),
+              _WorkspaceNavigation(
+                copy: copy,
+                items: _navItems,
+                selectedIndex: _selectedRailIndex,
+                onSelected: (index) =>
+                    setState(() => _selectedRailIndex = index),
               ),
               Expanded(
                 child: Column(
@@ -2062,14 +2069,8 @@ final class _WritelerShellState extends State<WritelerShell> {
                       workspaceTitle: _workspaceTitle(copy),
                       workspaceIcon: _workspaceIcon(),
                       project: _selectedProject,
-                      scenes: _scenes,
-                      words: _scenes.fold<int>(
-                        0,
-                        (sum, scene) => sum + scene.actualWordCount,
-                      ),
-                      pendingSuggestions: _pendingSuggestionCount(),
-                      providerConfig:
-                          _activeProviderConfig ?? _defaultProviderConfig(),
+                      showCreateProject:
+                          _selectedRailIndex == 0 || _projects.isEmpty,
                       onCreateProject: () => _showCreateProjectDialog(copy),
                     ),
                     const Divider(height: 1),
@@ -2295,15 +2296,42 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 }
 
-final class _StudioRailFrame extends StatelessWidget {
-  const _StudioRailFrame({required this.child});
+enum _WorkspaceNavGroup { organize, write, world, review, output }
 
-  final Widget child;
+final class _WorkspaceNavItem {
+  const _WorkspaceNavItem({
+    required this.index,
+    required this.icon,
+    required this.selectedIcon,
+    required this.labelBuilder,
+    required this.group,
+  });
+
+  final int index;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String Function(WritelerCopy copy) labelBuilder;
+  final _WorkspaceNavGroup group;
+}
+
+final class _WorkspaceNavigation extends StatelessWidget {
+  const _WorkspaceNavigation({
+    required this.copy,
+    required this.items,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final WritelerCopy copy;
+  final List<_WorkspaceNavItem> items;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return DecoratedBox(
+    return Container(
+      width: 244,
       decoration: BoxDecoration(
         color: color.surfaceContainerLowest,
         border: Border(
@@ -2312,7 +2340,180 @@ final class _StudioRailFrame extends StatelessWidget {
       ),
       child: SafeArea(
         right: false,
-        child: child,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(18, 16, 18, 12),
+              child: _BrandMark(),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final group in _WorkspaceNavGroup.values) ...[
+                      _NavigationGroupLabel(label: _navGroupLabel(group, copy)),
+                      for (final item
+                          in items.where((item) => item.group == group))
+                        _WorkspaceNavButton(
+                          item: item,
+                          label: item.labelBuilder(copy),
+                          selected: item.index == selectedIndex,
+                          onTap: () => onSelected(item.index),
+                        ),
+                      const SizedBox(height: 4),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _navGroupLabel(_WorkspaceNavGroup group, WritelerCopy copy) =>
+    switch (group) {
+      _WorkspaceNavGroup.organize => copy.t('project'),
+      _WorkspaceNavGroup.write => copy.t('manuscript'),
+      _WorkspaceNavGroup.world => copy.t('catalog'),
+      _WorkspaceNavGroup.review => copy.t('analysis'),
+      _WorkspaceNavGroup.output => copy.t('exports'),
+    };
+
+final class _NavigationGroupLabel extends StatelessWidget {
+  const _NavigationGroupLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+      child: Text(
+        label.toUpperCase(),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color.onSurfaceVariant,
+              fontWeight: FontWeight.w800,
+            ),
+      ),
+    );
+  }
+}
+
+final class _WorkspaceNavButton extends StatefulWidget {
+  const _WorkspaceNavButton({
+    required this.item,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _WorkspaceNavItem item;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  State<_WorkspaceNavButton> createState() => _WorkspaceNavButtonState();
+}
+
+final class _WorkspaceNavButtonState extends State<_WorkspaceNavButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final active = widget.selected || _hovered;
+    final foreground = widget.selected
+        ? color.primary
+        : color.onSurface.withValues(alpha: 0.86);
+    final background = widget.selected
+        ? color.primary.withValues(alpha: 0.12)
+        : _hovered
+            ? color.surfaceContainer
+            : Colors.transparent;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Semantics(
+        button: true,
+        selected: widget.selected,
+        label: widget.label,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: widget.onTap,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 130),
+                curve: Curves.easeOutCubic,
+                constraints: const BoxConstraints(minHeight: 36),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: background,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: widget.selected
+                        ? color.primary.withValues(alpha: 0.24)
+                        : Colors.transparent,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 130),
+                      width: 3,
+                      height: active ? 20 : 12,
+                      decoration: BoxDecoration(
+                        color: widget.selected
+                            ? color.primary
+                            : _hovered
+                                ? color.outline
+                                : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(
+                      widget.selected
+                          ? widget.item.selectedIcon
+                          : widget.item.icon,
+                      size: 20,
+                      color: foreground,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: foreground,
+                              fontWeight: widget.selected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -2328,8 +2529,7 @@ final class _BrandMark extends StatelessWidget {
       message: 'Writeler',
       child: Semantics(
         label: 'Writeler',
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
@@ -2366,13 +2566,17 @@ final class _BrandMark extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Writeler',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Writeler',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: color.onSurface,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
             ),
           ],
         ),
@@ -2387,10 +2591,7 @@ final class _StudioTopBar extends StatelessWidget {
     required this.workspaceTitle,
     required this.workspaceIcon,
     required this.project,
-    required this.scenes,
-    required this.words,
-    required this.pendingSuggestions,
-    required this.providerConfig,
+    required this.showCreateProject,
     required this.onCreateProject,
   });
 
@@ -2398,26 +2599,17 @@ final class _StudioTopBar extends StatelessWidget {
   final String workspaceTitle;
   final IconData workspaceIcon;
   final Project? project;
-  final List<Scene> scenes;
-  final int words;
-  final int pendingSuggestions;
-  final AIProviderConfig providerConfig;
+  final bool showCreateProject;
   final VoidCallback onCreateProject;
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final availableWidth = MediaQuery.sizeOf(context).width;
-    final showStatus = availableWidth >= 1080;
-    final showAiStatus = availableWidth >= 1320;
     final projectTitle = project?.title ?? copy.t('selectProject');
-    final aiLabel = providerConfig.kind == AIProviderKind.mock
-        ? 'Mock'
-        : providerConfig.displayName;
 
     return Container(
-      height: 76,
-      padding: const EdgeInsets.symmetric(horizontal: 22),
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: color.surfaceContainerLowest,
         border: Border(
@@ -2460,102 +2652,13 @@ final class _StudioTopBar extends StatelessWidget {
               ],
             ),
           ),
-          if (project != null && showStatus) ...[
-            _StudioStatusPill(
-              icon: Icons.auto_awesome_motion_outlined,
-              label: copy.t('scenes'),
-              value: '${scenes.length}',
+          if (showCreateProject)
+            FilledButton.icon(
+              onPressed: onCreateProject,
+              icon: const Icon(Icons.add),
+              label: Text(copy.t('newProject')),
             ),
-            _StudioStatusPill(
-              icon: Icons.notes_outlined,
-              label: copy.t('words'),
-              value: '$words',
-            ),
-            _StudioStatusPill(
-              icon: Icons.psychology_alt_outlined,
-              label: copy.t('openSuggestions'),
-              value: '$pendingSuggestions',
-            ),
-            if (showAiStatus)
-              _StudioStatusPill(
-                icon: providerConfig.enabled
-                    ? Icons.bolt_outlined
-                    : Icons.power_settings_new_outlined,
-                label: copy.t('aiEnabled'),
-                value: aiLabel,
-              ),
-            const SizedBox(width: 10),
-          ],
-          FilledButton.icon(
-            onPressed: onCreateProject,
-            icon: const Icon(Icons.add),
-            label: Text(copy.t('newProject')),
-          ),
         ],
-      ),
-    );
-  }
-}
-
-final class _StudioStatusPill extends StatelessWidget {
-  const _StudioStatusPill({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Tooltip(
-        message: '$label: $value',
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 42, maxWidth: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: color.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: color.outlineVariant),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 17, color: color.primary),
-              const SizedBox(width: 7),
-              Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: color.onSurfaceVariant,
-                          ),
-                    ),
-                    Text(
-                      value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: color.onSurface,
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -2620,48 +2723,59 @@ final class _WorkspaceView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          width: 300,
-          child: _ProjectLibrary(
-            copy: copy,
-            projects: projects,
-            selectedProject: selectedProject,
-            onSelect: onSelectProject,
-            onDelete: onDeleteProject,
-          ),
-        ),
-        const VerticalDivider(width: 1),
-        Expanded(
-          child: _ProjectWorkspace(
-            copy: copy,
-            project: selectedProject,
-            chapters: chapters,
-            catalogItems: catalogItems,
-            relationships: relationships,
-            scenes: scenes,
-            selectedScene: selectedScene,
-            manuscriptController: manuscriptController,
-            summaryController: summaryController,
-            goalController: goalController,
-            conflictController: conflictController,
-            outcomeController: outcomeController,
-            wordTargetController: wordTargetController,
-            selectedSceneStatus: selectedSceneStatus,
-            selectedSceneChapterId: selectedSceneChapterId,
-            onSelectScene: onSelectScene,
-            onDeleteScene: onDeleteScene,
-            onSceneChapterChanged: onSceneChapterChanged,
-            onToggleSceneCatalogLink: onToggleSceneCatalogLink,
-            onSceneStatusChanged: onSceneStatusChanged,
-            onCreateChapter: onCreateChapter,
-            onCreateScene: onCreateScene,
-            onSaveScene: onSaveScene,
-          ),
-        ),
-      ],
+    final library = _ProjectLibrary(
+      copy: copy,
+      projects: projects,
+      selectedProject: selectedProject,
+      onSelect: onSelectProject,
+      onDelete: onDeleteProject,
+    );
+    final workspace = _ProjectWorkspace(
+      copy: copy,
+      project: selectedProject,
+      chapters: chapters,
+      catalogItems: catalogItems,
+      relationships: relationships,
+      scenes: scenes,
+      selectedScene: selectedScene,
+      manuscriptController: manuscriptController,
+      summaryController: summaryController,
+      goalController: goalController,
+      conflictController: conflictController,
+      outcomeController: outcomeController,
+      wordTargetController: wordTargetController,
+      selectedSceneStatus: selectedSceneStatus,
+      selectedSceneChapterId: selectedSceneChapterId,
+      onSelectScene: onSelectScene,
+      onDeleteScene: onDeleteScene,
+      onSceneChapterChanged: onSceneChapterChanged,
+      onToggleSceneCatalogLink: onToggleSceneCatalogLink,
+      onSceneStatusChanged: onSceneStatusChanged,
+      onCreateChapter: onCreateChapter,
+      onCreateScene: onCreateScene,
+      onSaveScene: onSaveScene,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 760) {
+          return Column(
+            children: [
+              SizedBox(height: 150, child: library),
+              const Divider(height: 1),
+              Expanded(child: workspace),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(width: 300, child: library),
+            const VerticalDivider(width: 1),
+            Expanded(child: workspace),
+          ],
+        );
+      },
     );
   }
 }
@@ -6198,10 +6312,13 @@ final class _WorkspaceHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    if (actionLabel == null || actionIcon == null) {
+      return const SizedBox.shrink();
+    }
     return Container(
-      height: 68,
+      height: 56,
       decoration: BoxDecoration(
-        color: color.surfaceContainerLowest,
+        color: color.surface,
         border: Border(
           bottom: BorderSide(color: color.outlineVariant),
         ),
@@ -6210,28 +6327,12 @@ final class _WorkspaceHeader extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           children: [
-            Container(
-              width: 4,
-              height: 28,
-              decoration: BoxDecoration(
-                color: color.primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
+            Expanded(child: Semantics(label: title, header: true)),
+            FilledButton.icon(
+              onPressed: onAction,
+              icon: Icon(actionIcon),
+              label: Text(actionLabel!),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Semantics(
-                label: title,
-                header: true,
-                child: const SizedBox.shrink(),
-              ),
-            ),
-            if (actionLabel != null && actionIcon != null)
-              FilledButton.icon(
-                onPressed: onAction,
-                icon: Icon(actionIcon),
-                label: Text(actionLabel!),
-              ),
           ],
         ),
       ),
