@@ -14,6 +14,7 @@ import 'package:writeler/features/projects/application/create_project.dart';
 import 'package:writeler/features/projects/infrastructure/drift_project_repository.dart';
 import 'package:writeler/features/settings/domain/ai_provider_config.dart';
 import 'package:writeler/features/settings/infrastructure/drift_ai_provider_config_repository.dart';
+import 'package:writeler/features/settings/infrastructure/drift_app_preference_repository.dart';
 import 'package:writeler/features/structure/application/create_chapter.dart';
 import 'package:writeler/features/structure/application/create_scene.dart';
 import 'package:writeler/features/structure/infrastructure/drift_chapter_repository.dart';
@@ -28,6 +29,7 @@ void main() {
   late DriftMetricRepository metricRepository;
   late DriftProjectNoteRepository noteRepository;
   late DriftAIProviderConfigRepository providerConfigRepository;
+  late DriftAppPreferenceRepository appPreferenceRepository;
 
   setUp(() {
     database = AppDatabase(NativeDatabase.memory());
@@ -38,6 +40,7 @@ void main() {
     metricRepository = DriftMetricRepository(database);
     noteRepository = DriftProjectNoteRepository(database);
     providerConfigRepository = DriftAIProviderConfigRepository(database);
+    appPreferenceRepository = DriftAppPreferenceRepository(database);
   });
 
   tearDown(() async {
@@ -45,17 +48,18 @@ void main() {
   });
 
   test('database schema creates core local-first tables', () async {
-    expect(database.schemaVersion, 7);
+    expect(database.schemaVersion, 8);
 
     final rows = await database
         .customSelect(
-          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'catalog_items', 'chapters', 'metric_events', 'project_notes', 'projects', 'relationships', 'scenes') order by name",
+          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'app_preferences', 'catalog_items', 'chapters', 'metric_events', 'project_notes', 'projects', 'relationships', 'scenes') order by name",
         )
         .get();
 
     expect(rows.map((row) => row.read<String>('name')).toList(), [
       'a_i_provider_configs',
       'a_i_suggestions',
+      'app_preferences',
       'catalog_items',
       'chapters',
       'metric_events',
@@ -64,6 +68,16 @@ void main() {
       'relationships',
       'scenes',
     ]);
+  });
+
+  test('app preference repository persists user settings', () async {
+    await appPreferenceRepository.write('design.theme', 'sapphire');
+
+    expect(await appPreferenceRepository.read('design.theme'), 'sapphire');
+
+    await appPreferenceRepository.write('design.theme', 'sage');
+
+    expect(await appPreferenceRepository.read('design.theme'), 'sage');
   });
 
   test('project repository persists and filters active projects', () async {

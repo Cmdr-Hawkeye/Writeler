@@ -168,6 +168,16 @@ class AIProviderConfigs extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('AppPreferenceRow')
+class AppPreferences extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {key};
+}
+
 @DataClassName('MetricEventRow')
 class MetricEvents extends Table {
   TextColumn get id => text()();
@@ -191,6 +201,7 @@ class MetricEvents extends Table {
     AISuggestions,
     ProjectNotes,
     AIProviderConfigs,
+    AppPreferences,
     MetricEvents,
   ],
 )
@@ -208,7 +219,7 @@ final class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -234,6 +245,9 @@ final class AppDatabase extends _$AppDatabase {
           }
           if (from < 7) {
             await migrator.createTable(projectNotes);
+          }
+          if (from < 8) {
+            await migrator.createTable(appPreferences);
           }
         },
         beforeOpen: (details) async {

@@ -7,6 +7,7 @@ import 'package:writeler/features/metrics/application/in_memory_metric_repositor
 import 'package:writeler/features/notes/infrastructure/in_memory_project_note_repository.dart';
 import 'package:writeler/features/projects/infrastructure/in_memory_project_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_ai_provider_config_repository.dart';
+import 'package:writeler/features/settings/infrastructure/in_memory_app_preference_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_secret_vault.dart';
 import 'package:writeler/features/structure/application/in_memory_chapter_repository.dart';
 import 'package:writeler/features/structure/application/in_memory_scene_repository.dart';
@@ -25,6 +26,7 @@ void main() {
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
         projectNoteRepository: InMemoryProjectNoteRepository(),
         aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: InMemoryAppPreferenceRepository(),
         secretVault: InMemorySecretVault(),
       ),
     );
@@ -50,6 +52,7 @@ void main() {
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
         projectNoteRepository: InMemoryProjectNoteRepository(),
         aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: InMemoryAppPreferenceRepository(),
         secretVault: InMemorySecretVault(),
       ),
     );
@@ -70,5 +73,34 @@ void main() {
 
     expect(find.text('Structure cockpit'), findsOneWidget);
     expect(find.text('Structure inspector'), findsOneWidget);
+  });
+
+  testWidgets('stored design theme is applied', (tester) async {
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('design.theme', 'sapphire');
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: InMemoryProjectRepository(),
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    final context = tester.element(find.text('Writeler'));
+
+    expect(
+      Theme.of(context).colorScheme.primary,
+      const Color(0xFF8FC4FF),
+    );
   });
 }

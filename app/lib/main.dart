@@ -53,9 +53,12 @@ import 'features/projects/infrastructure/lazy_project_repository.dart';
 import 'features/settings/domain/ai_provider_config.dart';
 import 'features/settings/domain/ai_provider_config_repository.dart';
 import 'features/settings/domain/ai_provider_preset.dart';
+import 'features/settings/domain/app_preference_repository.dart';
 import 'features/settings/domain/secret_vault.dart';
+import 'features/settings/infrastructure/drift_app_preference_repository.dart';
 import 'features/settings/infrastructure/drift_ai_provider_config_repository.dart';
 import 'features/settings/infrastructure/flutter_secure_secret_vault.dart';
+import 'features/settings/infrastructure/lazy_app_preference_repository.dart';
 import 'features/settings/infrastructure/lazy_ai_provider_config_repository.dart';
 import 'features/sync/application/manual_sync_adapter.dart';
 import 'features/sync/domain/sync_checkpoint.dart';
@@ -105,6 +108,9 @@ void main() {
       aiProviderConfigRepository: LazyAIProviderConfigRepository(
         () => DriftAIProviderConfigRepository(getDatabase()),
       ),
+      appPreferenceRepository: LazyAppPreferenceRepository(
+        () => DriftAppPreferenceRepository(getDatabase()),
+      ),
       secretVault: const FlutterSecureSecretVault(),
     ),
   );
@@ -121,6 +127,7 @@ final class WritelerApp extends StatefulWidget {
     required this.aiSuggestionRepository,
     required this.projectNoteRepository,
     required this.aiProviderConfigRepository,
+    required this.appPreferenceRepository,
     required this.secretVault,
     super.key,
   });
@@ -134,6 +141,7 @@ final class WritelerApp extends StatefulWidget {
   final AISuggestionRepository aiSuggestionRepository;
   final ProjectNoteRepository projectNoteRepository;
   final AIProviderConfigRepository aiProviderConfigRepository;
+  final AppPreferenceRepository appPreferenceRepository;
   final SecretVault secretVault;
 
   @override
@@ -141,7 +149,35 @@ final class WritelerApp extends StatefulWidget {
 }
 
 final class _WritelerAppState extends State<WritelerApp> {
+  static const _designThemePreferenceKey = 'design.theme';
+
   WritelerDesignTheme _designTheme = WritelerDesignTheme.paper;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadDesignTheme());
+  }
+
+  Future<void> _loadDesignTheme() async {
+    final value =
+        await widget.appPreferenceRepository.read(_designThemePreferenceKey);
+    if (!mounted || value == null) return;
+    final theme = WritelerDesignThemeWire.tryParse(value);
+    if (theme == null || theme == _designTheme) return;
+    setState(() => _designTheme = theme);
+  }
+
+  void _changeDesignTheme(WritelerDesignTheme theme) {
+    if (theme == _designTheme) return;
+    setState(() => _designTheme = theme);
+    unawaited(
+      widget.appPreferenceRepository.write(
+        _designThemePreferenceKey,
+        theme.wireName,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +207,7 @@ final class _WritelerAppState extends State<WritelerApp> {
         aiProviderConfigRepository: widget.aiProviderConfigRepository,
         secretVault: widget.secretVault,
         designTheme: _designTheme,
-        onDesignThemeChanged: (theme) => setState(() => _designTheme = theme),
+        onDesignThemeChanged: _changeDesignTheme,
       ),
     );
   }
@@ -184,6 +220,31 @@ enum WritelerDesignTheme {
   sage,
   copper,
   ink,
+}
+
+extension WritelerDesignThemeWire on WritelerDesignTheme {
+  String get wireName {
+    return switch (this) {
+      WritelerDesignTheme.paper => 'paper',
+      WritelerDesignTheme.dusk => 'dusk',
+      WritelerDesignTheme.sapphire => 'sapphire',
+      WritelerDesignTheme.sage => 'sage',
+      WritelerDesignTheme.copper => 'copper',
+      WritelerDesignTheme.ink => 'ink',
+    };
+  }
+
+  static WritelerDesignTheme? tryParse(String value) {
+    return switch (value) {
+      'paper' => WritelerDesignTheme.paper,
+      'dusk' => WritelerDesignTheme.dusk,
+      'sapphire' => WritelerDesignTheme.sapphire,
+      'sage' => WritelerDesignTheme.sage,
+      'copper' => WritelerDesignTheme.copper,
+      'ink' => WritelerDesignTheme.ink,
+      _ => null,
+    };
+  }
 }
 
 enum _SceneSaveState {
