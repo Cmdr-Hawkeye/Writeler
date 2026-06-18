@@ -110,7 +110,7 @@ void main() {
   );
 }
 
-final class WritelerApp extends StatelessWidget {
+final class WritelerApp extends StatefulWidget {
   const WritelerApp({
     required this.projectRepository,
     required this.sceneRepository,
@@ -137,6 +137,13 @@ final class WritelerApp extends StatelessWidget {
   final SecretVault secretVault;
 
   @override
+  State<WritelerApp> createState() => _WritelerAppState();
+}
+
+final class _WritelerAppState extends State<WritelerApp> {
+  WritelerDesignTheme _designTheme = WritelerDesignTheme.paper;
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Writeler',
@@ -150,50 +157,199 @@ final class WritelerApp extends StatelessWidget {
         Locale('de'),
         Locale('en'),
       ],
-      theme: _buildWritelerTheme(Brightness.light),
-      darkTheme: _buildWritelerTheme(Brightness.dark),
+      theme: _buildWritelerTheme(_designTheme),
       themeMode: ThemeMode.light,
       home: WritelerShell(
-        projectRepository: projectRepository,
-        sceneRepository: sceneRepository,
-        chapterRepository: chapterRepository,
-        catalogItemRepository: catalogItemRepository,
-        relationshipRepository: relationshipRepository,
-        metricRepository: metricRepository,
-        aiSuggestionRepository: aiSuggestionRepository,
-        projectNoteRepository: projectNoteRepository,
-        aiProviderConfigRepository: aiProviderConfigRepository,
-        secretVault: secretVault,
+        projectRepository: widget.projectRepository,
+        sceneRepository: widget.sceneRepository,
+        chapterRepository: widget.chapterRepository,
+        catalogItemRepository: widget.catalogItemRepository,
+        relationshipRepository: widget.relationshipRepository,
+        metricRepository: widget.metricRepository,
+        aiSuggestionRepository: widget.aiSuggestionRepository,
+        projectNoteRepository: widget.projectNoteRepository,
+        aiProviderConfigRepository: widget.aiProviderConfigRepository,
+        secretVault: widget.secretVault,
+        designTheme: _designTheme,
+        onDesignThemeChanged: (theme) => setState(() => _designTheme = theme),
       ),
     );
   }
 }
 
-ThemeData _buildWritelerTheme(Brightness brightness) {
-  final dark = brightness == Brightness.dark;
-  final seed = dark ? const Color(0xFF9BE7D8) : const Color(0xFF2A8C7D);
+enum WritelerDesignTheme {
+  paper,
+  dusk,
+  sapphire,
+  sage,
+  copper,
+  ink,
+}
+
+final class _WritelerThemeTokens {
+  const _WritelerThemeTokens({
+    required this.brightness,
+    required this.seed,
+    required this.primary,
+    required this.onPrimary,
+    required this.secondary,
+    required this.tertiary,
+    required this.surface,
+    required this.surfaceLowest,
+    required this.surfaceLow,
+    required this.surfaceMid,
+    required this.surfaceHigh,
+    required this.surfaceHighest,
+    required this.outline,
+    required this.outlineVariant,
+    required this.error,
+  });
+
+  final Brightness brightness;
+  final Color seed;
+  final Color primary;
+  final Color onPrimary;
+  final Color secondary;
+  final Color tertiary;
+  final Color surface;
+  final Color surfaceLowest;
+  final Color surfaceLow;
+  final Color surfaceMid;
+  final Color surfaceHigh;
+  final Color surfaceHighest;
+  final Color outline;
+  final Color outlineVariant;
+  final Color error;
+}
+
+_WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
+  return switch (theme) {
+    WritelerDesignTheme.paper => const _WritelerThemeTokens(
+        brightness: Brightness.light,
+        seed: Color(0xFF2A8C7D),
+        primary: Color(0xFF087467),
+        onPrimary: Colors.white,
+        secondary: Color(0xFF7D5A16),
+        tertiary: Color(0xFF35618C),
+        surface: Color(0xFFF6FAFB),
+        surfaceLowest: Color(0xFFFFFFFF),
+        surfaceLow: Color(0xFFF0F7F8),
+        surfaceMid: Color(0xFFE9F2F3),
+        surfaceHigh: Color(0xFFDDE9EA),
+        surfaceHighest: Color(0xFFD1E0E2),
+        outline: Color(0xFF8BA2A5),
+        outlineVariant: Color(0xFFC9D8DA),
+        error: Color(0xFFBA1A1A),
+      ),
+    WritelerDesignTheme.dusk => const _WritelerThemeTokens(
+        brightness: Brightness.dark,
+        seed: Color(0xFF9BE7D8),
+        primary: Color(0xFFA7EEE1),
+        onPrimary: Color(0xFF062321),
+        secondary: Color(0xFFFFCE7A),
+        tertiary: Color(0xFFAFCBFF),
+        surface: Color(0xFF081312),
+        surfaceLowest: Color(0xFF040908),
+        surfaceLow: Color(0xFF0A1715),
+        surfaceMid: Color(0xFF0F201D),
+        surfaceHigh: Color(0xFF152A27),
+        surfaceHighest: Color(0xFF1B3430),
+        outline: Color(0xFF4D6864),
+        outlineVariant: Color(0xFF243C38),
+        error: Color(0xFFFFA0A8),
+      ),
+    WritelerDesignTheme.sapphire => const _WritelerThemeTokens(
+        brightness: Brightness.dark,
+        seed: Color(0xFF7FB8FF),
+        primary: Color(0xFF8FC4FF),
+        onPrimary: Color(0xFF071A33),
+        secondary: Color(0xFFA7D5FF),
+        tertiary: Color(0xFFFFC68F),
+        surface: Color(0xFF07111E),
+        surfaceLowest: Color(0xFF030915),
+        surfaceLow: Color(0xFF0B1726),
+        surfaceMid: Color(0xFF102033),
+        surfaceHigh: Color(0xFF172C45),
+        surfaceHighest: Color(0xFF1F3958),
+        outline: Color(0xFF536D8B),
+        outlineVariant: Color(0xFF273E59),
+        error: Color(0xFFFFA0A8),
+      ),
+    WritelerDesignTheme.sage => const _WritelerThemeTokens(
+        brightness: Brightness.light,
+        seed: Color(0xFF73956F),
+        primary: Color(0xFF3F6E44),
+        onPrimary: Colors.white,
+        secondary: Color(0xFF7D6232),
+        tertiary: Color(0xFF3F6B75),
+        surface: Color(0xFFF7F8F1),
+        surfaceLowest: Color(0xFFFFFFFF),
+        surfaceLow: Color(0xFFF0F2E7),
+        surfaceMid: Color(0xFFE7EBD9),
+        surfaceHigh: Color(0xFFDDE4CC),
+        surfaceHighest: Color(0xFFD1DABD),
+        outline: Color(0xFF95A285),
+        outlineVariant: Color(0xFFD0D8C1),
+        error: Color(0xFFBA1A1A),
+      ),
+    WritelerDesignTheme.copper => const _WritelerThemeTokens(
+        brightness: Brightness.light,
+        seed: Color(0xFFB86F45),
+        primary: Color(0xFF9C4F2B),
+        onPrimary: Colors.white,
+        secondary: Color(0xFF526A75),
+        tertiary: Color(0xFF76603A),
+        surface: Color(0xFFFFF8F3),
+        surfaceLowest: Color(0xFFFFFFFF),
+        surfaceLow: Color(0xFFF8EFE8),
+        surfaceMid: Color(0xFFF0E3DA),
+        surfaceHigh: Color(0xFFE8D7CB),
+        surfaceHighest: Color(0xFFDDCABD),
+        outline: Color(0xFFA99385),
+        outlineVariant: Color(0xFFD9C9BE),
+        error: Color(0xFFBA1A1A),
+      ),
+    WritelerDesignTheme.ink => const _WritelerThemeTokens(
+        brightness: Brightness.dark,
+        seed: Color(0xFFD8D1FF),
+        primary: Color(0xFFD6D0FF),
+        onPrimary: Color(0xFF17142A),
+        secondary: Color(0xFFFFC9A9),
+        tertiary: Color(0xFF9BE7D8),
+        surface: Color(0xFF111018),
+        surfaceLowest: Color(0xFF08070E),
+        surfaceLow: Color(0xFF16141F),
+        surfaceMid: Color(0xFF1D1A29),
+        surfaceHigh: Color(0xFF252135),
+        surfaceHighest: Color(0xFF302A43),
+        outline: Color(0xFF6B647D),
+        outlineVariant: Color(0xFF3B354D),
+        error: Color(0xFFFFA0A8),
+      ),
+  };
+}
+
+ThemeData _buildWritelerTheme(WritelerDesignTheme designTheme) {
+  final tokens = _tokensFor(designTheme);
+  final dark = tokens.brightness == Brightness.dark;
   final baseScheme = ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: brightness,
+    seedColor: tokens.seed,
+    brightness: tokens.brightness,
   );
   final scheme = baseScheme.copyWith(
-    primary: dark ? const Color(0xFFA7EEE1) : const Color(0xFF087467),
-    onPrimary: dark ? const Color(0xFF062321) : Colors.white,
-    secondary: dark ? const Color(0xFFFFCE7A) : const Color(0xFF7D5A16),
-    tertiary: dark ? const Color(0xFFAFCBFF) : const Color(0xFF35618C),
-    surface: dark ? const Color(0xFF081312) : const Color(0xFFF6FAFB),
-    surfaceContainerLowest:
-        dark ? const Color(0xFF040908) : const Color(0xFFFFFFFF),
-    surfaceContainerLow:
-        dark ? const Color(0xFF0A1715) : const Color(0xFFF0F7F8),
-    surfaceContainer: dark ? const Color(0xFF0F201D) : const Color(0xFFE9F2F3),
-    surfaceContainerHigh:
-        dark ? const Color(0xFF152A27) : const Color(0xFFDDE9EA),
-    surfaceContainerHighest:
-        dark ? const Color(0xFF1B3430) : const Color(0xFFD1E0E2),
-    outline: dark ? const Color(0xFF4D6864) : const Color(0xFF8BA2A5),
-    outlineVariant: dark ? const Color(0xFF243C38) : const Color(0xFFC9D8DA),
-    error: dark ? const Color(0xFFFFA0A8) : const Color(0xFFBA1A1A),
+    primary: tokens.primary,
+    onPrimary: tokens.onPrimary,
+    secondary: tokens.secondary,
+    tertiary: tokens.tertiary,
+    surface: tokens.surface,
+    surfaceContainerLowest: tokens.surfaceLowest,
+    surfaceContainerLow: tokens.surfaceLow,
+    surfaceContainer: tokens.surfaceMid,
+    surfaceContainerHigh: tokens.surfaceHigh,
+    surfaceContainerHighest: tokens.surfaceHighest,
+    outline: tokens.outline,
+    outlineVariant: tokens.outlineVariant,
+    error: tokens.error,
   );
   final textTheme =
       (dark ? Typography.material2021().white : Typography.material2021().black)
@@ -210,25 +366,41 @@ ThemeData _buildWritelerTheme(Brightness brightness) {
   );
 
   return ThemeData(
-    brightness: brightness,
+    brightness: tokens.brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
     canvasColor: scheme.surface,
-    fontFamily: 'Roboto',
+    fontFamily: 'Aptos',
+    fontFamilyFallback: const [
+      'Segoe UI Variable',
+      'Segoe UI',
+      'Inter',
+      'Roboto',
+      'Arial',
+      'sans-serif',
+    ],
     textTheme: textTheme.copyWith(
       headlineMedium: textTheme.headlineMedium?.copyWith(
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0,
       ),
       headlineSmall: textTheme.headlineSmall?.copyWith(
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0,
       ),
       titleLarge: textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0,
       ),
       titleMedium: textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
+      labelLarge: textTheme.labelLarge?.copyWith(
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0,
+      ),
+      labelMedium: textTheme.labelMedium?.copyWith(
         fontWeight: FontWeight.w700,
         letterSpacing: 0,
       ),
@@ -417,6 +589,8 @@ final class WritelerShell extends StatefulWidget {
     required this.projectNoteRepository,
     required this.aiProviderConfigRepository,
     required this.secretVault,
+    required this.designTheme,
+    required this.onDesignThemeChanged,
     super.key,
   });
 
@@ -430,6 +604,8 @@ final class WritelerShell extends StatefulWidget {
   final ProjectNoteRepository projectNoteRepository;
   final AIProviderConfigRepository aiProviderConfigRepository;
   final SecretVault secretVault;
+  final WritelerDesignTheme designTheme;
+  final ValueChanged<WritelerDesignTheme> onDesignThemeChanged;
 
   @override
   State<WritelerShell> createState() => _WritelerShellState();
@@ -2284,6 +2460,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           providerEnabled: _providerEnabled,
           providerHasStoredApiKey: _providerHasStoredApiKey,
           activeProviderConfig: _activeProviderConfig,
+          designTheme: widget.designTheme,
+          onDesignThemeChanged: widget.onDesignThemeChanged,
           onProviderKindChanged: _selectProviderKind,
           onProviderEnabledChanged: (enabled) =>
               setState(() => _providerEnabled = enabled),
@@ -2542,27 +2720,13 @@ final class _BrandMark extends StatelessWidget {
               child: SizedBox(
                 width: 46,
                 height: 46,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      Icons.auto_stories_outlined,
-                      color: color.primary,
-                      size: 25,
-                    ),
-                    Positioned(
-                      right: 9,
-                      bottom: 8,
-                      child: Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: color.secondary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                  ],
+                child: CustomPaint(
+                  painter: _WritelerMarkPainter(
+                    primary: color.primary,
+                    secondary: color.secondary,
+                    surface: color.surfaceContainerLowest,
+                  ),
+                  child: const SizedBox.expand(),
                 ),
               ),
             ),
@@ -2582,6 +2746,72 @@ final class _BrandMark extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+final class _WritelerMarkPainter extends CustomPainter {
+  const _WritelerMarkPainter({
+    required this.primary,
+    required this.secondary,
+    required this.surface,
+  });
+
+  final Color primary;
+  final Color secondary;
+  final Color surface;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stroke = Paint()
+      ..color = primary
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final fill = Paint()
+      ..color = primary.withValues(alpha: 0.14)
+      ..style = PaintingStyle.fill;
+    final accent = Paint()
+      ..color = secondary
+      ..style = PaintingStyle.fill;
+
+    final page = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        size.width * 0.22,
+        size.height * 0.22,
+        size.width * 0.46,
+        size.height * 0.52,
+      ),
+      const Radius.circular(5),
+    );
+    canvas.drawRRect(page, fill);
+    canvas.drawRRect(page, stroke);
+
+    final path = Path()
+      ..moveTo(size.width * 0.24, size.height * 0.66)
+      ..lineTo(size.width * 0.35, size.height * 0.43)
+      ..lineTo(size.width * 0.46, size.height * 0.66)
+      ..lineTo(size.width * 0.58, size.height * 0.39)
+      ..lineTo(size.width * 0.72, size.height * 0.66);
+    canvas.drawPath(path, stroke);
+
+    canvas.drawCircle(
+      Offset(size.width * 0.72, size.height * 0.70),
+      3.3,
+      accent,
+    );
+    canvas.drawCircle(
+      Offset(size.width * 0.72, size.height * 0.70),
+      1.4,
+      Paint()..color = surface,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _WritelerMarkPainter oldDelegate) {
+    return primary != oldDelegate.primary ||
+        secondary != oldDelegate.secondary ||
+        surface != oldDelegate.surface;
   }
 }
 
@@ -6119,6 +6349,8 @@ final class _SettingsWorkspace extends StatelessWidget {
     required this.providerEnabled,
     required this.providerHasStoredApiKey,
     required this.activeProviderConfig,
+    required this.designTheme,
+    required this.onDesignThemeChanged,
     required this.onProviderKindChanged,
     required this.onProviderEnabledChanged,
     required this.onSaveProviderConfig,
@@ -6137,6 +6369,8 @@ final class _SettingsWorkspace extends StatelessWidget {
   final bool providerEnabled;
   final bool providerHasStoredApiKey;
   final AIProviderConfig? activeProviderConfig;
+  final WritelerDesignTheme designTheme;
+  final ValueChanged<WritelerDesignTheme> onDesignThemeChanged;
   final ValueChanged<AIProviderKind> onProviderKindChanged;
   final ValueChanged<bool> onProviderEnabledChanged;
   final VoidCallback onSaveProviderConfig;
@@ -6151,147 +6385,335 @@ final class _SettingsWorkspace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final project = this.project;
-    if (project == null) {
-      return _EmptyPanel(
-        icon: Icons.tune_outlined,
-        title: copy.t('settings'),
-        body: copy.t('selectProject'),
-      );
-    }
-
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
         Text(copy.t('settings'),
             style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 20),
-        SwitchListTile(
-          value: project.aiEnabled,
-          title: Text(copy.t('aiEnabled')),
-          onChanged: (value) => onSavePrivacySettings(
-            aiEnabled: value,
-            cloudSyncEnabled: project.cloudSyncEnabled,
-            noAiNoCloud: value ? false : project.noAiNoCloud,
+        const SizedBox(height: 16),
+        _SettingsSection(
+          title: copy.t('designSettings'),
+          body: copy.t('designSettingsBody'),
+          child: _DesignThemeSelector(
+            copy: copy,
+            value: designTheme,
+            onChanged: onDesignThemeChanged,
           ),
         ),
-        SwitchListTile(
-          value: project.cloudSyncEnabled,
-          title: Text(copy.t('cloudSyncEnabled')),
-          onChanged: project.noAiNoCloud
-              ? null
-              : (value) => onSavePrivacySettings(
-                    aiEnabled: project.aiEnabled,
-                    cloudSyncEnabled: value,
-                    noAiNoCloud: project.noAiNoCloud,
-                  ),
+        _SettingsSection(
+          title: copy.t('privacySettings'),
+          body: copy.t('privacySettingsBody'),
+          child: project == null
+              ? Text(copy.t('selectProject'))
+              : Column(
+                  children: [
+                    SwitchListTile(
+                      value: project.aiEnabled,
+                      title: Text(copy.t('aiEnabled')),
+                      onChanged: (value) => onSavePrivacySettings(
+                        aiEnabled: value,
+                        cloudSyncEnabled: project.cloudSyncEnabled,
+                        noAiNoCloud: value ? false : project.noAiNoCloud,
+                      ),
+                    ),
+                    SwitchListTile(
+                      value: project.cloudSyncEnabled,
+                      title: Text(copy.t('cloudSyncEnabled')),
+                      onChanged: project.noAiNoCloud
+                          ? null
+                          : (value) => onSavePrivacySettings(
+                                aiEnabled: project.aiEnabled,
+                                cloudSyncEnabled: value,
+                                noAiNoCloud: project.noAiNoCloud,
+                              ),
+                    ),
+                    SwitchListTile(
+                      value: project.noAiNoCloud,
+                      title: Text(copy.t('noAiNoCloud')),
+                      onChanged: (value) => onSavePrivacySettings(
+                        aiEnabled: value ? false : project.aiEnabled,
+                        cloudSyncEnabled:
+                            value ? false : project.cloudSyncEnabled,
+                        noAiNoCloud: value,
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: Text(
+                          '${copy.t('syncAdapter')}: $syncAdapterName. ${copy.t('syncAdapterHint')}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-          child: Text(
-            '${copy.t('syncAdapter')}: $syncAdapterName. ${copy.t('syncAdapterHint')}',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-        SwitchListTile(
-          value: project.noAiNoCloud,
-          title: Text(copy.t('noAiNoCloud')),
-          onChanged: (value) => onSavePrivacySettings(
-            aiEnabled: value ? false : project.aiEnabled,
-            cloudSyncEnabled: value ? false : project.cloudSyncEnabled,
-            noAiNoCloud: value,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(copy.t('providerConfig'),
-            style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<AIProviderKind>(
-          initialValue: providerKind,
-          decoration: InputDecoration(
-            labelText: copy.t('providerKind'),
-            border: const OutlineInputBorder(),
-          ),
-          items: [
-            for (final kind in AIProviderKind.values)
-              DropdownMenuItem(
-                value: kind,
-                child: Text(_providerKindLabel(kind, copy.languageCode)),
+        _SettingsSection(
+          title: copy.t('providerConfig'),
+          body: copy.t('providerSettingsBody'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DropdownButtonFormField<AIProviderKind>(
+                initialValue: providerKind,
+                decoration: InputDecoration(
+                  labelText: copy.t('providerKind'),
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  for (final kind in AIProviderKind.values)
+                    DropdownMenuItem(
+                      value: kind,
+                      child: Text(_providerKindLabel(kind, copy.languageCode)),
+                    ),
+                ],
+                onChanged: (kind) {
+                  if (kind != null) onProviderKindChanged(kind);
+                },
               ),
-          ],
-          onChanged: (kind) {
-            if (kind != null) onProviderKindChanged(kind);
-          },
-        ),
-        const SizedBox(height: 12),
-        SwitchListTile(
-          value: providerEnabled,
-          title: Text(copy.t('providerEnabled')),
-          onChanged: onProviderEnabledChanged,
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: providerNameController,
-          decoration: InputDecoration(
-            labelText: copy.t('providerName'),
-            border: const OutlineInputBorder(),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                value: providerEnabled,
+                title: Text(copy.t('providerEnabled')),
+                onChanged: onProviderEnabledChanged,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: providerNameController,
+                decoration: InputDecoration(
+                  labelText: copy.t('providerName'),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: modelNameController,
+                decoration: InputDecoration(
+                  labelText: copy.t('modelName'),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: baseUrlController,
+                decoration: InputDecoration(
+                  labelText: copy.t('baseUrl'),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: apiKeyRefController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: copy.t('apiKeyRef'),
+                  helperText: providerHasStoredApiKey
+                      ? copy.t('apiKeyStoredHint')
+                      : copy.t('apiKeyWebWarning'),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              if (providerHasStoredApiKey) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: onDeleteProviderApiKey,
+                    icon: const Icon(Icons.delete_outline),
+                    label: Text(copy.t('deleteApiKey')),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.icon(
+                  onPressed: onSaveProviderConfig,
+                  icon: const Icon(Icons.save_outlined),
+                  label: Text(copy.t('saveProviderConfig')),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '${copy.t('activeProvider')}: '
+                '${activeProviderConfig?.displayName ?? providerNameController.text} - '
+                '${activeProviderConfig?.modelName ?? modelNameController.text}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: modelNameController,
-          decoration: InputDecoration(
-            labelText: copy.t('modelName'),
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: baseUrlController,
-          decoration: InputDecoration(
-            labelText: copy.t('baseUrl'),
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: apiKeyRefController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: copy.t('apiKeyRef'),
-            helperText: providerHasStoredApiKey
-                ? copy.t('apiKeyStoredHint')
-                : copy.t('apiKeyWebWarning'),
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        if (providerHasStoredApiKey) ...[
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              onPressed: onDeleteProviderApiKey,
-              icon: const Icon(Icons.delete_outline),
-              label: Text(copy.t('deleteApiKey')),
-            ),
-          ),
-        ],
-        const SizedBox(height: 12),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: FilledButton.icon(
-            onPressed: onSaveProviderConfig,
-            icon: const Icon(Icons.save_outlined),
-            label: Text(copy.t('saveProviderConfig')),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          '${copy.t('activeProvider')}: '
-          '${activeProviderConfig?.displayName ?? providerNameController.text} - '
-          '${activeProviderConfig?.modelName ?? modelNameController.text}',
-          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
+    );
+  }
+}
+
+final class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({
+    required this.title,
+    required this.body,
+    required this.child,
+  });
+
+  final String title;
+  final String body;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: color.outlineVariant),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(
+                body,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 14),
+              child,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _DesignThemeSelector extends StatelessWidget {
+  const _DesignThemeSelector({
+    required this.copy,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final WritelerCopy copy;
+  final WritelerDesignTheme value;
+  final ValueChanged<WritelerDesignTheme> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final theme in WritelerDesignTheme.values)
+          _DesignThemeSwatch(
+            copy: copy,
+            theme: theme,
+            selected: theme == value,
+            onTap: () => onChanged(theme),
+          ),
+      ],
+    );
+  }
+}
+
+final class _DesignThemeSwatch extends StatelessWidget {
+  const _DesignThemeSwatch({
+    required this.copy,
+    required this.theme,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final WritelerCopy copy;
+  final WritelerDesignTheme theme;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = _tokensFor(theme);
+    final color = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: _designThemeLabel(theme, copy),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          width: 150,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: selected
+                ? color.primary.withValues(alpha: 0.10)
+                : color.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: selected ? color.primary : color.outlineVariant,
+              width: selected ? 1.6 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              _ThemeMiniature(tokens: tokens),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _designThemeLabel(theme, copy),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight:
+                            selected ? FontWeight.w800 : FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _ThemeMiniature extends StatelessWidget {
+  const _ThemeMiniature({required this.tokens});
+
+  final _WritelerThemeTokens tokens;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 34,
+      height: 30,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: tokens.surface,
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(color: tokens.outlineVariant),
+        ),
+        child: Align(
+          alignment: Alignment.bottomRight,
+          child: Container(
+            width: 17,
+            height: 17,
+            margin: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: tokens.primary,
+              borderRadius: BorderRadius.circular(5),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -7456,6 +7878,17 @@ String _providerKindLabel(AIProviderKind kind, String languageCode) {
     AIProviderKind.openRouter => 'OpenRouter',
     AIProviderKind.ollama => 'Ollama',
     AIProviderKind.mock => german ? 'Mock / lokal' : 'Mock / local',
+  };
+}
+
+String _designThemeLabel(WritelerDesignTheme theme, WritelerCopy copy) {
+  return switch (theme) {
+    WritelerDesignTheme.paper => copy.t('designThemePaper'),
+    WritelerDesignTheme.dusk => copy.t('designThemeDusk'),
+    WritelerDesignTheme.sapphire => copy.t('designThemeSapphire'),
+    WritelerDesignTheme.sage => copy.t('designThemeSage'),
+    WritelerDesignTheme.copper => copy.t('designThemeCopper'),
+    WritelerDesignTheme.ink => copy.t('designThemeInk'),
   };
 }
 

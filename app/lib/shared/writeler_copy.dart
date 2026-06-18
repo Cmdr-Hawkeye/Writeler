@@ -21,6 +21,20 @@ final class WritelerCopy {
     'aiWorkshop': 'KI-Werkstatt',
     'exports': 'Export',
     'settings': 'Einstellungen',
+    'designSettings': 'Design',
+    'designSettingsBody':
+        'Waehle die Arbeitsstimmung fuer Oberflaeche, Marke und Fokusflaechen.',
+    'designThemePaper': 'Hell',
+    'designThemeDusk': 'Dunkel',
+    'designThemeSapphire': 'Saphir',
+    'designThemeSage': 'Salbei',
+    'designThemeCopper': 'Kupfer',
+    'designThemeInk': 'Tinte',
+    'privacySettings': 'Projekt & Privatsphaere',
+    'privacySettingsBody':
+        'Steuert, wie dieses Projekt KI und optionale Synchronisation nutzt.',
+    'providerSettingsBody':
+        'Provider, Modell und API-Key fuer KI-Funktionen konfigurieren.',
     'emptyTitle': 'Noch kein Projekt geoeffnet',
     'emptyBody':
         'Lege ein lokales Schreibprojekt an und strukturiere es in Kapitel, Szenen und Notizen.',
@@ -295,6 +309,20 @@ final class WritelerCopy {
     'aiWorkshop': 'AI Workshop',
     'exports': 'Export',
     'settings': 'Settings',
+    'designSettings': 'Design',
+    'designSettingsBody':
+        'Choose the working mood for the interface, brand, and focus surfaces.',
+    'designThemePaper': 'Light',
+    'designThemeDusk': 'Dark',
+    'designThemeSapphire': 'Sapphire',
+    'designThemeSage': 'Sage',
+    'designThemeCopper': 'Copper',
+    'designThemeInk': 'Ink',
+    'privacySettings': 'Project & privacy',
+    'privacySettingsBody':
+        'Controls how this project uses AI and optional sync.',
+    'providerSettingsBody':
+        'Configure provider, model, and API key for AI features.',
     'emptyTitle': 'No project open',
     'emptyBody':
         'Create a local writing project and organize it into chapters, scenes, and notes.',
