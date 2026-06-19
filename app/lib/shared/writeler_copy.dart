@@ -1,7 +1,51 @@
+final class WritelerLanguage {
+  const WritelerLanguage({
+    required this.code,
+    required this.nativeName,
+    required this.englishName,
+  });
+
+  final String code;
+  final String nativeName;
+  final String englishName;
+}
+
 final class WritelerCopy {
-  const WritelerCopy(this.languageCode);
+  WritelerCopy(String languageCode)
+      : languageCode = WritelerCopy.normalizeLanguageCode(languageCode);
 
   final String languageCode;
+
+  static const fallbackLanguageCode = 'de';
+
+  static const supportedLanguages = [
+    WritelerLanguage(
+      code: 'de',
+      nativeName: 'Deutsch',
+      englishName: 'German',
+    ),
+    WritelerLanguage(
+      code: 'en',
+      nativeName: 'English',
+      englishName: 'English',
+    ),
+  ];
+
+  static String normalizeLanguageCode(String value) {
+    final normalized = value.trim().toLowerCase().split(RegExp('[-_]')).first;
+    if (supportedLanguages.any((language) => language.code == normalized)) {
+      return normalized;
+    }
+    return fallbackLanguageCode;
+  }
+
+  static WritelerLanguage languageFor(String languageCode) {
+    final normalized = normalizeLanguageCode(languageCode);
+    return supportedLanguages.firstWhere(
+      (language) => language.code == normalized,
+      orElse: () => supportedLanguages.first,
+    );
+  }
 
   static const _de = {
     'appTitle': 'Writeler',
@@ -22,6 +66,9 @@ final class WritelerCopy {
     'aiWorkshop': 'KI-Werkstatt',
     'exports': 'Export',
     'settings': 'Einstellungen',
+    'language': 'Sprache',
+    'languageGerman': 'Deutsch',
+    'languageEnglish': 'English',
     'designSettings': 'Design',
     'designSettingsBody':
         'Wähle die Arbeitsstimmung für Oberfläche, Marke und Fokusflächen.',
@@ -418,6 +465,9 @@ final class WritelerCopy {
     'aiWorkshop': 'AI Workshop',
     'exports': 'Export',
     'settings': 'Settings',
+    'language': 'Language',
+    'languageGerman': 'Deutsch',
+    'languageEnglish': 'English',
     'designSettings': 'Design',
     'designSettingsBody':
         'Choose the working mood for the interface, brand, and focus surfaces.',
@@ -790,7 +840,13 @@ final class WritelerCopy {
   };
 
   String t(String key) {
-    final table = languageCode == 'de' ? _de : _en;
+    final table =
+        _dictionaries[languageCode] ?? _dictionaries[fallbackLanguageCode]!;
     return table[key] ?? _en[key] ?? key;
   }
+
+  static const Map<String, Map<String, String>> _dictionaries = {
+    'de': _de,
+    'en': _en,
+  };
 }

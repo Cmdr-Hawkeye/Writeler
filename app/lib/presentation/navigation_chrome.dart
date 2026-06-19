@@ -349,6 +349,8 @@ final class _StudioTopBar extends StatelessWidget {
     required this.workspaceTitle,
     required this.workspaceIcon,
     required this.project,
+    required this.languageCode,
+    required this.onLanguageChanged,
     required this.showCreateProject,
     required this.onCreateProject,
   });
@@ -357,6 +359,8 @@ final class _StudioTopBar extends StatelessWidget {
   final String workspaceTitle;
   final IconData workspaceIcon;
   final Project? project;
+  final String languageCode;
+  final ValueChanged<String> onLanguageChanged;
   final bool showCreateProject;
   final VoidCallback onCreateProject;
 
@@ -410,6 +414,33 @@ final class _StudioTopBar extends StatelessWidget {
               ],
             ),
           ),
+          PopupMenuButton<String>(
+            tooltip: copy.t('language'),
+            onSelected: onLanguageChanged,
+            itemBuilder: (context) => [
+              for (final language in WritelerCopy.supportedLanguages)
+                PopupMenuItem(
+                  value: language.code,
+                  child: Row(
+                    children: [
+                      Icon(
+                        language.code == languageCode
+                            ? Icons.check
+                            : Icons.language,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(language.nativeName),
+                    ],
+                  ),
+                ),
+            ],
+            child: _LanguageMenuAnchor(
+              copy: copy,
+              languageCode: languageCode,
+            ),
+          ),
+          const SizedBox(width: 10),
           if (showCreateProject)
             FilledButton.icon(
               onPressed: onCreateProject,
@@ -417,6 +448,51 @@ final class _StudioTopBar extends StatelessWidget {
               label: Text(copy.t('newProject')),
             ),
         ],
+      ),
+    );
+  }
+}
+
+final class _LanguageMenuAnchor extends StatelessWidget {
+  const _LanguageMenuAnchor({
+    required this.copy,
+    required this.languageCode,
+  });
+
+  final WritelerCopy copy;
+  final String languageCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final language = WritelerCopy.languageFor(languageCode);
+    return Semantics(
+      button: true,
+      label: copy.t('language'),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.outlineVariant),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.language, size: 18, color: color.primary),
+              const SizedBox(width: 8),
+              Text(
+                language.code.toUpperCase(),
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: color.onSurface,
+                    ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.arrow_drop_down, size: 18, color: color.primary),
+            ],
+          ),
+        ),
       ),
     );
   }

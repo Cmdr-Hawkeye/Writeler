@@ -36,13 +36,16 @@ final class WritelerApp extends StatefulWidget {
 
 final class _WritelerAppState extends State<WritelerApp> {
   static const _designThemePreferenceKey = 'design.theme';
+  static const _languagePreferenceKey = 'app.language';
 
   WritelerDesignTheme _designTheme = WritelerDesignTheme.paper;
+  String _languageCode = WritelerCopy.fallbackLanguageCode;
 
   @override
   void initState() {
     super.initState();
     unawaited(_loadDesignTheme());
+    unawaited(_loadLanguage());
   }
 
   Future<void> _loadDesignTheme() async {
@@ -65,11 +68,33 @@ final class _WritelerAppState extends State<WritelerApp> {
     );
   }
 
+  Future<void> _loadLanguage() async {
+    final value =
+        await widget.appPreferenceRepository.read(_languagePreferenceKey);
+    if (!mounted || value == null) return;
+    final languageCode = WritelerCopy.normalizeLanguageCode(value);
+    if (languageCode == _languageCode) return;
+    setState(() => _languageCode = languageCode);
+  }
+
+  void _changeLanguage(String languageCode) {
+    final normalized = WritelerCopy.normalizeLanguageCode(languageCode);
+    if (normalized == _languageCode) return;
+    setState(() => _languageCode = normalized);
+    unawaited(
+      widget.appPreferenceRepository.write(
+        _languagePreferenceKey,
+        normalized,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Writeler',
       debugShowCheckedModeBanner: false,
+      locale: Locale(_languageCode),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -94,6 +119,8 @@ final class _WritelerAppState extends State<WritelerApp> {
         secretVault: widget.secretVault,
         designTheme: _designTheme,
         onDesignThemeChanged: _changeDesignTheme,
+        languageCode: _languageCode,
+        onLanguageChanged: _changeLanguage,
       ),
     );
   }

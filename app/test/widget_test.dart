@@ -15,6 +15,9 @@ import 'package:writeler/main.dart';
 
 void main() {
   testWidgets('Writeler shell shows core workspace navigation', (tester) async {
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
     await tester.pumpWidget(
       WritelerApp(
         projectRepository: InMemoryProjectRepository(),
@@ -26,10 +29,11 @@ void main() {
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
         projectNoteRepository: InMemoryProjectNoteRepository(),
         aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
-        appPreferenceRepository: InMemoryAppPreferenceRepository(),
+        appPreferenceRepository: appPreferenceRepository,
         secretVault: InMemorySecretVault(),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('Writeler'), findsOneWidget);
     expect(find.text('Dashboard'), findsOneWidget);
@@ -43,6 +47,8 @@ void main() {
   testWidgets('new project action creates a local project row', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
       WritelerApp(
@@ -55,10 +61,11 @@ void main() {
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
         projectNoteRepository: InMemoryProjectNoteRepository(),
         aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
-        appPreferenceRepository: InMemoryAppPreferenceRepository(),
+        appPreferenceRepository: appPreferenceRepository,
         secretVault: InMemorySecretVault(),
       ),
     );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('New Project'));
     await tester.pumpAndSettle();
@@ -82,6 +89,8 @@ void main() {
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
       WritelerApp(
@@ -94,10 +103,11 @@ void main() {
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
         projectNoteRepository: InMemoryProjectNoteRepository(),
         aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
-        appPreferenceRepository: InMemoryAppPreferenceRepository(),
+        appPreferenceRepository: appPreferenceRepository,
         secretVault: InMemorySecretVault(),
       ),
     );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('New Project'));
     await tester.pumpAndSettle();
@@ -121,6 +131,40 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('MockProvider'), findsOneWidget);
+  });
+
+  testWidgets('top bar language switch updates workspace copy', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: InMemoryProjectRepository(),
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('New Project'), findsOneWidget);
+
+    await tester.tap(find.text('EN'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Deutsch'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Neues Projekt'), findsOneWidget);
+    expect(await appPreferenceRepository.read('app.language'), 'de');
   });
 
   testWidgets('stored design theme is applied', (tester) async {

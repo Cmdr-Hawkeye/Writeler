@@ -16,6 +16,8 @@ final class WritelerShell extends StatefulWidget {
     required this.secretVault,
     required this.designTheme,
     required this.onDesignThemeChanged,
+    required this.languageCode,
+    required this.onLanguageChanged,
     super.key,
   });
 
@@ -31,6 +33,8 @@ final class WritelerShell extends StatefulWidget {
   final SecretVault secretVault;
   final WritelerDesignTheme designTheme;
   final ValueChanged<WritelerDesignTheme> onDesignThemeChanged;
+  final String languageCode;
+  final ValueChanged<String> onLanguageChanged;
 
   @override
   State<WritelerShell> createState() => _WritelerShellState();
@@ -1383,6 +1387,8 @@ final class _WritelerShellState extends State<WritelerShell> {
                       workspaceTitle: _workspaceTitle(copy),
                       workspaceIcon: _workspaceIcon(),
                       project: _selectedProject,
+                      languageCode: widget.languageCode,
+                      onLanguageChanged: widget.onLanguageChanged,
                       showCreateProject:
                           _selectedRailIndex == 0 || _projects.isEmpty,
                       onCreateProject: () => _showCreateProjectDialog(copy),
