@@ -241,6 +241,11 @@ final class WritelerCopy {
     'aiNeedsScene':
         'Lege zuerst eine Szene an, bevor KI-Vorschläge erzeugt werden.',
     'aiContext': 'Kontext',
+    'aiProjectContext': 'Projekt',
+    'aiSceneContext': 'Szene',
+    'selectAiScene': 'Szenenkontext wählen',
+    'aiProjectScopeHint':
+        'Projektweite Analyse nutzt Titel, Beschreibung, Kapitel und Szenenüberblick.',
     'aiPrompt': 'Auftrag an die KI',
     'defaultAiPrompt':
         'Prüfe diese Szene und schlage strukturierende Fragen vor.',
@@ -630,6 +635,11 @@ final class WritelerCopy {
     'moveToNoChapter': 'No chapter',
     'aiNeedsScene': 'Create a scene before requesting AI suggestions.',
     'aiContext': 'Context',
+    'aiProjectContext': 'Project',
+    'aiSceneContext': 'Scene',
+    'selectAiScene': 'Choose scene context',
+    'aiProjectScopeHint':
+        'Project-wide analysis uses title, description, chapters, and scene overview.',
     'aiPrompt': 'AI task',
     'defaultAiPrompt': 'Review this scene and suggest structuring questions.',
     'requestSceneIdeas': 'Scene ideas',

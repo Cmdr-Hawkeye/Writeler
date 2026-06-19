@@ -753,24 +753,43 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _requestSceneSuggestion(
-      WritelerCopy copy, AITaskKind task) async {
+  Future<void> _requestAiSuggestion(
+    WritelerCopy copy,
+    AITaskKind task, {
+    required _AIWorkshopContextKind contextKind,
+    Scene? scene,
+  }) async {
     final project = _selectedProject;
-    final scene = _selectedScene ?? _scenes.firstOrNull;
-    if (project == null || scene == null || _isRequestingAi) return;
+    final targetScene = scene ?? _selectedScene ?? _scenes.firstOrNull;
+    if (project == null || _isRequestingAi) return;
+    if (contextKind == _AIWorkshopContextKind.scene && targetScene == null) {
+      return;
+    }
 
     setState(() => _isRequestingAi = true);
     try {
       final requester = await _createSuggestionRequester();
-      await requester.forScene(
-        project: project,
-        scene: scene,
-        task: task,
-        languageCode: copy.languageCode,
-        userPrompt: _aiPromptController.text.trim().isEmpty
-            ? copy.t('defaultAiPrompt')
-            : _aiPromptController.text.trim(),
-      );
+      final userPrompt = _aiPromptController.text.trim().isEmpty
+          ? copy.t('defaultAiPrompt')
+          : _aiPromptController.text.trim();
+      if (contextKind == _AIWorkshopContextKind.project) {
+        await requester.forProject(
+          project: project,
+          chapters: _chapters,
+          scenes: _scenes,
+          task: task,
+          languageCode: copy.languageCode,
+          userPrompt: userPrompt,
+        );
+      } else {
+        await requester.forScene(
+          project: project,
+          scene: targetScene!,
+          task: task,
+          languageCode: copy.languageCode,
+          userPrompt: userPrompt,
+        );
+      }
       final suggestions =
           await widget.aiSuggestionRepository.listForProject(project.id);
       if (!mounted) return;
@@ -778,10 +797,19 @@ final class _WritelerShellState extends State<WritelerShell> {
         _suggestions = suggestions;
         _aiPromptController.clear();
         _lastAiError = null;
+        if (contextKind == _AIWorkshopContextKind.scene &&
+            targetScene != null) {
+          _selectedScene = targetScene;
+          _syncSceneControllers(targetScene);
+        }
       });
       await _recordProjectMetric(
         eventType: 'ai.suggestion.created',
-        metadata: {'task': task.name, 'sceneId': scene.id},
+        metadata: {
+          'task': task.name,
+          'context': contextKind.name,
+          if (targetScene != null) 'sceneId': targetScene.id,
+        },
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1537,6 +1565,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           copy: copy,
           project: _selectedProject,
           selectedScene: _selectedScene,
+          chapters: _chapters,
           scenes: _scenes,
           suggestions: _suggestions,
           notes: _notes,
@@ -1545,9 +1574,18 @@ final class _WritelerShellState extends State<WritelerShell> {
           promptController: _aiPromptController,
           isRequesting: _isRequestingAi,
           lastError: _lastAiError,
-          onSubmitPrompt: () =>
-              _requestSceneSuggestion(copy, AITaskKind.customScenePrompt),
-          onRequestTask: (task) => _requestSceneSuggestion(copy, task),
+          onSelectScene: _selectScene,
+          onRequestTask: (
+            task, {
+            required contextKind,
+            scene,
+          }) =>
+              _requestAiSuggestion(
+            copy,
+            task,
+            contextKind: contextKind,
+            scene: scene,
+          ),
           onAcceptSuggestion: (suggestion) =>
               _decideSuggestion(copy, suggestion, SuggestionDecision.accepted),
           onRejectSuggestion: (suggestion) =>

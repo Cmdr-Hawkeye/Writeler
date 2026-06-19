@@ -6,11 +6,20 @@ final class _SubmitAiPromptIntent extends Intent {
   const _SubmitAiPromptIntent();
 }
 
-final class _AIWorkshop extends StatelessWidget {
+enum _AIWorkshopContextKind { project, scene }
+
+typedef _AIWorkshopTaskRequest = void Function(
+  AITaskKind task, {
+  required _AIWorkshopContextKind contextKind,
+  Scene? scene,
+});
+
+final class _AIWorkshop extends StatefulWidget {
   const _AIWorkshop({
     required this.copy,
     required this.project,
     required this.selectedScene,
+    required this.chapters,
     required this.scenes,
     required this.suggestions,
     required this.notes,
@@ -18,7 +27,7 @@ final class _AIWorkshop extends StatelessWidget {
     required this.promptController,
     required this.isRequesting,
     required this.lastError,
-    required this.onSubmitPrompt,
+    required this.onSelectScene,
     required this.onRequestTask,
     required this.onAcceptSuggestion,
     required this.onRejectSuggestion,
@@ -29,6 +38,7 @@ final class _AIWorkshop extends StatelessWidget {
   final WritelerCopy copy;
   final Project? project;
   final Scene? selectedScene;
+  final List<Chapter> chapters;
   final List<Scene> scenes;
   final List<AISuggestion> suggestions;
   final List<ProjectNote> notes;
@@ -36,23 +46,56 @@ final class _AIWorkshop extends StatelessWidget {
   final TextEditingController promptController;
   final bool isRequesting;
   final String? lastError;
-  final VoidCallback onSubmitPrompt;
-  final ValueChanged<AITaskKind> onRequestTask;
+  final ValueChanged<Scene> onSelectScene;
+  final _AIWorkshopTaskRequest onRequestTask;
   final ValueChanged<AISuggestion> onAcceptSuggestion;
   final ValueChanged<AISuggestion> onRejectSuggestion;
   final ValueChanged<AISuggestion> onConvertSuggestion;
   final ValueChanged<ProjectNote> onDeleteNote;
 
   @override
+  State<_AIWorkshop> createState() => _AIWorkshopState();
+}
+
+final class _AIWorkshopState extends State<_AIWorkshop> {
+  late _AIWorkshopContextKind _contextKind;
+  String? _sceneId;
+
+  @override
+  void initState() {
+    super.initState();
+    _contextKind = widget.selectedScene == null
+        ? _AIWorkshopContextKind.project
+        : _AIWorkshopContextKind.scene;
+    _sceneId = widget.selectedScene?.id ?? widget.scenes.firstOrNull?.id;
+  }
+
+  @override
+  void didUpdateWidget(covariant _AIWorkshop oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final sceneStillExists = widget.scenes.any((scene) => scene.id == _sceneId);
+    if (!sceneStillExists) {
+      _sceneId = widget.selectedScene?.id ?? widget.scenes.firstOrNull?.id;
+    }
+    if (_contextKind == _AIWorkshopContextKind.scene &&
+        oldWidget.selectedScene?.id != widget.selectedScene?.id &&
+        widget.selectedScene != null) {
+      _sceneId = widget.selectedScene!.id;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final scene = selectedScene ?? scenes.firstOrNull;
-    final aiAvailable = project?.aiEnabled == true &&
-        project?.noAiNoCloud == false &&
-        scene != null;
+    final scene = _selectedSceneForContext();
+    final project = widget.project;
+    final projectAllowsAi =
+        project?.aiEnabled == true && project?.noAiNoCloud == false;
+    final aiAvailable = projectAllowsAi &&
+        (_contextKind == _AIWorkshopContextKind.project || scene != null);
 
     return Column(
       children: [
-        _WorkspaceHeader(title: copy.t('aiWorkshop')),
+        _WorkspaceHeader(title: widget.copy.t('aiWorkshop')),
         const Divider(height: 1),
         Expanded(
           child: Padding(
@@ -61,33 +104,38 @@ final class _AIWorkshop extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _AIPromptConsole(
-                  copy: copy,
+                  copy: widget.copy,
+                  project: project,
+                  contextKind: _contextKind,
                   scene: scene,
+                  chapters: widget.chapters,
+                  scenes: widget.scenes,
                   aiAvailable: aiAvailable,
-                  activeProviderConfig: activeProviderConfig,
-                  promptController: promptController,
-                  isRequesting: isRequesting,
-                  lastError: lastError,
-                  onSubmitPrompt: onSubmitPrompt,
-                  onRequestTask: onRequestTask,
+                  activeProviderConfig: widget.activeProviderConfig,
+                  promptController: widget.promptController,
+                  isRequesting: widget.isRequesting,
+                  lastError: widget.lastError,
+                  onContextChanged: _changeContext,
+                  onSceneChanged: _changeScene,
+                  onRequestTask: _requestTask,
                 ),
                 const SizedBox(height: 24),
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final suggestionsPanel = _AISuggestionsPanel(
-                        copy: copy,
-                        suggestions: suggestions,
-                        scenes: scenes,
-                        onAcceptSuggestion: onAcceptSuggestion,
-                        onConvertSuggestion: onConvertSuggestion,
-                        onRejectSuggestion: onRejectSuggestion,
+                        copy: widget.copy,
+                        suggestions: widget.suggestions,
+                        scenes: widget.scenes,
+                        onAcceptSuggestion: widget.onAcceptSuggestion,
+                        onConvertSuggestion: widget.onConvertSuggestion,
+                        onRejectSuggestion: widget.onRejectSuggestion,
                       );
                       final notesPanel = _AINotesPanel(
-                        copy: copy,
-                        notes: notes,
-                        scenes: scenes,
-                        onDeleteNote: onDeleteNote,
+                        copy: widget.copy,
+                        notes: widget.notes,
+                        scenes: widget.scenes,
+                        onDeleteNote: widget.onDeleteNote,
                       );
                       if (constraints.maxWidth >= 920) {
                         return Row(
@@ -114,6 +162,33 @@ final class _AIWorkshop extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Scene? _selectedSceneForContext() {
+    return widget.scenes.where((scene) => scene.id == _sceneId).firstOrNull;
+  }
+
+  void _changeContext(_AIWorkshopContextKind contextKind) {
+    setState(() {
+      _contextKind = contextKind;
+      _sceneId ??= widget.selectedScene?.id ?? widget.scenes.firstOrNull?.id;
+    });
+  }
+
+  void _changeScene(Scene scene) {
+    setState(() {
+      _contextKind = _AIWorkshopContextKind.scene;
+      _sceneId = scene.id;
+    });
+    widget.onSelectScene(scene);
+  }
+
+  void _requestTask(AITaskKind task) {
+    widget.onRequestTask(
+      task,
+      contextKind: _contextKind,
+      scene: _selectedSceneForContext(),
     );
   }
 }
@@ -160,27 +235,83 @@ const _secondaryAiActions = [
   ),
 ];
 
+const _projectPrimaryAiActions = [
+  _AiWorkshopAction(
+    task: AITaskKind.storylineVariants,
+    icon: Icons.alt_route_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.plotGapReview,
+    icon: Icons.troubleshoot_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.consistencyCheck,
+    icon: Icons.rule_outlined,
+  ),
+];
+
+const _projectSecondaryAiActions = [
+  _AiWorkshopAction(
+    task: AITaskKind.sceneIdeas,
+    icon: Icons.lightbulb_outline,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.timelineCheck,
+    icon: Icons.timeline_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.authorQuestions,
+    icon: Icons.help_outline,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.researchStructuring,
+    icon: Icons.manage_search_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.blurbVariants,
+    icon: Icons.short_text_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.characterProfile,
+    icon: Icons.person_search_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.styleAnalysis,
+    icon: Icons.auto_fix_high_outlined,
+  ),
+];
+
 final class _AIPromptConsole extends StatefulWidget {
   const _AIPromptConsole({
     required this.copy,
+    required this.project,
+    required this.contextKind,
     required this.scene,
+    required this.chapters,
+    required this.scenes,
     required this.aiAvailable,
     required this.activeProviderConfig,
     required this.promptController,
     required this.isRequesting,
     required this.lastError,
-    required this.onSubmitPrompt,
+    required this.onContextChanged,
+    required this.onSceneChanged,
     required this.onRequestTask,
   });
 
   final WritelerCopy copy;
+  final Project? project;
+  final _AIWorkshopContextKind contextKind;
   final Scene? scene;
+  final List<Chapter> chapters;
+  final List<Scene> scenes;
   final bool aiAvailable;
   final AIProviderConfig activeProviderConfig;
   final TextEditingController promptController;
   final bool isRequesting;
   final String? lastError;
-  final VoidCallback onSubmitPrompt;
+  final ValueChanged<_AIWorkshopContextKind> onContextChanged;
+  final ValueChanged<Scene> onSceneChanged;
   final ValueChanged<AITaskKind> onRequestTask;
 
   @override
@@ -193,6 +324,20 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final primaryActions = widget.contextKind == _AIWorkshopContextKind.project
+        ? _projectPrimaryAiActions
+        : _primaryAiActions;
+    final secondaryActions =
+        widget.contextKind == _AIWorkshopContextKind.project
+            ? _projectSecondaryAiActions
+            : _secondaryAiActions;
+    final contextTitle = widget.contextKind == _AIWorkshopContextKind.project
+        ? widget.copy.t('aiProjectContext')
+        : widget.copy.t('aiSceneContext');
+    final contextDetail = widget.contextKind == _AIWorkshopContextKind.project
+        ? widget.project?.title ?? widget.copy.t('selectProject')
+        : widget.scene?.title ?? widget.copy.t('aiNeedsScene');
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color.surfaceContainerLow,
@@ -211,15 +356,23 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    widget.scene == null
-                        ? widget.copy.t('aiNeedsScene')
-                        : '${widget.copy.t('aiContext')}: ${widget.scene!.title}',
+                    '${widget.copy.t('aiContext')}: $contextTitle - $contextDetail',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
+            _AIContextPicker(
+              copy: widget.copy,
+              contextKind: widget.contextKind,
+              scenes: widget.scenes,
+              selectedScene: widget.scene,
+              isEnabled: !widget.isRequesting,
+              onContextChanged: widget.onContextChanged,
+              onSceneChanged: widget.onSceneChanged,
+            ),
+            const SizedBox(height: 12),
             _AIProviderStatusLine(
               copy: widget.copy,
               config: widget.activeProviderConfig,
@@ -234,10 +387,7 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final action in [
-                  ..._primaryAiActions,
-                  ..._secondaryAiActions
-                ])
+                for (final action in [...primaryActions, ...secondaryActions])
                   ActionChip(
                     avatar: Icon(action.icon, size: 18),
                     label: Text(_aiTaskLabel(action.task.name, widget.copy)),
@@ -291,7 +441,7 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                   icon: const Icon(Icons.send_outlined),
                   label: Text(widget.copy.t('submitAiPrompt')),
                 ),
-                for (final action in _primaryAiActions)
+                for (final action in primaryActions)
                   OutlinedButton.icon(
                     onPressed: widget.aiAvailable && !widget.isRequesting
                         ? () => _requestTask(action.task)
@@ -304,7 +454,7 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                   tooltip: widget.copy.t('moreAiChecks'),
                   onSelected: _requestTask,
                   itemBuilder: (context) => [
-                    for (final action in _secondaryAiActions)
+                    for (final action in secondaryActions)
                       PopupMenuItem(
                         value: action.task,
                         child: ListTile(
@@ -322,7 +472,11 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
             const SizedBox(height: 12),
             _LivePromptPreview(
               copy: widget.copy,
+              project: widget.project,
+              contextKind: widget.contextKind,
               scene: widget.scene,
+              chapters: widget.chapters,
+              scenes: widget.scenes,
               promptController: widget.promptController,
               task: _previewTask,
             ),
@@ -346,10 +500,6 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
   }
 
   void _submitCurrentTask() {
-    if (_previewTask == AITaskKind.customScenePrompt) {
-      widget.onSubmitPrompt();
-      return;
-    }
     widget.onRequestTask(_previewTask);
   }
 
@@ -362,16 +512,120 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
   }
 }
 
+final class _AIContextPicker extends StatelessWidget {
+  const _AIContextPicker({
+    required this.copy,
+    required this.contextKind,
+    required this.scenes,
+    required this.selectedScene,
+    required this.isEnabled,
+    required this.onContextChanged,
+    required this.onSceneChanged,
+  });
+
+  final WritelerCopy copy;
+  final _AIWorkshopContextKind contextKind;
+  final List<Scene> scenes;
+  final Scene? selectedScene;
+  final bool isEnabled;
+  final ValueChanged<_AIWorkshopContextKind> onContextChanged;
+  final ValueChanged<Scene> onSceneChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final selectedSceneId = scenes.any((scene) => scene.id == selectedScene?.id)
+        ? selectedScene?.id
+        : scenes.firstOrNull?.id;
+    return Wrap(
+      spacing: 12,
+      runSpacing: 10,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        SegmentedButton<_AIWorkshopContextKind>(
+          segments: [
+            ButtonSegment(
+              value: _AIWorkshopContextKind.project,
+              icon: const Icon(Icons.folder_special_outlined),
+              label: Text(copy.t('project')),
+            ),
+            ButtonSegment(
+              value: _AIWorkshopContextKind.scene,
+              icon: const Icon(Icons.auto_awesome_motion_outlined),
+              label: Text(copy.t('scene')),
+            ),
+          ],
+          selected: {contextKind},
+          onSelectionChanged: isEnabled
+              ? (selection) => onContextChanged(selection.first)
+              : null,
+        ),
+        if (contextKind == _AIWorkshopContextKind.scene)
+          SizedBox(
+            width: 320,
+            child: DropdownButtonFormField<String>(
+              initialValue: selectedSceneId,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: copy.t('selectAiScene'),
+                prefixIcon: const Icon(Icons.view_agenda_outlined),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: [
+                for (final scene in scenes)
+                  DropdownMenuItem(
+                    value: scene.id,
+                    child: Text(
+                      scene.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              onChanged: isEnabled
+                  ? (sceneId) {
+                      final scene = scenes
+                          .where((scene) => scene.id == sceneId)
+                          .firstOrNull;
+                      if (scene != null) onSceneChanged(scene);
+                    }
+                  : null,
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Text(
+              copy.t('aiProjectScopeHint'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 final class _LivePromptPreview extends StatelessWidget {
   const _LivePromptPreview({
     required this.copy,
+    required this.project,
+    required this.contextKind,
     required this.scene,
+    required this.chapters,
+    required this.scenes,
     required this.promptController,
     required this.task,
   });
 
   final WritelerCopy copy;
+  final Project? project;
+  final _AIWorkshopContextKind contextKind;
   final Scene? scene;
+  final List<Chapter> chapters;
+  final List<Scene> scenes;
   final TextEditingController promptController;
   final AITaskKind task;
 
@@ -387,18 +641,31 @@ final class _LivePromptPreview extends StatelessWidget {
         ValueListenableBuilder<TextEditingValue>(
           valueListenable: promptController,
           builder: (context, value, child) {
-            final selectedScene = scene;
-            final prompt = selectedScene == null
-                ? copy.t('aiNeedsScene')
-                : const AIScenePromptBuilder().build(
-                    policy: const AIPolicy(),
-                    scene: selectedScene,
-                    task: task,
-                    userPrompt: value.text.trim().isEmpty
-                        ? copy.t('defaultAiPrompt')
-                        : value.text.trim(),
-                    languageCode: copy.languageCode,
-                  );
+            final userPrompt = value.text.trim().isEmpty
+                ? copy.t('defaultAiPrompt')
+                : value.text.trim();
+            final prompt = switch (contextKind) {
+              _AIWorkshopContextKind.project => project == null
+                  ? copy.t('selectProject')
+                  : const AIProjectPromptBuilder().build(
+                      policy: const AIPolicy(),
+                      project: project!,
+                      chapters: chapters,
+                      scenes: scenes,
+                      task: task,
+                      userPrompt: userPrompt,
+                      languageCode: copy.languageCode,
+                    ),
+              _AIWorkshopContextKind.scene => scene == null
+                  ? copy.t('aiNeedsScene')
+                  : const AIScenePromptBuilder().build(
+                      policy: const AIPolicy(),
+                      scene: scene!,
+                      task: task,
+                      userPrompt: userPrompt,
+                      languageCode: copy.languageCode,
+                    ),
+            };
             return DecoratedBox(
               decoration: BoxDecoration(
                 color: color.surfaceContainerHighest,
