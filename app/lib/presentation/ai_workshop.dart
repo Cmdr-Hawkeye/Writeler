@@ -88,9 +88,7 @@ final class _AIWorkshopState extends State<_AIWorkshop> {
   Widget build(BuildContext context) {
     final scene = _selectedSceneForContext();
     final project = widget.project;
-    final projectAllowsAi =
-        project?.aiEnabled == true && project?.noAiNoCloud == false;
-    final aiAvailable = projectAllowsAi &&
+    final canRequest = project != null &&
         (_contextKind == _AIWorkshopContextKind.project || scene != null);
 
     return Column(
@@ -98,67 +96,70 @@ final class _AIWorkshopState extends State<_AIWorkshop> {
         _WorkspaceHeader(title: widget.copy.t('aiWorkshop')),
         const Divider(height: 1),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _AIPromptConsole(
-                  copy: widget.copy,
-                  project: project,
-                  contextKind: _contextKind,
-                  scene: scene,
-                  chapters: widget.chapters,
-                  scenes: widget.scenes,
-                  aiAvailable: aiAvailable,
-                  activeProviderConfig: widget.activeProviderConfig,
-                  promptController: widget.promptController,
-                  isRequesting: widget.isRequesting,
-                  lastError: widget.lastError,
-                  onContextChanged: _changeContext,
-                  onSceneChanged: _changeScene,
-                  onRequestTask: _requestTask,
-                ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final suggestionsPanel = _AISuggestionsPanel(
-                        copy: widget.copy,
-                        suggestions: widget.suggestions,
-                        scenes: widget.scenes,
-                        onAcceptSuggestion: widget.onAcceptSuggestion,
-                        onConvertSuggestion: widget.onConvertSuggestion,
-                        onRejectSuggestion: widget.onRejectSuggestion,
-                      );
-                      final notesPanel = _AINotesPanel(
-                        copy: widget.copy,
-                        notes: widget.notes,
-                        scenes: widget.scenes,
-                        onDeleteNote: widget.onDeleteNote,
-                      );
-                      if (constraints.maxWidth >= 920) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(flex: 3, child: suggestionsPanel),
-                            const SizedBox(width: 24),
-                            SizedBox(width: 360, child: notesPanel),
-                          ],
-                        );
-                      }
-                      return Column(
-                        children: [
-                          Expanded(child: suggestionsPanel),
-                          const SizedBox(height: 16),
-                          SizedBox(height: 220, child: notesPanel),
-                        ],
-                      );
-                    },
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final suggestionsPanel = _AISuggestionsPanel(
+                copy: widget.copy,
+                suggestions: widget.suggestions,
+                scenes: widget.scenes,
+                onAcceptSuggestion: widget.onAcceptSuggestion,
+                onConvertSuggestion: widget.onConvertSuggestion,
+                onRejectSuggestion: widget.onRejectSuggestion,
+              );
+              final notesPanel = _AINotesPanel(
+                copy: widget.copy,
+                notes: widget.notes,
+                scenes: widget.scenes,
+                onDeleteNote: widget.onDeleteNote,
+              );
+              final panelsHeight = constraints.maxHeight < 760
+                  ? 360.0
+                  : constraints.maxHeight - 430;
+              final boundedPanelsHeight =
+                  panelsHeight < 320 ? 320.0 : panelsHeight;
+
+              return ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  _AIPromptConsole(
+                    copy: widget.copy,
+                    project: project,
+                    contextKind: _contextKind,
+                    scene: scene,
+                    chapters: widget.chapters,
+                    scenes: widget.scenes,
+                    canRequest: canRequest,
+                    activeProviderConfig: widget.activeProviderConfig,
+                    promptController: widget.promptController,
+                    isRequesting: widget.isRequesting,
+                    lastError: widget.lastError,
+                    onContextChanged: _changeContext,
+                    onSceneChanged: _changeScene,
+                    onRequestTask: _requestTask,
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: boundedPanelsHeight,
+                    child: constraints.maxWidth >= 920
+                        ? Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(flex: 3, child: suggestionsPanel),
+                              const SizedBox(width: 24),
+                              SizedBox(width: 360, child: notesPanel),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              Expanded(child: suggestionsPanel),
+                              const SizedBox(height: 16),
+                              SizedBox(height: 220, child: notesPanel),
+                            ],
+                          ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ],
@@ -289,7 +290,7 @@ final class _AIPromptConsole extends StatefulWidget {
     required this.scene,
     required this.chapters,
     required this.scenes,
-    required this.aiAvailable,
+    required this.canRequest,
     required this.activeProviderConfig,
     required this.promptController,
     required this.isRequesting,
@@ -305,7 +306,7 @@ final class _AIPromptConsole extends StatefulWidget {
   final Scene? scene;
   final List<Chapter> chapters;
   final List<Scene> scenes;
-  final bool aiAvailable;
+  final bool canRequest;
   final AIProviderConfig activeProviderConfig;
   final TextEditingController promptController;
   final bool isRequesting;
@@ -391,7 +392,7 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                   ActionChip(
                     avatar: Icon(action.icon, size: 18),
                     label: Text(_aiTaskLabel(action.task.name, widget.copy)),
-                    onPressed: widget.aiAvailable && !widget.isRequesting
+                    onPressed: !widget.isRequesting
                         ? () => _useTemplate(action.task)
                         : null,
                   ),
@@ -409,7 +410,7 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                 actions: {
                   _SubmitAiPromptIntent: CallbackAction<_SubmitAiPromptIntent>(
                     onInvoke: (intent) {
-                      if (widget.aiAvailable && !widget.isRequesting) {
+                      if (widget.canRequest && !widget.isRequesting) {
                         _submitCurrentTask();
                       }
                       return null;
@@ -435,7 +436,7 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
               runSpacing: 12,
               children: [
                 FilledButton.icon(
-                  onPressed: widget.aiAvailable && !widget.isRequesting
+                  onPressed: widget.canRequest && !widget.isRequesting
                       ? _submitCurrentTask
                       : null,
                   icon: const Icon(Icons.send_outlined),
@@ -443,14 +444,14 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                 ),
                 for (final action in primaryActions)
                   OutlinedButton.icon(
-                    onPressed: widget.aiAvailable && !widget.isRequesting
+                    onPressed: widget.canRequest && !widget.isRequesting
                         ? () => _requestTask(action.task)
                         : null,
                     icon: Icon(action.icon),
                     label: Text(_aiTaskLabel(action.task.name, widget.copy)),
                   ),
                 PopupMenuButton<AITaskKind>(
-                  enabled: widget.aiAvailable && !widget.isRequesting,
+                  enabled: widget.canRequest && !widget.isRequesting,
                   tooltip: widget.copy.t('moreAiChecks'),
                   onSelected: _requestTask,
                   itemBuilder: (context) => [
@@ -632,62 +633,65 @@ final class _LivePromptPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return ExpansionTile(
-      tilePadding: EdgeInsets.zero,
-      title: Text(copy.t('promptPreview')),
-      subtitle: Text(_aiTaskLabel(task.name, copy)),
-      childrenPadding: const EdgeInsets.only(bottom: 10),
-      children: [
-        ValueListenableBuilder<TextEditingValue>(
-          valueListenable: promptController,
-          builder: (context, value, child) {
-            final userPrompt = value.text.trim().isEmpty
-                ? copy.t('defaultAiPrompt')
-                : value.text.trim();
-            final prompt = switch (contextKind) {
-              _AIWorkshopContextKind.project => project == null
-                  ? copy.t('selectProject')
-                  : const AIProjectPromptBuilder().build(
-                      policy: const AIPolicy(),
-                      project: project!,
-                      chapters: chapters,
-                      scenes: scenes,
-                      task: task,
-                      userPrompt: userPrompt,
-                      languageCode: copy.languageCode,
+    return Material(
+      color: Colors.transparent,
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        title: Text(copy.t('promptPreview')),
+        subtitle: Text(_aiTaskLabel(task.name, copy)),
+        childrenPadding: const EdgeInsets.only(bottom: 10),
+        children: [
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: promptController,
+            builder: (context, value, child) {
+              final userPrompt = value.text.trim().isEmpty
+                  ? copy.t('defaultAiPrompt')
+                  : value.text.trim();
+              final prompt = switch (contextKind) {
+                _AIWorkshopContextKind.project => project == null
+                    ? copy.t('selectProject')
+                    : const AIProjectPromptBuilder().build(
+                        policy: const AIPolicy(),
+                        project: project!,
+                        chapters: chapters,
+                        scenes: scenes,
+                        task: task,
+                        userPrompt: userPrompt,
+                        languageCode: copy.languageCode,
+                      ),
+                _AIWorkshopContextKind.scene => scene == null
+                    ? copy.t('aiNeedsScene')
+                    : const AIScenePromptBuilder().build(
+                        policy: const AIPolicy(),
+                        scene: scene!,
+                        task: task,
+                        userPrompt: userPrompt,
+                        languageCode: copy.languageCode,
+                      ),
+              };
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SelectableText(
+                      prompt,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontFamily: 'monospace',
+                            color: color.onSurfaceVariant,
+                          ),
                     ),
-              _AIWorkshopContextKind.scene => scene == null
-                  ? copy.t('aiNeedsScene')
-                  : const AIScenePromptBuilder().build(
-                      policy: const AIPolicy(),
-                      scene: scene!,
-                      task: task,
-                      userPrompt: userPrompt,
-                      languageCode: copy.languageCode,
-                    ),
-            };
-            return DecoratedBox(
-              decoration: BoxDecoration(
-                color: color.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: SelectableText(
-                    prompt,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          color: color.onSurfaceVariant,
-                        ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
-      ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -922,90 +926,93 @@ final class _AISuggestionTile extends StatelessWidget {
             suggestion: suggestion,
             scene: scene,
           );
-    return ExpansionTile(
-      leading: const Icon(Icons.psychology_alt_outlined),
-      title: Text(_aiTaskLabel(suggestion.suggestionType, copy)),
-      subtitle: Text(
-        '${suggestion.modelName} - ${_decisionLabel(suggestion.userDecision, copy)}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      childrenPadding: const EdgeInsets.fromLTRB(56, 0, 16, 16),
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                copy.t('aiResponse'),
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              const SizedBox(height: 6),
-              _AIResponseDigest(copy: copy, text: suggestion.responseText),
-              const SizedBox(height: 12),
-              SelectableText(
-                suggestion.responseText,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              _ScenePatchPreview(
-                copy: copy,
-                patch: patch,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                copy.t('sentPrompt'),
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              const SizedBox(height: 6),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: color.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
+    return Material(
+      color: Colors.transparent,
+      child: ExpansionTile(
+        leading: const Icon(Icons.psychology_alt_outlined),
+        title: Text(_aiTaskLabel(suggestion.suggestionType, copy)),
+        subtitle: Text(
+          '${suggestion.modelName} - ${_decisionLabel(suggestion.userDecision, copy)}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        childrenPadding: const EdgeInsets.fromLTRB(56, 0, 16, 16),
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  copy.t('aiResponse'),
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: SelectableText(
-                    suggestion.promptText,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          color: color.onSurfaceVariant,
-                        ),
+                const SizedBox(height: 6),
+                _AIResponseDigest(copy: copy, text: suggestion.responseText),
+                const SizedBox(height: 12),
+                SelectableText(
+                  suggestion.responseText,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                _ScenePatchPreview(
+                  copy: copy,
+                  patch: patch,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  copy.t('sentPrompt'),
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 6),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: color.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: SelectableText(
+                      suggestion.promptText,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontFamily: 'monospace',
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
                   ),
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                _formatLocalDateTime(suggestion.createdAt),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
+              ),
+              const Spacer(),
+              IconButton(
+                tooltip: copy.t('accept'),
+                onPressed: () => onAcceptSuggestion(suggestion),
+                icon: const Icon(Icons.check),
+              ),
+              IconButton(
+                tooltip: copy.t('convertToNote'),
+                onPressed: () => onConvertSuggestion(suggestion),
+                icon: const Icon(Icons.sticky_note_2_outlined),
+              ),
+              IconButton(
+                tooltip: copy.t('reject'),
+                onPressed: () => onRejectSuggestion(suggestion),
+                icon: const Icon(Icons.close),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Text(
-              _formatLocalDateTime(suggestion.createdAt),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color.onSurfaceVariant,
-                  ),
-            ),
-            const Spacer(),
-            IconButton(
-              tooltip: copy.t('accept'),
-              onPressed: () => onAcceptSuggestion(suggestion),
-              icon: const Icon(Icons.check),
-            ),
-            IconButton(
-              tooltip: copy.t('convertToNote'),
-              onPressed: () => onConvertSuggestion(suggestion),
-              icon: const Icon(Icons.sticky_note_2_outlined),
-            ),
-            IconButton(
-              tooltip: copy.t('reject'),
-              onPressed: () => onRejectSuggestion(suggestion),
-              icon: const Icon(Icons.close),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

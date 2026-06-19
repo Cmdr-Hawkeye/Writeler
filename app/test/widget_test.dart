@@ -78,6 +78,51 @@ void main() {
     expect(find.text('Author cockpit'), findsOneWidget);
   });
 
+  testWidgets('AI workshop opens with actionable project context',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: InMemoryProjectRepository(),
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: InMemoryAppPreferenceRepository(),
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+
+    await tester.tap(find.text('New Project'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(EditableText), 'AI Draft');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('AI Workshop').first);
+    await tester.pumpAndSettle();
+
+    final sendButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Send task'),
+    );
+
+    expect(sendButton.onPressed, isNotNull);
+    expect(find.textContaining('Project-wide'), findsWidgets);
+
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Send task'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Send task'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('MockProvider'), findsOneWidget);
+  });
+
   testWidgets('stored design theme is applied', (tester) async {
     final appPreferenceRepository = InMemoryAppPreferenceRepository();
     await appPreferenceRepository.write('design.theme', 'sapphire');
