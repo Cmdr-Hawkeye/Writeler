@@ -249,6 +249,33 @@ final class WritelerCopy {
     'moreAiChecks': 'Weitere Prüfungen',
     'submitAiPrompt': 'Auftrag senden',
     'aiPromptSubmitHint': 'Strg+Enter sendet den Auftrag',
+    'promptTemplates': 'Prompt-Vorlagen',
+    'promptPreview': 'Exakter Prompt an das LLM',
+    'structuredAnswer': 'Strukturierte Antwort',
+    'promptTemplateSceneIdeas':
+        'Entwickle drei unterschiedliche Szenenvarianten. Benenne jeweils Konflikt, neue Information und erzählerischen Nutzen.',
+    'promptTemplateSceneStructure':
+        'Prüfe Ziel, Konflikt, Ausgang und Zusammenfassung. Gib zuerst einen JSON-Block für scenePatch aus und danach kurze Begründungen.',
+    'promptTemplateConsistency':
+        'Suche konkrete Anschluss-, Fakten- und Logikprobleme. Nenne je Punkt die betroffene Information und eine pragmatische Korrektur.',
+    'promptTemplateTimeline':
+        'Prüfe zeitliche Abfolge, Dauer, Ortswechsel und Erholungszeiten. Markiere unklare Stellen und schlage eine plausible Reihenfolge vor.',
+    'promptTemplatePlotGaps':
+        'Finde Plot-Lücken, fehlende Motivation und unklare Kausalität. Priorisiere nach Risiko für die Story.',
+    'promptTemplateAuthorQuestions':
+        'Formuliere starke Autorfragen, die Entscheidungen erzwingen. Keine allgemeinen Tipps, nur konkrete Fragen zur Szene.',
+    'promptTemplateStyle':
+        'Analysiere Ton, Rhythmus, Perspektive und Stilwirkung. Gib konkrete Stellschrauben, ohne Manuskripttext zu ersetzen.',
+    'promptTemplateResearch':
+        'Strukturiere offene Recherchefragen in Sofort klären, später prüfen und kann fiktional gelöst werden.',
+    'promptTemplateDialogue':
+        'Analysiere Dialogabsicht, Subtext, Machtverschiebung und unausgesprochene Ziele der Figuren.',
+    'promptTemplateCharacter':
+        'Prüfe Figurenfunktion, Ziel, Widerspruch und Veränderungspotenzial im Szenenkontext.',
+    'promptTemplateStoryline':
+        'Entwickle alternative Storyline-Varianten mit Folgen für Konflikt, Tempo und Figurenentscheidung.',
+    'promptTemplateBlurb':
+        'Entwickle Pitch- oder Klappentext-Varianten, ohne finalen Manuskripttext zu ersetzen.',
     'aiApiKeyMissing':
         'Für diesen Provider ist ein API-Key nötig. Speichere ihn unter Einstellungen > Provider-Konfiguration.',
     'aiRequestInProgress': 'Provider-Anfrage läuft...',
@@ -610,6 +637,33 @@ final class WritelerCopy {
     'moreAiChecks': 'More checks',
     'submitAiPrompt': 'Send task',
     'aiPromptSubmitHint': 'Ctrl+Enter sends the task',
+    'promptTemplates': 'Prompt templates',
+    'promptPreview': 'Exact prompt sent to the LLM',
+    'structuredAnswer': 'Structured answer',
+    'promptTemplateSceneIdeas':
+        'Develop three distinct scene variants. For each, name the conflict, new information, and narrative value.',
+    'promptTemplateSceneStructure':
+        'Review goal, conflict, outcome, and summary. Start with a scenePatch JSON block, then add short reasons.',
+    'promptTemplateConsistency':
+        'Find concrete continuity, fact, and logic issues. For each point, name the affected information and a pragmatic correction.',
+    'promptTemplateTimeline':
+        'Review chronology, duration, travel, and recovery time. Mark unclear spots and suggest a plausible order.',
+    'promptTemplatePlotGaps':
+        'Find plot gaps, missing motivation, and unclear causality. Prioritize by story risk.',
+    'promptTemplateAuthorQuestions':
+        'Formulate strong author questions that force decisions. No generic advice, only concrete questions about the scene.',
+    'promptTemplateStyle':
+        'Analyze tone, rhythm, point of view, and style effect. Give concrete levers without replacing manuscript prose.',
+    'promptTemplateResearch':
+        'Structure open research questions into clarify now, check later, and can be solved fictionally.',
+    'promptTemplateDialogue':
+        'Analyze dialogue intent, subtext, power shift, and unstated character goals.',
+    'promptTemplateCharacter':
+        'Review character function, goal, contradiction, and change potential in the scene context.',
+    'promptTemplateStoryline':
+        'Develop alternative storyline variants with consequences for conflict, pacing, and character decisions.',
+    'promptTemplateBlurb':
+        'Develop pitch or blurb variants without replacing final manuscript prose.',
     'aiApiKeyMissing':
         'This provider needs an API key. Save it under Settings > Provider configuration.',
     'aiRequestInProgress': 'Provider request in progress...',

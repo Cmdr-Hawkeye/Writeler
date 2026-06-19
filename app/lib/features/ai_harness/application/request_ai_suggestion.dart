@@ -33,7 +33,8 @@ final class RequestAISuggestion {
     policy.ensureSceneAllowsAI(scene);
     policy.ensureAllowedTask(kind: task, targetType: EntityType.scene);
 
-    final prompt = _buildScenePrompt(
+    final prompt = const AIScenePromptBuilder().build(
+      policy: policy,
       scene: scene,
       task: task,
       userPrompt: userPrompt,
@@ -61,6 +62,7 @@ final class RequestAISuggestion {
       inputContextHash: prompt.hashCode.toRadixString(16),
       providerId: provider.id,
       modelName: provider.displayName,
+      promptTemplateId: 'scene.${task.name}.v1',
       promptText: prompt,
       responseText: response.text,
       structuredResponse: response.structured,
@@ -71,8 +73,13 @@ final class RequestAISuggestion {
     await repository.save(suggestion);
     return suggestion;
   }
+}
 
-  String _buildScenePrompt({
+final class AIScenePromptBuilder {
+  const AIScenePromptBuilder();
+
+  String build({
+    required AIPolicy policy,
     required Scene scene,
     required AITaskKind task,
     required String userPrompt,
@@ -86,8 +93,8 @@ final class RequestAISuggestion {
           ? 'Antworte auf Deutsch. Schreibe konkret, knapp und handlungsorientiert. Nutze die vorhandenen Szenendaten; wenn etwas fehlt, benenne die Lücke.'
           : 'Answer in English. Be concrete, concise, and actionable. Use the available scene data; if something is missing, name the gap.',
       german
-          ? 'Aufgabe: ${_taskInstruction(task, german: true)}'
-          : 'Task: ${_taskInstruction(task, german: false)}',
+          ? 'Aufgabe: ${taskInstruction(task, german: true)}'
+          : 'Task: ${taskInstruction(task, german: false)}',
       german ? 'Szenentitel: ${scene.title}' : 'Scene title: ${scene.title}',
       german
           ? 'Status: ${scene.status.wireName}'
@@ -127,7 +134,7 @@ final class RequestAISuggestion {
     ].join('\n');
   }
 
-  String _taskInstruction(AITaskKind task, {required bool german}) {
+  String taskInstruction(AITaskKind task, {required bool german}) {
     return switch (task) {
       AITaskKind.sceneIdeas => german
           ? 'Entwickle mehrere Szenenideen oder Varianten, die zur vorhandenen Szene passen.'

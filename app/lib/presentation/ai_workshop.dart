@@ -49,38 +49,6 @@ final class _AIWorkshop extends StatelessWidget {
     final aiAvailable = project?.aiEnabled == true &&
         project?.noAiNoCloud == false &&
         scene != null;
-    const primaryActions = [
-      _AiWorkshopAction(
-        task: AITaskKind.sceneIdeas,
-        icon: Icons.lightbulb_outline,
-      ),
-      _AiWorkshopAction(
-        task: AITaskKind.sceneGoalConflictOutcome,
-        icon: Icons.account_tree_outlined,
-      ),
-      _AiWorkshopAction(
-        task: AITaskKind.consistencyCheck,
-        icon: Icons.rule_outlined,
-      ),
-    ];
-    const secondaryActions = [
-      _AiWorkshopAction(
-        task: AITaskKind.timelineCheck,
-        icon: Icons.timeline_outlined,
-      ),
-      _AiWorkshopAction(
-        task: AITaskKind.plotGapReview,
-        icon: Icons.troubleshoot_outlined,
-      ),
-      _AiWorkshopAction(
-        task: AITaskKind.authorQuestions,
-        icon: Icons.help_outline,
-      ),
-      _AiWorkshopAction(
-        task: AITaskKind.styleAnalysis,
-        icon: Icons.auto_fix_high_outlined,
-      ),
-    ];
 
     return Column(
       children: [
@@ -92,128 +60,16 @@ final class _AIWorkshop extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.psychology_alt_outlined,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                scene == null
-                                    ? copy.t('aiNeedsScene')
-                                    : '${copy.t('aiContext')}: ${scene.title}',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        _AIProviderStatusLine(
-                          copy: copy,
-                          config: activeProviderConfig,
-                        ),
-                        const SizedBox(height: 14),
-                        Shortcuts(
-                          shortcuts: const {
-                            SingleActivator(LogicalKeyboardKey.enter,
-                                control: true): _SubmitAiPromptIntent(),
-                            SingleActivator(LogicalKeyboardKey.enter,
-                                meta: true): _SubmitAiPromptIntent(),
-                          },
-                          child: Actions(
-                            actions: {
-                              _SubmitAiPromptIntent:
-                                  CallbackAction<_SubmitAiPromptIntent>(
-                                onInvoke: (intent) {
-                                  if (aiAvailable && !isRequesting) {
-                                    onSubmitPrompt();
-                                  }
-                                  return null;
-                                },
-                              ),
-                            },
-                            child: TextField(
-                              controller: promptController,
-                              minLines: 2,
-                              maxLines: 4,
-                              textInputAction: TextInputAction.newline,
-                              decoration: InputDecoration(
-                                labelText: copy.t('aiPrompt'),
-                                helperText: copy.t('aiPromptSubmitHint'),
-                                border: const OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            FilledButton.icon(
-                              onPressed: aiAvailable && !isRequesting
-                                  ? onSubmitPrompt
-                                  : null,
-                              icon: const Icon(Icons.send_outlined),
-                              label: Text(copy.t('submitAiPrompt')),
-                            ),
-                            for (final action in primaryActions)
-                              OutlinedButton.icon(
-                                onPressed: aiAvailable && !isRequesting
-                                    ? () => onRequestTask(action.task)
-                                    : null,
-                                icon: Icon(action.icon),
-                                label:
-                                    Text(_aiTaskLabel(action.task.name, copy)),
-                              ),
-                            PopupMenuButton<AITaskKind>(
-                              enabled: aiAvailable && !isRequesting,
-                              tooltip: copy.t('moreAiChecks'),
-                              onSelected: onRequestTask,
-                              itemBuilder: (context) => [
-                                for (final action in secondaryActions)
-                                  PopupMenuItem(
-                                    value: action.task,
-                                    child: ListTile(
-                                      dense: true,
-                                      leading: Icon(action.icon),
-                                      title: Text(
-                                        _aiTaskLabel(action.task.name, copy),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                              child: _AiMenuAnchor(copy: copy),
-                            ),
-                          ],
-                        ),
-                        if (isRequesting || lastError != null) ...[
-                          const SizedBox(height: 12),
-                          _AIRequestStatus(
-                            copy: copy,
-                            isRequesting: isRequesting,
-                            message: lastError,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                _AIPromptConsole(
+                  copy: copy,
+                  scene: scene,
+                  aiAvailable: aiAvailable,
+                  activeProviderConfig: activeProviderConfig,
+                  promptController: promptController,
+                  isRequesting: isRequesting,
+                  lastError: lastError,
+                  onSubmitPrompt: onSubmitPrompt,
+                  onRequestTask: onRequestTask,
                 ),
                 const SizedBox(height: 24),
                 Expanded(
@@ -256,6 +112,313 @@ final class _AIWorkshop extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+const _primaryAiActions = [
+  _AiWorkshopAction(
+    task: AITaskKind.sceneIdeas,
+    icon: Icons.lightbulb_outline,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.sceneGoalConflictOutcome,
+    icon: Icons.account_tree_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.consistencyCheck,
+    icon: Icons.rule_outlined,
+  ),
+];
+
+const _secondaryAiActions = [
+  _AiWorkshopAction(
+    task: AITaskKind.timelineCheck,
+    icon: Icons.timeline_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.plotGapReview,
+    icon: Icons.troubleshoot_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.authorQuestions,
+    icon: Icons.help_outline,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.styleAnalysis,
+    icon: Icons.auto_fix_high_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.researchStructuring,
+    icon: Icons.manage_search_outlined,
+  ),
+  _AiWorkshopAction(
+    task: AITaskKind.dialogueIntentAnalysis,
+    icon: Icons.forum_outlined,
+  ),
+];
+
+final class _AIPromptConsole extends StatefulWidget {
+  const _AIPromptConsole({
+    required this.copy,
+    required this.scene,
+    required this.aiAvailable,
+    required this.activeProviderConfig,
+    required this.promptController,
+    required this.isRequesting,
+    required this.lastError,
+    required this.onSubmitPrompt,
+    required this.onRequestTask,
+  });
+
+  final WritelerCopy copy;
+  final Scene? scene;
+  final bool aiAvailable;
+  final AIProviderConfig activeProviderConfig;
+  final TextEditingController promptController;
+  final bool isRequesting;
+  final String? lastError;
+  final VoidCallback onSubmitPrompt;
+  final ValueChanged<AITaskKind> onRequestTask;
+
+  @override
+  State<_AIPromptConsole> createState() => _AIPromptConsoleState();
+}
+
+final class _AIPromptConsoleState extends State<_AIPromptConsole> {
+  AITaskKind _previewTask = AITaskKind.customScenePrompt;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.psychology_alt_outlined, color: color.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.scene == null
+                        ? widget.copy.t('aiNeedsScene')
+                        : '${widget.copy.t('aiContext')}: ${widget.scene!.title}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _AIProviderStatusLine(
+              copy: widget.copy,
+              config: widget.activeProviderConfig,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              widget.copy.t('promptTemplates'),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final action in [
+                  ..._primaryAiActions,
+                  ..._secondaryAiActions
+                ])
+                  ActionChip(
+                    avatar: Icon(action.icon, size: 18),
+                    label: Text(_aiTaskLabel(action.task.name, widget.copy)),
+                    onPressed: widget.aiAvailable && !widget.isRequesting
+                        ? () => _useTemplate(action.task)
+                        : null,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Shortcuts(
+              shortcuts: const {
+                SingleActivator(LogicalKeyboardKey.enter, control: true):
+                    _SubmitAiPromptIntent(),
+                SingleActivator(LogicalKeyboardKey.enter, meta: true):
+                    _SubmitAiPromptIntent(),
+              },
+              child: Actions(
+                actions: {
+                  _SubmitAiPromptIntent: CallbackAction<_SubmitAiPromptIntent>(
+                    onInvoke: (intent) {
+                      if (widget.aiAvailable && !widget.isRequesting) {
+                        _submitCurrentTask();
+                      }
+                      return null;
+                    },
+                  ),
+                },
+                child: TextField(
+                  controller: widget.promptController,
+                  minLines: 2,
+                  maxLines: 4,
+                  textInputAction: TextInputAction.newline,
+                  decoration: InputDecoration(
+                    labelText: widget.copy.t('aiPrompt'),
+                    helperText: widget.copy.t('aiPromptSubmitHint'),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                FilledButton.icon(
+                  onPressed: widget.aiAvailable && !widget.isRequesting
+                      ? _submitCurrentTask
+                      : null,
+                  icon: const Icon(Icons.send_outlined),
+                  label: Text(widget.copy.t('submitAiPrompt')),
+                ),
+                for (final action in _primaryAiActions)
+                  OutlinedButton.icon(
+                    onPressed: widget.aiAvailable && !widget.isRequesting
+                        ? () => _requestTask(action.task)
+                        : null,
+                    icon: Icon(action.icon),
+                    label: Text(_aiTaskLabel(action.task.name, widget.copy)),
+                  ),
+                PopupMenuButton<AITaskKind>(
+                  enabled: widget.aiAvailable && !widget.isRequesting,
+                  tooltip: widget.copy.t('moreAiChecks'),
+                  onSelected: _requestTask,
+                  itemBuilder: (context) => [
+                    for (final action in _secondaryAiActions)
+                      PopupMenuItem(
+                        value: action.task,
+                        child: ListTile(
+                          dense: true,
+                          leading: Icon(action.icon),
+                          title:
+                              Text(_aiTaskLabel(action.task.name, widget.copy)),
+                        ),
+                      ),
+                  ],
+                  child: _AiMenuAnchor(copy: widget.copy),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _LivePromptPreview(
+              copy: widget.copy,
+              scene: widget.scene,
+              promptController: widget.promptController,
+              task: _previewTask,
+            ),
+            if (widget.isRequesting || widget.lastError != null) ...[
+              const SizedBox(height: 12),
+              _AIRequestStatus(
+                copy: widget.copy,
+                isRequesting: widget.isRequesting,
+                message: widget.lastError,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _requestTask(AITaskKind task) {
+    setState(() => _previewTask = task);
+    widget.onRequestTask(task);
+  }
+
+  void _submitCurrentTask() {
+    if (_previewTask == AITaskKind.customScenePrompt) {
+      widget.onSubmitPrompt();
+      return;
+    }
+    widget.onRequestTask(_previewTask);
+  }
+
+  void _useTemplate(AITaskKind task) {
+    setState(() => _previewTask = task);
+    widget.promptController.text = _promptTemplateFor(task, widget.copy);
+    widget.promptController.selection = TextSelection.collapsed(
+      offset: widget.promptController.text.length,
+    );
+  }
+}
+
+final class _LivePromptPreview extends StatelessWidget {
+  const _LivePromptPreview({
+    required this.copy,
+    required this.scene,
+    required this.promptController,
+    required this.task,
+  });
+
+  final WritelerCopy copy;
+  final Scene? scene;
+  final TextEditingController promptController;
+  final AITaskKind task;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: Text(copy.t('promptPreview')),
+      subtitle: Text(_aiTaskLabel(task.name, copy)),
+      childrenPadding: const EdgeInsets.only(bottom: 10),
+      children: [
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: promptController,
+          builder: (context, value, child) {
+            final selectedScene = scene;
+            final prompt = selectedScene == null
+                ? copy.t('aiNeedsScene')
+                : const AIScenePromptBuilder().build(
+                    policy: const AIPolicy(),
+                    scene: selectedScene,
+                    task: task,
+                    userPrompt: value.text.trim().isEmpty
+                        ? copy.t('defaultAiPrompt')
+                        : value.text.trim(),
+                    languageCode: copy.languageCode,
+                  );
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                color: color.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SelectableText(
+                    prompt,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -512,6 +675,8 @@ final class _AISuggestionTile extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 6),
+              _AIResponseDigest(copy: copy, text: suggestion.responseText),
+              const SizedBox(height: 12),
               SelectableText(
                 suggestion.responseText,
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -574,6 +739,63 @@ final class _AISuggestionTile extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+final class _AIResponseDigest extends StatelessWidget {
+  const _AIResponseDigest({
+    required this.copy,
+    required this.text,
+  });
+
+  final WritelerCopy copy;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final items = _responseDigestItems(text);
+    if (items.isEmpty) return const SizedBox.shrink();
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerHighest.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.format_list_numbered,
+                    size: 18, color: color.primary),
+                const SizedBox(width: 8),
+                Text(
+                  copy.t('structuredAnswer'),
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            for (final item in items.take(6))
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.check_circle_outline,
+                        size: 16, color: color.primary),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(item)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -644,6 +866,39 @@ final class _ScenePatchPreview extends StatelessWidget {
       ),
     );
   }
+}
+
+String _promptTemplateFor(AITaskKind task, WritelerCopy copy) {
+  return switch (task) {
+    AITaskKind.sceneIdeas => copy.t('promptTemplateSceneIdeas'),
+    AITaskKind.sceneGoalConflictOutcome =>
+      copy.t('promptTemplateSceneStructure'),
+    AITaskKind.consistencyCheck => copy.t('promptTemplateConsistency'),
+    AITaskKind.timelineCheck => copy.t('promptTemplateTimeline'),
+    AITaskKind.plotGapReview => copy.t('promptTemplatePlotGaps'),
+    AITaskKind.authorQuestions => copy.t('promptTemplateAuthorQuestions'),
+    AITaskKind.styleAnalysis => copy.t('promptTemplateStyle'),
+    AITaskKind.researchStructuring => copy.t('promptTemplateResearch'),
+    AITaskKind.dialogueIntentAnalysis => copy.t('promptTemplateDialogue'),
+    AITaskKind.characterProfile => copy.t('promptTemplateCharacter'),
+    AITaskKind.storylineVariants => copy.t('promptTemplateStoryline'),
+    AITaskKind.blurbVariants => copy.t('promptTemplateBlurb'),
+    AITaskKind.customScenePrompt => copy.t('defaultAiPrompt'),
+  };
+}
+
+List<String> _responseDigestItems(String text) {
+  final items = <String>[];
+  final lines = text.split(RegExp(r'\r?\n'));
+  final pattern = RegExp(r'^\s*(?:[-*\u2022]\s*|\d+[.)]\s+)(.+)$');
+  for (final line in lines) {
+    final match = pattern.firstMatch(line);
+    final value = match?.group(1)?.trim();
+    if (value != null && value.isNotEmpty) {
+      items.add(value.replaceAll(RegExp(r'\s+'), ' '));
+    }
+  }
+  return items;
 }
 
 final class _AIProviderStatusLine extends StatelessWidget {
