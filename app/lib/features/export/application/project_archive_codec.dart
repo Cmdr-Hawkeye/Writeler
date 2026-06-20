@@ -36,6 +36,8 @@ final class ProjectArchivePreview {
     required this.catalogItemCount,
     required this.relationshipCount,
     required this.noteCount,
+    this.sourceFormat = 'Writeler',
+    this.sourceName,
   });
 
   final String schema;
@@ -45,6 +47,8 @@ final class ProjectArchivePreview {
   final int catalogItemCount;
   final int relationshipCount;
   final int noteCount;
+  final String sourceFormat;
+  final String? sourceName;
 }
 
 final class ProjectArchiveCodec {

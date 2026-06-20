@@ -8,6 +8,7 @@ import 'package:writeler/features/catalog/domain/relationship.dart';
 import 'package:writeler/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
 import 'package:writeler/features/export/application/project_archive_codec.dart';
 import 'package:writeler/features/export/application/project_exporter.dart';
+import 'package:writeler/features/export/application/project_importer.dart';
 import 'package:writeler/features/export/domain/export_profile.dart';
 import 'package:writeler/features/notes/domain/project_note.dart';
 import 'package:writeler/features/projects/application/create_project.dart';
@@ -222,5 +223,78 @@ void main() {
     expect(preview.sceneCount, 1);
     expect(preview.catalogItemCount, 1);
     expect(preview.noteCount, 1);
+  });
+
+  test('yWriter xml can be inspected as a Writeler project archive', () {
+    const source = '''
+<YWRITER7>
+  <Title>Orbitale Schatten</Title>
+  <Chapter>
+    <Title>Ankunft</Title>
+    <Description>Der Druck steigt.</Description>
+    <Scene>
+      <Title>Turnhalle im Ring</Title>
+      <Description>Training vor dem Einsatz.</Description>
+      <Goal>Die Crew testen</Goal>
+      <Conflict>Die Gravitation kippt</Conflict>
+      <Outcome>Mara erkennt das Sabotagemuster</Outcome>
+      <Text>Kaltes Licht lag auf den Matten.</Text>
+    </Scene>
+  </Chapter>
+  <Character>
+    <Name>Mara</Name>
+    <Description>Pilotin mit zu viel Mut.</Description>
+    <Role>Protagonist</Role>
+  </Character>
+  <Location>
+    <Name>Orbitalhalle</Name>
+    <Description>Eine Trainingshalle auf Station C.</Description>
+  </Location>
+  <Item>
+    <Name>Grav-Stiefel</Name>
+    <Description>Haften an fast allem.</Description>
+  </Item>
+</YWRITER7>
+''';
+
+    final inspection = const ProjectImporter().inspect(
+      source,
+      sourceName: 'orbitale-schatten.yw7',
+    );
+
+    expect(inspection.kind, ProjectImportKind.yWriter);
+    expect(inspection.preview.sourceFormat, 'yWriter');
+    expect(inspection.preview.sourceName, 'orbitale-schatten.yw7');
+    expect(inspection.archive.project.title, 'Orbitale Schatten');
+    expect(inspection.archive.chapters.single.title, 'Ankunft');
+    expect(inspection.archive.scenes.single.title, 'Turnhalle im Ring');
+    expect(inspection.archive.scenes.single.goal, 'Die Crew testen');
+    expect(inspection.archive.scenes.single.manuscriptText,
+        'Kaltes Licht lag auf den Matten.');
+    expect(inspection.archive.catalogItems, hasLength(3));
+    expect(inspection.preview.catalogItemCount, 3);
+  });
+
+  test('plain text and markdown import creates scenes from headings', () {
+    const source = '''
+# Auftakt
+Ein erster Absatz.
+
+## Bruchpunkt
+Ein zweiter Absatz.
+''';
+
+    final inspection = const ProjectImporter().inspect(
+      source,
+      sourceName: 'rohfassung.md',
+    );
+
+    expect(inspection.kind, ProjectImportKind.plainText);
+    expect(inspection.preview.sourceFormat, 'Text / Markdown');
+    expect(inspection.archive.project.title, 'rohfassung');
+    expect(inspection.archive.chapters.single.title, 'Import');
+    expect(inspection.archive.scenes, hasLength(2));
+    expect(inspection.archive.scenes.first.title, 'Auftakt');
+    expect(inspection.archive.scenes.last.title, 'Bruchpunkt');
   });
 }

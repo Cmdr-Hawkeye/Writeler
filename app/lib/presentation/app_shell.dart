@@ -64,6 +64,10 @@ final class _WritelerShellState extends State<WritelerShell> {
   late final ProjectExporter _projectExporter = const ProjectExporter();
   late final ProjectArchiveCodec _archiveCodec = const ProjectArchiveCodec();
   late final ManualSyncAdapter _syncAdapter = const ManualSyncAdapter();
+  late final ProjectImporter _projectImporter = ProjectImporter(
+    archiveCodec: _archiveCodec,
+    syncAdapter: _syncAdapter,
+  );
   late final _AIProviderRuntime _aiProviderRuntime = _AIProviderRuntime(
     configRepository: widget.aiProviderConfigRepository,
     secretVault: widget.secretVault,
@@ -110,8 +114,11 @@ final class _WritelerShellState extends State<WritelerShell> {
   String? _lastAiError;
   ProjectArchivePreview? _importPreview;
   String? _importPreviewError;
+  String? _importSourceName;
   SyncCheckpoint? _lastSyncCheckpoint;
   SyncEnvelopePreview? _syncImportPreview;
+  ProjectImportInspection? _importInspection;
+  bool _isImportDragging = false;
   AIProviderKind _selectedProviderKind = AIProviderKind.mock;
   AIProviderConfig? _activeProviderConfig;
   bool _providerEnabled = true;
@@ -1165,35 +1172,47 @@ final class _WritelerShellState extends State<WritelerShell> {
       setState(() {
         _importPreview = null;
         _importPreviewError = null;
+        _importSourceName = null;
         _syncImportPreview = null;
+        _importInspection = null;
+        _isImportDragging = false;
       });
       return;
     }
 
     try {
-      final inspection = _syncAdapter.inspectPayload(source);
-      final preview = _archiveCodec.preview(inspection.archiveSource);
+      final inspection = _projectImporter.inspect(
+        source,
+        sourceName: _importSourceName,
+      );
       setState(() {
-        _importPreview = preview;
+        _importPreview = inspection.preview;
         _importPreviewError = null;
-        _syncImportPreview = inspection.envelope;
+        _syncImportPreview = inspection.syncEnvelope;
+        _importInspection = inspection;
       });
     } catch (error) {
       setState(() {
         _importPreview = null;
         _importPreviewError = _providerErrorMessage(error);
         _syncImportPreview = null;
+        _importInspection = null;
       });
     }
   }
 
+  void _refreshPastedImportPreview() {
+    _importSourceName = null;
+    _refreshImportPreview();
+  }
+
   Future<void> _importArchive(WritelerCopy copy) async {
     final source = _importArchiveController.text.trim();
-    if (source.isEmpty) return;
+    final inspection = _importInspection;
+    if (source.isEmpty || inspection == null) return;
 
     try {
-      final inspection = _syncAdapter.inspectPayload(source);
-      final archive = _archiveCodec.decode(inspection.archiveSource);
+      final archive = inspection.archive;
       await widget.projectRepository.save(archive.project);
       for (final chapter in archive.chapters) {
         await widget.chapterRepository.save(chapter);
@@ -1232,19 +1251,24 @@ final class _WritelerShellState extends State<WritelerShell> {
         _importArchiveController.clear();
         _importPreview = null;
         _importPreviewError = null;
+        _importSourceName = null;
         _syncImportPreview = null;
+        _importInspection = null;
+        _isImportDragging = false;
       });
       await _recordMetric(
         projectId: archive.project.id,
-        eventType: inspection.isEnvelope
-            ? 'sync.checkpoint.imported'
-            : 'project.imported',
+        eventType: _importEventType(inspection.kind),
         metadata: {
+          'importKind': inspection.kind.name,
+          if (inspection.preview.sourceName != null)
+            'sourceName': inspection.preview.sourceName,
           'scenes': archive.scenes.length,
           'catalogItems': archive.catalogItems.length,
           'relationships': archive.relationships.length,
           'notes': archive.notes.length,
-          if (inspection.envelope != null) ...inspection.envelope!.toJson(),
+          if (inspection.syncEnvelope != null)
+            ...inspection.syncEnvelope!.toJson(),
         },
       );
       final metrics =
@@ -1263,6 +1287,71 @@ final class _WritelerShellState extends State<WritelerShell> {
         SnackBar(content: Text(error.toString())),
       );
     }
+  }
+
+  Future<void> _pickImportFile(WritelerCopy copy) async {
+    final result = await FilePicker.pickFiles(
+      dialogTitle: copy.t('chooseImportFile'),
+      type: FileType.custom,
+      allowedExtensions: const [
+        'json',
+        'yw5',
+        'yw6',
+        'yw7',
+        'xml',
+        'scrivx',
+        'txt',
+        'md',
+      ],
+      withData: true,
+      lockParentWindow: true,
+    );
+    final file = result?.files.firstOrNull;
+    final bytes = file?.bytes;
+    if (file == null || bytes == null) return;
+    _loadImportSource(
+      utf8.decode(bytes, allowMalformed: true),
+      sourceName: file.name,
+    );
+  }
+
+  Future<void> _handleImportDrop(
+    WritelerCopy copy,
+    DropDoneDetails details,
+  ) async {
+    final file = details.files.firstOrNull;
+    if (file == null) return;
+    try {
+      final bytes = await file.readAsBytes();
+      _loadImportSource(
+        utf8.decode(bytes, allowMalformed: true),
+        sourceName: file.name,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _importPreview = null;
+        _importPreviewError = _providerErrorMessage(error);
+        _syncImportPreview = null;
+        _importInspection = null;
+      });
+    }
+  }
+
+  void _loadImportSource(String source, {required String sourceName}) {
+    _importArchiveController.text = source;
+    setState(() => _importSourceName = sourceName);
+    _refreshImportPreview();
+  }
+
+  String _importEventType(ProjectImportKind kind) {
+    return switch (kind) {
+      ProjectImportKind.writelerSyncCheckpoint => 'sync.checkpoint.imported',
+      ProjectImportKind.writelerArchive => 'project.imported',
+      ProjectImportKind.yWriter => 'project.imported.ywriter',
+      ProjectImportKind.scrivenerOutline => 'project.imported.scrivener',
+      ProjectImportKind.plainText => 'project.imported.text',
+    };
   }
 
   Future<void> _saveProviderConfig(WritelerCopy copy) async {
@@ -1613,6 +1702,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           importController: _importArchiveController,
           importPreview: _importPreview,
           importPreviewError: _importPreviewError,
+          importSourceName: _importSourceName,
+          isImportDragging: _isImportDragging,
           lastSyncCheckpoint: _lastSyncCheckpoint,
           syncImportPreview: _syncImportPreview,
           onFormatChanged: (format) =>
@@ -1624,7 +1715,11 @@ final class _WritelerShellState extends State<WritelerShell> {
           onCopyExport: () => _copyExport(copy),
           onDownloadExport: () => _downloadExport(copy),
           onCopySyncCheckpoint: () => _copySyncCheckpoint(copy),
-          onImportSourceChanged: _refreshImportPreview,
+          onImportSourceChanged: _refreshPastedImportPreview,
+          onPickImportFile: () => _pickImportFile(copy),
+          onImportDropped: (details) => _handleImportDrop(copy, details),
+          onImportDragChanged: (value) =>
+              setState(() => _isImportDragging = value),
           onImportArchive: () => _importArchive(copy),
         ),
       _ => _SettingsWorkspace(

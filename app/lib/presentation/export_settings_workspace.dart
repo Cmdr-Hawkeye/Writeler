@@ -18,6 +18,8 @@ final class _ExportCenter extends StatelessWidget {
     required this.importController,
     required this.importPreview,
     required this.importPreviewError,
+    required this.importSourceName,
+    required this.isImportDragging,
     required this.lastSyncCheckpoint,
     required this.syncImportPreview,
     required this.onFormatChanged,
@@ -27,6 +29,9 @@ final class _ExportCenter extends StatelessWidget {
     required this.onDownloadExport,
     required this.onCopySyncCheckpoint,
     required this.onImportSourceChanged,
+    required this.onPickImportFile,
+    required this.onImportDropped,
+    required this.onImportDragChanged,
     required this.onImportArchive,
   });
 
@@ -44,6 +49,8 @@ final class _ExportCenter extends StatelessWidget {
   final TextEditingController importController;
   final ProjectArchivePreview? importPreview;
   final String? importPreviewError;
+  final String? importSourceName;
+  final bool isImportDragging;
   final SyncCheckpoint? lastSyncCheckpoint;
   final SyncEnvelopePreview? syncImportPreview;
   final ValueChanged<ExportFormat> onFormatChanged;
@@ -53,6 +60,9 @@ final class _ExportCenter extends StatelessWidget {
   final VoidCallback onDownloadExport;
   final VoidCallback onCopySyncCheckpoint;
   final VoidCallback onImportSourceChanged;
+  final VoidCallback onPickImportFile;
+  final ValueChanged<DropDoneDetails> onImportDropped;
+  final ValueChanged<bool> onImportDragChanged;
   final VoidCallback onImportArchive;
 
   @override
@@ -155,6 +165,16 @@ final class _ExportCenter extends StatelessWidget {
                     Text(copy.t('importArchive'),
                         style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 8),
+                    _ImportDropZone(
+                      copy: copy,
+                      sourceName: importSourceName,
+                      preview: importPreview,
+                      isDragging: isImportDragging,
+                      onPickFile: onPickImportFile,
+                      onDropped: onImportDropped,
+                      onDragChanged: onImportDragChanged,
+                    ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: importController,
                       onChanged: (_) => onImportSourceChanged(),
@@ -291,6 +311,104 @@ final class _SyncEnvelopePanel extends StatelessWidget {
   }
 }
 
+final class _ImportDropZone extends StatelessWidget {
+  const _ImportDropZone({
+    required this.copy,
+    required this.sourceName,
+    required this.preview,
+    required this.isDragging,
+    required this.onPickFile,
+    required this.onDropped,
+    required this.onDragChanged,
+  });
+
+  final WritelerCopy copy;
+  final String? sourceName;
+  final ProjectArchivePreview? preview;
+  final bool isDragging;
+  final VoidCallback onPickFile;
+  final ValueChanged<DropDoneDetails> onDropped;
+  final ValueChanged<bool> onDragChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final borderColor = isDragging ? color.primary : color.outlineVariant;
+    final background = isDragging
+        ? color.primaryContainer.withValues(alpha: 0.45)
+        : color.surfaceContainerHighest;
+    final sourceName = this.sourceName;
+    final preview = this.preview;
+    return DropTarget(
+      onDragEntered: (_) => onDragChanged(true),
+      onDragExited: (_) => onDragChanged(false),
+      onDragDone: (details) {
+        onDragChanged(false);
+        onDropped(details);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.file_upload_outlined, color: color.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        copy.t('dropImportFile'),
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        copy.t('dropImportFileBody'),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: color.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onPickFile,
+              icon: const Icon(Icons.folder_open_outlined),
+              label: Text(copy.t('chooseImportFile')),
+            ),
+            if (sourceName != null || preview != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                [
+                  if (sourceName != null)
+                    '${copy.t('selectedImportFile')}: $sourceName',
+                  if (preview != null)
+                    '${copy.t('importSourceType')}: ${preview.sourceFormat}',
+                ].join('\n'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 final class _ImportArchivePreview extends StatelessWidget {
   const _ImportArchivePreview({
     required this.copy,
@@ -341,12 +459,17 @@ final class _ImportArchivePreview extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${copy.t('archiveSchema')}: ${preview.schema}\n'
-                    '${copy.t('chapters')}: ${preview.chapterCount} - '
-                    '${copy.t('scenes')}: ${preview.sceneCount}\n'
-                    '${copy.t('catalog')}: ${preview.catalogItemCount} - '
-                    '${copy.t('relationships')}: ${preview.relationshipCount}\n'
-                    '${copy.t('notes')}: ${preview.noteCount}',
+                    [
+                      '${copy.t('importSourceType')}: ${preview.sourceFormat}',
+                      if (preview.sourceName != null)
+                        '${copy.t('selectedImportFile')}: ${preview.sourceName}',
+                      '${copy.t('archiveSchema')}: ${preview.schema}',
+                      '${copy.t('chapters')}: ${preview.chapterCount} - '
+                          '${copy.t('scenes')}: ${preview.sceneCount}',
+                      '${copy.t('catalog')}: ${preview.catalogItemCount} - '
+                          '${copy.t('relationships')}: ${preview.relationshipCount}',
+                      '${copy.t('notes')}: ${preview.noteCount}',
+                    ].join('\n'),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: color.onSecondaryContainer,
                         ),

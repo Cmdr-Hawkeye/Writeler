@@ -200,8 +200,8 @@ void main() {
     await tester.tap(find.text('Export/Import').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Import project archive'), findsOneWidget);
-    expect(find.text('Import project'), findsOneWidget);
+    expect(find.text('Drop file here'), findsOneWidget);
+    expect(find.text('Choose import file'), findsOneWidget);
   });
 
   testWidgets('settings store global work profile preferences', (tester) async {
