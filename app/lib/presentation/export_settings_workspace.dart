@@ -360,7 +360,9 @@ final class _ImportArchivePreview extends StatelessWidget {
 final class _SettingsWorkspace extends StatelessWidget {
   const _SettingsWorkspace({
     required this.copy,
-    required this.project,
+    required this.aiEnabled,
+    required this.cloudSyncEnabled,
+    required this.noAiNoCloud,
     required this.providerNameController,
     required this.modelNameController,
     required this.baseUrlController,
@@ -375,12 +377,14 @@ final class _SettingsWorkspace extends StatelessWidget {
     required this.onProviderEnabledChanged,
     required this.onSaveProviderConfig,
     required this.onDeleteProviderApiKey,
-    required this.onSavePrivacySettings,
+    required this.onSaveProfileSettings,
     required this.syncAdapterName,
   });
 
   final WritelerCopy copy;
-  final Project? project;
+  final bool aiEnabled;
+  final bool cloudSyncEnabled;
+  final bool noAiNoCloud;
   final TextEditingController providerNameController;
   final TextEditingController modelNameController;
   final TextEditingController baseUrlController;
@@ -396,15 +400,14 @@ final class _SettingsWorkspace extends StatelessWidget {
   final VoidCallback onSaveProviderConfig;
   final VoidCallback onDeleteProviderApiKey;
   final String syncAdapterName;
-  final Future<void> Function({
+  final FutureOr<void> Function({
     required bool aiEnabled,
     required bool cloudSyncEnabled,
     required bool noAiNoCloud,
-  }) onSavePrivacySettings;
+  }) onSaveProfileSettings;
 
   @override
   Widget build(BuildContext context) {
-    final project = this.project;
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
@@ -421,54 +424,54 @@ final class _SettingsWorkspace extends StatelessWidget {
           ),
         ),
         _SettingsSection(
-          title: copy.t('privacySettings'),
-          body: copy.t('privacySettingsBody'),
-          child: project == null
-              ? Text(copy.t('selectProject'))
-              : Column(
-                  children: [
-                    SwitchListTile(
-                      value: project.aiEnabled,
-                      title: Text(copy.t('aiEnabled')),
-                      onChanged: (value) => onSavePrivacySettings(
-                        aiEnabled: value,
-                        cloudSyncEnabled: project.cloudSyncEnabled,
-                        noAiNoCloud: value ? false : project.noAiNoCloud,
-                      ),
-                    ),
-                    SwitchListTile(
-                      value: project.cloudSyncEnabled,
-                      title: Text(copy.t('cloudSyncEnabled')),
-                      onChanged: project.noAiNoCloud
-                          ? null
-                          : (value) => onSavePrivacySettings(
-                                aiEnabled: project.aiEnabled,
-                                cloudSyncEnabled: value,
-                                noAiNoCloud: project.noAiNoCloud,
-                              ),
-                    ),
-                    SwitchListTile(
-                      value: project.noAiNoCloud,
-                      title: Text(copy.t('noAiNoCloud')),
-                      onChanged: (value) => onSavePrivacySettings(
-                        aiEnabled: value ? false : project.aiEnabled,
-                        cloudSyncEnabled:
-                            value ? false : project.cloudSyncEnabled,
-                        noAiNoCloud: value,
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: Text(
-                          '${copy.t('syncAdapter')}: $syncAdapterName. ${copy.t('syncAdapterHint')}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                    ),
-                  ],
+          title: copy.t('globalProfileSettings'),
+          body: copy.t('globalProfileSettingsBody'),
+          child: Column(
+            children: [
+              SwitchListTile(
+                value: aiEnabled,
+                title: Text(copy.t('aiEnabled')),
+                subtitle: Text(copy.t('globalAiEnabledHint')),
+                onChanged: (value) => onSaveProfileSettings(
+                  aiEnabled: value,
+                  cloudSyncEnabled: cloudSyncEnabled,
+                  noAiNoCloud: value ? false : noAiNoCloud,
                 ),
+              ),
+              SwitchListTile(
+                value: cloudSyncEnabled,
+                title: Text(copy.t('cloudSyncEnabled')),
+                subtitle: Text(copy.t('globalCloudSyncHint')),
+                onChanged: noAiNoCloud
+                    ? null
+                    : (value) => onSaveProfileSettings(
+                          aiEnabled: aiEnabled,
+                          cloudSyncEnabled: value,
+                          noAiNoCloud: noAiNoCloud,
+                        ),
+              ),
+              SwitchListTile(
+                value: noAiNoCloud,
+                title: Text(copy.t('noAiNoCloud')),
+                subtitle: Text(copy.t('globalNoAiNoCloudHint')),
+                onChanged: (value) => onSaveProfileSettings(
+                  aiEnabled: value ? false : aiEnabled,
+                  cloudSyncEnabled: value ? false : cloudSyncEnabled,
+                  noAiNoCloud: value,
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    '${copy.t('syncAdapter')}: $syncAdapterName. ${copy.t('syncAdapterHint')}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         _SettingsSection(
           title: copy.t('providerConfig'),

@@ -78,6 +78,15 @@ final class WritelerCopy {
     'designThemeSage': 'Salbei',
     'designThemeCopper': 'Kupfer',
     'designThemeInk': 'Tinte',
+    'globalProfileSettings': 'Arbeitsprofil',
+    'globalProfileSettingsBody':
+        'Globale Vorgaben für alle Projekte. Projektabhängige Überschreibungen können später ergänzt werden.',
+    'globalAiEnabledHint':
+        'Steuert KI-Funktionen appweit, unabhängig vom aktuell geöffneten Projekt.',
+    'globalCloudSyncHint':
+        'Bereitet optionale Synchronisation appweit vor. Der aktuelle Adapter bleibt lokal/manuell.',
+    'globalNoAiNoCloudHint':
+        'Deaktiviert KI und Cloud-Sync appweit für einen strikt lokalen Arbeitsmodus.',
     'privacySettings': 'Projekt & Privatsphäre',
     'privacySettingsBody':
         'Steuert, wie dieses Projekt KI und optionale Synchronisation nutzt.',
@@ -477,6 +486,15 @@ final class WritelerCopy {
     'designThemeSage': 'Sage',
     'designThemeCopper': 'Copper',
     'designThemeInk': 'Ink',
+    'globalProfileSettings': 'Work profile',
+    'globalProfileSettingsBody':
+        'Global defaults for all projects. Project-specific overrides can be added later.',
+    'globalAiEnabledHint':
+        'Controls AI features app-wide, independent of the currently open project.',
+    'globalCloudSyncHint':
+        'Prepares optional sync app-wide. The current adapter remains local/manual.',
+    'globalNoAiNoCloudHint':
+        'Disables AI and cloud sync app-wide for a strictly local working mode.',
     'privacySettings': 'Project & privacy',
     'privacySettingsBody':
         'Controls how this project uses AI and optional sync.',

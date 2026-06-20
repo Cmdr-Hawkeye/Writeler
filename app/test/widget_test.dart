@@ -167,6 +167,52 @@ void main() {
     expect(await appPreferenceRepository.read('app.language'), 'de');
   });
 
+  testWidgets('settings store global work profile preferences', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: InMemoryProjectRepository(),
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('New Project'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText), 'Profile Test');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Settings').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Work profile'), findsOneWidget);
+    expect(find.text('Select a project'), findsNothing);
+
+    await tester.tap(find.text('No AI / No Cloud'));
+    await tester.pumpAndSettle();
+
+    expect(await appPreferenceRepository.read('profile.noAiNoCloud'), 'true');
+    expect(await appPreferenceRepository.read('profile.aiEnabled'), 'false');
+    expect(
+      await appPreferenceRepository.read('profile.cloudSyncEnabled'),
+      'false',
+    );
+  });
+
   testWidgets('stored design theme is applied', (tester) async {
     final appPreferenceRepository = InMemoryAppPreferenceRepository();
     await appPreferenceRepository.write('design.theme', 'sapphire');

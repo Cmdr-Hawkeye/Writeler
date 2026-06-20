@@ -18,6 +18,10 @@ final class WritelerShell extends StatefulWidget {
     required this.onDesignThemeChanged,
     required this.languageCode,
     required this.onLanguageChanged,
+    required this.globalAiEnabled,
+    required this.globalCloudSyncEnabled,
+    required this.globalNoAiNoCloud,
+    required this.onGlobalProfileSettingsChanged,
     super.key,
   });
 
@@ -35,6 +39,14 @@ final class WritelerShell extends StatefulWidget {
   final ValueChanged<WritelerDesignTheme> onDesignThemeChanged;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
+  final bool globalAiEnabled;
+  final bool globalCloudSyncEnabled;
+  final bool globalNoAiNoCloud;
+  final FutureOr<void> Function({
+    required bool aiEnabled,
+    required bool cloudSyncEnabled,
+    required bool noAiNoCloud,
+  }) onGlobalProfileSettingsChanged;
 
   @override
   State<WritelerShell> createState() => _WritelerShellState();
@@ -778,7 +790,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           : _aiPromptController.text.trim();
       if (contextKind == _AIWorkshopContextKind.project) {
         await requester.forProject(
-          project: project,
+          project: _effectiveProjectForGlobalProfile(project),
           chapters: _chapters,
           scenes: _scenes,
           task: task,
@@ -787,7 +799,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         );
       } else {
         await requester.forScene(
-          project: project,
+          project: _effectiveProjectForGlobalProfile(project),
           scene: targetScene!,
           task: task,
           languageCode: copy.languageCode,
@@ -840,6 +852,14 @@ final class _WritelerShellState extends State<WritelerShell> {
       return error.message;
     }
     return error.toString().replaceFirst('Exception: ', '');
+  }
+
+  Project _effectiveProjectForGlobalProfile(Project project) {
+    return project.copyWith(
+      aiEnabled: widget.globalAiEnabled,
+      cloudSyncEnabled: widget.globalCloudSyncEnabled,
+      noAiNoCloud: widget.globalNoAiNoCloud,
+    );
   }
 
   ProjectArchive _currentArchive(Project project) {
@@ -1245,28 +1265,6 @@ final class _WritelerShellState extends State<WritelerShell> {
     }
   }
 
-  Future<void> _saveProjectPrivacySettings({
-    required bool aiEnabled,
-    required bool cloudSyncEnabled,
-    required bool noAiNoCloud,
-  }) async {
-    final project = _selectedProject;
-    if (project == null) return;
-
-    final updated = project.copyWith(
-      aiEnabled: aiEnabled,
-      cloudSyncEnabled: cloudSyncEnabled,
-      noAiNoCloud: noAiNoCloud,
-    );
-    await widget.projectRepository.save(updated);
-    final projects = await widget.projectRepository.listActive();
-    if (!mounted) return;
-    setState(() {
-      _projects = projects;
-      _selectedProject = updated;
-    });
-  }
-
   Future<void> _saveProviderConfig(WritelerCopy copy) async {
     const providerId = 'default';
     final apiKeyInput =
@@ -1631,7 +1629,9 @@ final class _WritelerShellState extends State<WritelerShell> {
         ),
       _ => _SettingsWorkspace(
           copy: copy,
-          project: _selectedProject,
+          aiEnabled: widget.globalAiEnabled,
+          cloudSyncEnabled: widget.globalCloudSyncEnabled,
+          noAiNoCloud: widget.globalNoAiNoCloud,
           providerNameController: _providerNameController,
           modelNameController: _modelNameController,
           baseUrlController: _baseUrlController,
@@ -1647,7 +1647,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               setState(() => _providerEnabled = enabled),
           onSaveProviderConfig: () => _saveProviderConfig(copy),
           onDeleteProviderApiKey: () => _deleteProviderApiKey(copy),
-          onSavePrivacySettings: _saveProjectPrivacySettings,
+          onSaveProfileSettings: widget.onGlobalProfileSettingsChanged,
           syncAdapterName: _syncAdapter.adapterName,
         ),
     };

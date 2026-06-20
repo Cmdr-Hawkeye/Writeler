@@ -37,15 +37,23 @@ final class WritelerApp extends StatefulWidget {
 final class _WritelerAppState extends State<WritelerApp> {
   static const _designThemePreferenceKey = 'design.theme';
   static const _languagePreferenceKey = 'app.language';
+  static const _globalAiEnabledPreferenceKey = 'profile.aiEnabled';
+  static const _globalCloudSyncEnabledPreferenceKey =
+      'profile.cloudSyncEnabled';
+  static const _globalNoAiNoCloudPreferenceKey = 'profile.noAiNoCloud';
 
   WritelerDesignTheme _designTheme = WritelerDesignTheme.paper;
   String _languageCode = WritelerCopy.fallbackLanguageCode;
+  bool _globalAiEnabled = true;
+  bool _globalCloudSyncEnabled = false;
+  bool _globalNoAiNoCloud = false;
 
   @override
   void initState() {
     super.initState();
     unawaited(_loadDesignTheme());
     unawaited(_loadLanguage());
+    unawaited(_loadGlobalProfileSettings());
   }
 
   Future<void> _loadDesignTheme() async {
@@ -89,6 +97,63 @@ final class _WritelerAppState extends State<WritelerApp> {
     );
   }
 
+  Future<void> _loadGlobalProfileSettings() async {
+    final aiEnabled = await widget.appPreferenceRepository
+        .read(_globalAiEnabledPreferenceKey);
+    final cloudSyncEnabled = await widget.appPreferenceRepository
+        .read(_globalCloudSyncEnabledPreferenceKey);
+    final noAiNoCloud = await widget.appPreferenceRepository
+        .read(_globalNoAiNoCloudPreferenceKey);
+    if (!mounted) return;
+    setState(() {
+      _globalAiEnabled = _readBoolPreference(aiEnabled, fallback: true);
+      _globalCloudSyncEnabled =
+          _readBoolPreference(cloudSyncEnabled, fallback: false);
+      _globalNoAiNoCloud = _readBoolPreference(noAiNoCloud, fallback: false);
+      if (_globalNoAiNoCloud) {
+        _globalAiEnabled = false;
+        _globalCloudSyncEnabled = false;
+      }
+    });
+  }
+
+  void _changeGlobalProfileSettings({
+    required bool aiEnabled,
+    required bool cloudSyncEnabled,
+    required bool noAiNoCloud,
+  }) {
+    final normalizedAiEnabled = noAiNoCloud ? false : aiEnabled;
+    final normalizedCloudSyncEnabled = noAiNoCloud ? false : cloudSyncEnabled;
+    setState(() {
+      _globalAiEnabled = normalizedAiEnabled;
+      _globalCloudSyncEnabled = normalizedCloudSyncEnabled;
+      _globalNoAiNoCloud = noAiNoCloud;
+    });
+    unawaited(
+      widget.appPreferenceRepository.write(
+        _globalAiEnabledPreferenceKey,
+        normalizedAiEnabled.toString(),
+      ),
+    );
+    unawaited(
+      widget.appPreferenceRepository.write(
+        _globalCloudSyncEnabledPreferenceKey,
+        normalizedCloudSyncEnabled.toString(),
+      ),
+    );
+    unawaited(
+      widget.appPreferenceRepository.write(
+        _globalNoAiNoCloudPreferenceKey,
+        noAiNoCloud.toString(),
+      ),
+    );
+  }
+
+  bool _readBoolPreference(String? value, {required bool fallback}) {
+    if (value == null) return fallback;
+    return value.toLowerCase() == 'true';
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -121,6 +186,10 @@ final class _WritelerAppState extends State<WritelerApp> {
         onDesignThemeChanged: _changeDesignTheme,
         languageCode: _languageCode,
         onLanguageChanged: _changeLanguage,
+        globalAiEnabled: _globalAiEnabled,
+        globalCloudSyncEnabled: _globalCloudSyncEnabled,
+        globalNoAiNoCloud: _globalNoAiNoCloud,
+        onGlobalProfileSettingsChanged: _changeGlobalProfileSettings,
       ),
     );
   }
