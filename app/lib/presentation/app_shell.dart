@@ -1406,7 +1406,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Widget _buildSelectedWorkspace(WritelerCopy copy) {
-    if (_projects.isEmpty) {
+    if (_projects.isEmpty && !_isGlobalWorkspace(_selectedRailIndex)) {
       return _EmptyWorkspace(copy: copy);
     }
 
@@ -1651,5 +1651,9 @@ final class _WritelerShellState extends State<WritelerShell> {
           syncAdapterName: _syncAdapter.adapterName,
         ),
     };
+  }
+
+  bool _isGlobalWorkspace(int index) {
+    return index == 9 || index == 10;
   }
 }

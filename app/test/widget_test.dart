@@ -167,6 +167,43 @@ void main() {
     expect(await appPreferenceRepository.read('app.language'), 'de');
   });
 
+  testWidgets('settings and import stay available without a project',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: InMemoryProjectRepository(),
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Settings').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Work profile'), findsOneWidget);
+    expect(find.text('Provider configuration'), findsOneWidget);
+
+    await tester.tap(find.text('Export/Import').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Import project archive'), findsOneWidget);
+    expect(find.text('Import project'), findsOneWidget);
+  });
+
   testWidgets('settings store global work profile preferences', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

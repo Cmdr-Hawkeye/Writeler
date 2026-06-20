@@ -96,6 +96,7 @@ final class _ExportCenter extends StatelessWidget {
                   children: [
                     DropdownButtonFormField<ExportFormat>(
                       initialValue: format,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         labelText: copy.t('format'),
                         border: const OutlineInputBorder(),
