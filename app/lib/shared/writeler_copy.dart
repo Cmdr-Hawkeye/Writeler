@@ -432,6 +432,24 @@ final class WritelerCopy {
     'pasteArchiveJson': 'JSON, yWriter-XML oder Text hier einfügen',
     'importProject': 'Projekt importieren',
     'importComplete': 'Projektarchiv importiert',
+    'helpCopyExport':
+        'Kopiert die aktuell angezeigte Exportvorschau mit den gewählten Einstellungen in die Zwischenablage.',
+    'helpExportFormat':
+        'Legt fest, in welchem Dateiformat dein Projekt ausgegeben wird.',
+    'helpIncludeSceneTitles':
+        'Fügt beim Export die Szenentitel vor den jeweiligen Textabschnitten ein.',
+    'helpIncludeMetadata':
+        'Nimmt Planungsdaten wie Status, Ziel, Konflikt und Ausgang in den Export auf.',
+    'helpDownloadExport':
+        'Erstellt eine Datei aus dem aktuellen Projekt und speichert sie lokal.',
+    'helpCopySyncCheckpoint':
+        'Kopiert ein vollständiges lokales Sync-Paket, das später wieder importiert werden kann.',
+    'helpImportFile':
+        'Lädt eine Datei und erkennt automatisch Writeler, yWriter, Scrivener, Markdown oder Text.',
+    'helpPasteImport':
+        'Prüft eingefügten Inhalt und zeigt vor dem Import eine Vorschau des erkannten Projekts.',
+    'helpImportProject':
+        'Legt aus der Vorschau ein neues lokales Projekt mit Kapiteln, Szenen und Katalogdaten an.',
     'format': 'Format',
     'includeSceneTitles': 'Szenentitel einschließen',
     'includeMetadata': 'Metadaten einschließen',
@@ -455,6 +473,84 @@ final class WritelerCopy {
     'apiKeyDeleted': 'API-Key entfernt',
     'saveProviderConfig': 'Provider speichern',
     'providerConfigSaved': 'Provider-Konfiguration gespeichert',
+    'helpDesignSettings':
+        'Ändert nur die Darstellung der App. Inhalte und Projekte bleiben unverändert.',
+    'helpGlobalProfileSettings':
+        'Diese Optionen gelten appweit, solange spätere Projektprofile sie nicht überschreiben.',
+    'helpAiEnabled':
+        'Schaltet KI-Funktionen global ein oder aus. Manuskripttext wird dadurch nicht automatisch verändert.',
+    'helpCloudSyncEnabled':
+        'Erlaubt spätere Cloud-Sync-Adapter. Lokale Arbeit bleibt weiterhin möglich.',
+    'helpNoAiNoCloud':
+        'Deaktiviert KI und Cloud-Sync gemeinsam für einen bewusst lokalen Arbeitsmodus.',
+    'helpProviderKind':
+        'Wählt die technische Schnittstelle für KI-Anfragen, zum Beispiel OpenRouter, OpenAI oder Ollama.',
+    'helpProviderEnabled':
+        'Aktiviert oder pausiert den konfigurierten KI-Provider, ohne die gespeicherten Daten zu löschen.',
+    'helpProviderName':
+        'Ein frei wählbarer Anzeigename, damit du den Provider später wiedererkennst.',
+    'helpModelName':
+        'Der genaue Modellname, der an den Provider gesendet wird.',
+    'helpBaseUrl':
+        'Die API-Adresse des Providers. Bei Presets wird sie automatisch vorbelegt.',
+    'helpApiKey':
+        'Der Schlüssel wird lokal gespeichert und für echte Provider-Anfragen verwendet.',
+    'helpDeleteApiKey':
+        'Entfernt nur den lokal gespeicherten API-Key. Die übrige Provider-Konfiguration bleibt erhalten.',
+    'helpSaveProviderConfig':
+        'Speichert Provider, Modell, URL, Aktivstatus und optional den API-Key für zukünftige KI-Anfragen.',
+    'helpAiContext':
+        'Der Kontext bestimmt, ob die KI über das ganze Projekt oder nur über eine ausgewählte Szene nachdenkt.',
+    'helpPromptTemplates':
+        'Füllt den Auftrag mit einem passenden Startprompt. Du kannst den Text vor dem Senden frei ändern.',
+    'helpSubmitAiPrompt':
+        'Sendet den sichtbaren Auftrag mit dem gewählten Kontext an den aktiven KI-Provider und speichert die Antwort als Vorschlag.',
+    'helpAiQuickActions':
+        'Diese Aktionen senden sofort spezialisierte Prüf- oder Ideenaufträge an die KI.',
+    'helpPromptPreview':
+        'Zeigt den vollständigen Prompt, der tatsächlich an das Sprachmodell gesendet wird.',
+    'helpSuggestionActions':
+        'Annehmen prüft und übernimmt erkannte Planungsfelder, Notiz erstellt eine Projektnotiz, Ablehnen löscht den Vorschlag.',
+    'helpAcceptSuggestion':
+        'Übernimmt erkannte Strukturfelder in die Szene oder markiert den Vorschlag als geprüft.',
+    'helpConvertSuggestion':
+        'Speichert die KI-Antwort als Notiz, damit sie später weiterverwendet werden kann.',
+    'helpRejectSuggestion': 'Löscht den Vorschlag aus der offenen KI-Liste.',
+    'helpNewProject':
+        'Legt ein neues lokales Schreibprojekt an. Bestehende Projekte bleiben unverändert.',
+    'helpNewScene':
+        'Erstellt eine neue Szene im aktuellen Projekt und öffnet sie zur Bearbeitung.',
+    'helpNewChapter':
+        'Erstellt ein neues Kapitel, dem Szenen zugeordnet werden können.',
+    'helpDeleteChapter':
+        'Löscht das Kapitel nach Rückfrage. Zugeordnete Szenen bleiben im Projekt erhalten.',
+    'helpNewCatalogItem':
+        'Legt eine neue Person, einen Ort oder ein Objekt im aktuellen Katalog an.',
+    'helpEditCatalogItem':
+        'Öffnet die Detailansicht, damit Name, Status und Beschreibung bearbeitet werden können.',
+    'helpDeleteCatalogItem':
+        'Löscht den Katalogeintrag nach Rückfrage aus dem Projekt.',
+    'helpSaveCatalogItem':
+        'Speichert Name, Status, Beschreibung und Zusatzfelder dieses Katalogeintrags.',
+    'helpNewNote':
+        'Erstellt eine neue Notiz, die dem Projekt, einer Szene oder einem Katalogeintrag zugeordnet werden kann.',
+    'helpOpenLinkedScene':
+        'Springt direkt zu der Szene, auf die diese Notiz verweist.',
+    'helpSaveNote':
+        'Speichert Titel, Ziel und Inhalt der aktuellen Notiz lokal.',
+    'helpDeleteNote': 'Löscht die ausgewählte Notiz aus dem Projekt.',
+    'helpNewRelationship':
+        'Legt eine Beziehung zwischen Figuren, Orten, Objekten oder Szenen an.',
+    'helpEditRelationship':
+        'Öffnet die Beziehung, damit Typ, Richtung, Stärke und Beschreibung angepasst werden können.',
+    'helpDeleteRelationship':
+        'Löscht nur diese Beziehung. Die verknüpften Entitäten bleiben erhalten.',
+    'helpSaveRelationship':
+        'Speichert Quelle, Ziel, Typ, Richtung, Stärke und Beschreibung dieser Beziehung.',
+    'helpDeletePermanently':
+        'Bestätigt den Löschvorgang endgültig. Diese Aktion lässt sich nicht automatisch rückgängig machen.',
+    'helpStructureActions':
+        'Öffnet Aktionen für diese Szene: verschieben, Kapitel ändern oder löschen.',
     'activeProvider': 'Aktiver Provider',
     'providerNameFallback': 'Lokaler Provider',
     'modelNameFallback': 'mock-structure-v1',
@@ -842,6 +938,24 @@ final class WritelerCopy {
     'pasteArchiveJson': 'Paste JSON, yWriter XML, or text here',
     'importProject': 'Import project',
     'importComplete': 'Project archive imported',
+    'helpCopyExport':
+        'Copies the current export preview with the selected options to the clipboard.',
+    'helpExportFormat':
+        'Controls which file format is used when the project is exported.',
+    'helpIncludeSceneTitles':
+        'Adds scene titles before the matching text sections in the export.',
+    'helpIncludeMetadata':
+        'Includes planning data such as status, goal, conflict, and outcome in the export.',
+    'helpDownloadExport':
+        'Creates a file from the current project and saves it locally.',
+    'helpCopySyncCheckpoint':
+        'Copies a complete local sync package that can be imported again later.',
+    'helpImportFile':
+        'Loads a file and automatically detects Writeler, yWriter, Scrivener, Markdown, or text.',
+    'helpPasteImport':
+        'Checks pasted content and shows a preview of the detected project before import.',
+    'helpImportProject':
+        'Creates a new local project from the preview, including chapters, scenes, and catalog data.',
     'format': 'Format',
     'includeSceneTitles': 'Include scene titles',
     'includeMetadata': 'Include metadata',
@@ -864,6 +978,80 @@ final class WritelerCopy {
     'apiKeyDeleted': 'API key deleted',
     'saveProviderConfig': 'Save provider',
     'providerConfigSaved': 'Provider configuration saved',
+    'helpDesignSettings':
+        'Changes only the app appearance. Projects and writing content stay untouched.',
+    'helpGlobalProfileSettings':
+        'These options apply app-wide until future project profiles override them.',
+    'helpAiEnabled':
+        'Turns AI features on or off globally. Manuscript text is never changed automatically.',
+    'helpCloudSyncEnabled':
+        'Allows future cloud sync adapters while local work remains available.',
+    'helpNoAiNoCloud':
+        'Disables AI and cloud sync together for a deliberately local work mode.',
+    'helpProviderKind':
+        'Selects the technical interface for AI requests, such as OpenRouter, OpenAI, or Ollama.',
+    'helpProviderEnabled':
+        'Enables or pauses the configured AI provider without deleting saved settings.',
+    'helpProviderName':
+        'A display name that helps you recognize this provider later.',
+    'helpModelName': 'The exact model name sent to the provider.',
+    'helpBaseUrl': 'The provider API address. Presets fill this automatically.',
+    'helpApiKey':
+        'The key is stored locally and used for real provider requests.',
+    'helpDeleteApiKey':
+        'Removes only the locally stored API key. The rest of the provider configuration remains.',
+    'helpSaveProviderConfig':
+        'Saves provider, model, URL, enabled state, and optionally the API key for future AI requests.',
+    'helpAiContext':
+        'The context decides whether AI reasons about the whole project or only about the selected scene.',
+    'helpPromptTemplates':
+        'Fills the instruction with a useful starter prompt. You can edit the text before sending.',
+    'helpSubmitAiPrompt':
+        'Sends the visible instruction with the selected context to the active AI provider and stores the answer as a suggestion.',
+    'helpAiQuickActions':
+        'These actions immediately send specialized idea or review requests to AI.',
+    'helpPromptPreview':
+        'Shows the complete prompt that is actually sent to the language model.',
+    'helpSuggestionActions':
+        'Accept reviews and applies recognized planning fields, note creates a project note, reject deletes the suggestion.',
+    'helpAcceptSuggestion':
+        'Applies recognized structure fields to the scene or marks the suggestion as reviewed.',
+    'helpConvertSuggestion':
+        'Stores the AI answer as a note so it can be reused later.',
+    'helpRejectSuggestion': 'Deletes the suggestion from the open AI list.',
+    'helpNewProject':
+        'Creates a new local writing project. Existing projects stay unchanged.',
+    'helpNewScene':
+        'Creates a new scene in the current project and opens it for editing.',
+    'helpNewChapter': 'Creates a new chapter that scenes can be assigned to.',
+    'helpDeleteChapter':
+        'Deletes the chapter after confirmation. Assigned scenes remain in the project.',
+    'helpNewCatalogItem':
+        'Creates a new character, location, or object in the current catalog.',
+    'helpEditCatalogItem':
+        'Opens the detail view so name, status, and description can be edited.',
+    'helpDeleteCatalogItem':
+        'Deletes the catalog item from the project after confirmation.',
+    'helpSaveCatalogItem':
+        'Saves name, status, description, and extra fields of this catalog item.',
+    'helpNewNote':
+        'Creates a new note that can be assigned to the project, a scene, or a catalog item.',
+    'helpOpenLinkedScene': 'Jumps directly to the scene this note points to.',
+    'helpSaveNote':
+        'Saves title, target, and content of the current note locally.',
+    'helpDeleteNote': 'Deletes the selected note from the project.',
+    'helpNewRelationship':
+        'Creates a relationship between characters, locations, objects, or scenes.',
+    'helpEditRelationship':
+        'Opens the relationship so type, direction, strength, and description can be adjusted.',
+    'helpDeleteRelationship':
+        'Deletes only this relationship. The linked entities remain.',
+    'helpSaveRelationship':
+        'Saves source, target, type, direction, strength, and description of this relationship.',
+    'helpDeletePermanently':
+        'Confirms the deletion permanently. This action cannot be undone automatically.',
+    'helpStructureActions':
+        'Opens actions for this scene: move, change chapter, or delete.',
     'activeProvider': 'Active provider',
     'providerNameFallback': 'Local Provider',
     'modelNameFallback': 'mock-structure-v1',

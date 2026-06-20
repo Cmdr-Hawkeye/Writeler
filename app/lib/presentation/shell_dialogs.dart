@@ -342,10 +342,13 @@ extension _WritelerShellDialogs on _WritelerShellState {
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(copy.t('cancel')),
             ),
-            FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(true),
-              icon: const Icon(Icons.save_outlined),
-              label: Text(copy.t('saveCatalogItem')),
+            _ActionHelp(
+              message: copy.t('helpSaveCatalogItem'),
+              child: FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(true),
+                icon: const Icon(Icons.save_outlined),
+                label: Text(copy.t('saveCatalogItem')),
+              ),
             ),
           ],
         );
@@ -581,10 +584,13 @@ extension _WritelerShellDialogs on _WritelerShellState {
                   onPressed: () => Navigator.of(context).pop(false),
                   child: Text(copy.t('cancel')),
                 ),
-                FilledButton.icon(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  icon: const Icon(Icons.save_outlined),
-                  label: Text(copy.t('saveRelationship')),
+                _ActionHelp(
+                  message: copy.t('helpSaveRelationship'),
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    icon: const Icon(Icons.save_outlined),
+                    label: Text(copy.t('saveRelationship')),
+                  ),
                 ),
               ],
             );
@@ -713,10 +719,13 @@ extension _WritelerShellDialogs on _WritelerShellState {
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(copy.t('cancel')),
             ),
-            FilledButton.tonalIcon(
-              onPressed: () => Navigator.of(context).pop(true),
-              icon: const Icon(Icons.delete_outline),
-              label: Text(copy.t('deletePermanently')),
+            _ActionHelp(
+              message: copy.t('helpDeletePermanently'),
+              child: FilledButton.tonalIcon(
+                onPressed: () => Navigator.of(context).pop(true),
+                icon: const Icon(Icons.delete_outline),
+                label: Text(copy.t('deletePermanently')),
+              ),
             ),
           ],
         );

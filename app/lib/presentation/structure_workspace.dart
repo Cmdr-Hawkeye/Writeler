@@ -110,6 +110,7 @@ final class _SceneBoard extends StatelessWidget {
           title: copy.t('structureCockpit'),
           actionLabel: copy.t('newScene'),
           actionIcon: Icons.add,
+          actionHelp: copy.t('helpNewScene'),
           onAction: onCreateScene,
         ),
         const Divider(height: 1),
@@ -133,10 +134,13 @@ final class _SceneBoard extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
                 if (index == 0) {
-                  return OutlinedButton.icon(
-                    onPressed: onCreateChapter,
-                    icon: const Icon(Icons.create_new_folder_outlined),
-                    label: Text(copy.t('newChapter')),
+                  return _ActionHelp(
+                    message: copy.t('helpNewChapter'),
+                    child: OutlinedButton.icon(
+                      onPressed: onCreateChapter,
+                      icon: const Icon(Icons.create_new_folder_outlined),
+                      label: Text(copy.t('newChapter')),
+                    ),
                   );
                 }
                 final chapter = orderedChapters[index - 1];
@@ -147,6 +151,7 @@ final class _SceneBoard extends StatelessWidget {
                   avatar: const Icon(Icons.folder_outlined, size: 18),
                   label: Text('${chapter.title} - $sceneCount'),
                   deleteIcon: const Icon(Icons.delete_outline, size: 18),
+                  deleteButtonTooltipMessage: copy.t('helpDeleteChapter'),
                   onDeleted: () => onDeleteChapter(chapter),
                 );
               },
@@ -161,10 +166,13 @@ final class _SceneBoard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: OutlinedButton.icon(
-                  onPressed: onCreateChapter,
-                  icon: const Icon(Icons.create_new_folder_outlined),
-                  label: Text(copy.t('newChapter')),
+                child: _ActionHelp(
+                  message: copy.t('helpNewChapter'),
+                  child: OutlinedButton.icon(
+                    onPressed: onCreateChapter,
+                    icon: const Icon(Icons.create_new_folder_outlined),
+                    label: Text(copy.t('newChapter')),
+                  ),
                 ),
               ),
             ),
@@ -868,7 +876,7 @@ final class _StructureEntityDetailTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
       trailing: IconButton(
-        tooltip: copy.t('newRelationship'),
+        tooltip: copy.t('helpNewRelationship'),
         visualDensity: VisualDensity.compact,
         onPressed: onCreateRelationship,
         icon: const Icon(Icons.add_link),
@@ -1005,7 +1013,7 @@ final class _StructureRelationshipSection extends StatelessWidget {
           icon: Icons.device_hub_outlined,
           title: '${copy.t('relationshipMap')} (${relationships.length})',
           trailing: IconButton(
-            tooltip: copy.t('newRelationship'),
+            tooltip: copy.t('helpNewRelationship'),
             visualDensity: VisualDensity.compact,
             onPressed: onCreateRelationship,
             icon: const Icon(Icons.add_link),
@@ -1088,13 +1096,13 @@ final class _RelationshipMiniList extends StatelessWidget {
                         ),
                   ),
                 IconButton(
-                  tooltip: copy.t('editRelationship'),
+                  tooltip: copy.t('helpEditRelationship'),
                   visualDensity: VisualDensity.compact,
                   onPressed: () => onEditRelationship(relationship),
                   icon: const Icon(Icons.edit_outlined),
                 ),
                 IconButton(
-                  tooltip: copy.t('deleteRelationship'),
+                  tooltip: copy.t('helpDeleteRelationship'),
                   visualDensity: VisualDensity.compact,
                   onPressed: () => onDeleteRelationship(relationship),
                   icon: const Icon(Icons.delete_outline),
@@ -1275,57 +1283,66 @@ final class _SceneStructureMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<_SceneStructureAction>(
-      tooltip: copy.t('structureActions'),
-      icon: const Icon(Icons.more_vert),
-      onSelected: (action) {
-        switch (action.kind) {
-          case _SceneStructureActionKind.moveUp:
-            onMoveUp();
-          case _SceneStructureActionKind.moveDown:
-            onMoveDown();
-          case _SceneStructureActionKind.moveToChapter:
-            onMoveToChapter(action.chapterId);
-          case _SceneStructureActionKind.delete:
-            onDelete();
-        }
-      },
-      itemBuilder: (context) {
-        return [
-          PopupMenuItem(
-            value:
-                const _SceneStructureAction(_SceneStructureActionKind.moveUp),
-            child: Text(copy.t('moveSceneUp')),
-          ),
-          PopupMenuItem(
-            value:
-                const _SceneStructureAction(_SceneStructureActionKind.moveDown),
-            child: Text(copy.t('moveSceneDown')),
-          ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: const _SceneStructureAction(
-              _SceneStructureActionKind.moveToChapter,
-              chapterId: null,
-            ),
-            child: Text(copy.t('moveToNoChapter')),
-          ),
-          for (final chapter in chapters)
-            PopupMenuItem(
-              value: _SceneStructureAction(
-                _SceneStructureActionKind.moveToChapter,
-                chapterId: chapter.id,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _HelpTooltip(message: copy.t('helpStructureActions')),
+        PopupMenuButton<_SceneStructureAction>(
+          tooltip: copy.t('helpStructureActions'),
+          icon: const Icon(Icons.more_vert),
+          onSelected: (action) {
+            switch (action.kind) {
+              case _SceneStructureActionKind.moveUp:
+                onMoveUp();
+              case _SceneStructureActionKind.moveDown:
+                onMoveDown();
+              case _SceneStructureActionKind.moveToChapter:
+                onMoveToChapter(action.chapterId);
+              case _SceneStructureActionKind.delete:
+                onDelete();
+            }
+          },
+          itemBuilder: (context) {
+            return [
+              PopupMenuItem(
+                value: const _SceneStructureAction(
+                  _SceneStructureActionKind.moveUp,
+                ),
+                child: Text(copy.t('moveSceneUp')),
               ),
-              child: Text('${copy.t('moveToChapter')}: ${chapter.title}'),
-            ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value:
-                const _SceneStructureAction(_SceneStructureActionKind.delete),
-            child: Text(copy.t('deleteScene')),
-          ),
-        ];
-      },
+              PopupMenuItem(
+                value: const _SceneStructureAction(
+                  _SceneStructureActionKind.moveDown,
+                ),
+                child: Text(copy.t('moveSceneDown')),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: const _SceneStructureAction(
+                  _SceneStructureActionKind.moveToChapter,
+                  chapterId: null,
+                ),
+                child: Text(copy.t('moveToNoChapter')),
+              ),
+              for (final chapter in chapters)
+                PopupMenuItem(
+                  value: _SceneStructureAction(
+                    _SceneStructureActionKind.moveToChapter,
+                    chapterId: chapter.id,
+                  ),
+                  child: Text('${copy.t('moveToChapter')}: ${chapter.title}'),
+                ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: const _SceneStructureAction(
+                  _SceneStructureActionKind.delete,
+                ),
+                child: Text(copy.t('deleteScene')),
+              ),
+            ];
+          },
+        ),
+      ],
     );
   }
 }

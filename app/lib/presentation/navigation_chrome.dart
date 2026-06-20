@@ -442,10 +442,13 @@ final class _StudioTopBar extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           if (showCreateProject)
-            FilledButton.icon(
-              onPressed: onCreateProject,
-              icon: const Icon(Icons.add),
-              label: Text(copy.t('newProject')),
+            _ActionHelp(
+              message: copy.t('helpNewProject'),
+              child: FilledButton.icon(
+                onPressed: onCreateProject,
+                icon: const Icon(Icons.add),
+                label: Text(copy.t('newProject')),
+              ),
             ),
         ],
       ),

@@ -7,12 +7,14 @@ final class _WorkspaceHeader extends StatelessWidget {
     required this.title,
     this.actionLabel,
     this.actionIcon,
+    this.actionHelp,
     this.onAction,
   });
 
   final String title;
   final String? actionLabel;
   final IconData? actionIcon;
+  final String? actionHelp;
   final VoidCallback? onAction;
 
   @override
@@ -34,6 +36,10 @@ final class _WorkspaceHeader extends StatelessWidget {
         child: Row(
           children: [
             Expanded(child: Semantics(label: title, header: true)),
+            if (actionHelp != null) ...[
+              _HelpTooltip(message: actionHelp!),
+              const SizedBox(width: 8),
+            ],
             FilledButton.icon(
               onPressed: onAction,
               icon: Icon(actionIcon),
@@ -42,6 +48,78 @@ final class _WorkspaceHeader extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+final class _HelpTooltip extends StatelessWidget {
+  const _HelpTooltip({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: message,
+      preferBelow: false,
+      showDuration: const Duration(seconds: 8),
+      child: Semantics(
+        button: true,
+        label: message,
+        child: Icon(
+          Icons.help_outline,
+          size: 18,
+          color: color.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+final class _HelpedLabel extends StatelessWidget {
+  const _HelpedLabel({
+    required this.label,
+    required this.help,
+    this.style,
+  });
+
+  final String label;
+  final String help;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Expanded(child: Text(label, style: style)),
+        const SizedBox(width: 6),
+        _HelpTooltip(message: help),
+      ],
+    );
+  }
+}
+
+final class _ActionHelp extends StatelessWidget {
+  const _ActionHelp({
+    required this.child,
+    required this.message,
+  });
+
+  final Widget child;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        child,
+        _HelpTooltip(message: message),
+      ],
     );
   }
 }

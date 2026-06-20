@@ -29,6 +29,7 @@ final class _CatalogWorkspace extends StatelessWidget {
           title: copy.t(_catalogTitleKey(type)),
           actionLabel: copy.t(_newCatalogKey(type)),
           actionIcon: Icons.add,
+          actionHelp: copy.t('helpNewCatalogItem'),
           onAction: onCreateItem,
         ),
         const Divider(height: 1),
@@ -63,12 +64,12 @@ final class _CatalogWorkspace extends StatelessWidget {
                           Text(_draftStatusLabel(
                               item.status, copy.languageCode)),
                           IconButton(
-                            tooltip: copy.t('editCatalogItem'),
+                            tooltip: copy.t('helpEditCatalogItem'),
                             onPressed: () => onEditItem(item),
                             icon: const Icon(Icons.edit_outlined),
                           ),
                           IconButton(
-                            tooltip: copy.t('deleteCatalogItem'),
+                            tooltip: copy.t('helpDeleteCatalogItem'),
                             onPressed: () => onDeleteItem(item),
                             icon: const Icon(Icons.delete_outline),
                           ),
@@ -417,6 +418,7 @@ final class _NotesCockpitState extends State<_NotesCockpit> {
           title: widget.copy.t('notesCockpit'),
           actionLabel: widget.copy.t('newNote'),
           actionIcon: Icons.add,
+          actionHelp: widget.copy.t('helpNewNote'),
           onAction: _startNewNote,
         ),
         const Divider(height: 1),
@@ -728,10 +730,13 @@ final class _NoteEditorPane extends StatelessWidget {
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: onOpenScene,
-                icon: const Icon(Icons.open_in_new),
-                label: Text(copy.t('openLinkedScene')),
+              child: _ActionHelp(
+                message: copy.t('helpOpenLinkedScene'),
+                child: TextButton.icon(
+                  onPressed: onOpenScene,
+                  icon: const Icon(Icons.open_in_new),
+                  label: Text(copy.t('openLinkedScene')),
+                ),
               ),
             ),
           ],
@@ -753,17 +758,23 @@ final class _NoteEditorPane extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              FilledButton.icon(
-                onPressed: onSave,
-                icon: const Icon(Icons.save_outlined),
-                label: Text(copy.t('saveNote')),
+              _ActionHelp(
+                message: copy.t('helpSaveNote'),
+                child: FilledButton.icon(
+                  onPressed: onSave,
+                  icon: const Icon(Icons.save_outlined),
+                  label: Text(copy.t('saveNote')),
+                ),
               ),
               const SizedBox(width: 12),
               if (onDelete != null)
-                OutlinedButton.icon(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline),
-                  label: Text(copy.t('delete')),
+                _ActionHelp(
+                  message: copy.t('helpDeleteNote'),
+                  child: OutlinedButton.icon(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline),
+                    label: Text(copy.t('delete')),
+                  ),
                 ),
               const Spacer(),
               if (note != null)

@@ -93,6 +93,7 @@ final class _ExportCenter extends StatelessWidget {
           title: copy.t('exports'),
           actionLabel: copy.t('copyExport'),
           actionIcon: Icons.copy,
+          actionHelp: copy.t('helpCopyExport'),
           onAction: project == null ? null : onCopyExport,
         ),
         const Divider(height: 1),
@@ -109,6 +110,14 @@ final class _ExportCenter extends StatelessWidget {
                       isExpanded: true,
                       decoration: InputDecoration(
                         labelText: copy.t('format'),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: _HelpTooltip(
+                            message: copy.t('helpExportFormat'),
+                          ),
+                        ),
+                        suffixIconConstraints:
+                            const BoxConstraints(minWidth: 42),
                         border: const OutlineInputBorder(),
                       ),
                       items: [
@@ -126,19 +135,28 @@ final class _ExportCenter extends StatelessWidget {
                     const SizedBox(height: 12),
                     SwitchListTile(
                       value: includeSceneTitles,
-                      title: Text(copy.t('includeSceneTitles')),
+                      title: _HelpedLabel(
+                        label: copy.t('includeSceneTitles'),
+                        help: copy.t('helpIncludeSceneTitles'),
+                      ),
                       onChanged: onIncludeSceneTitlesChanged,
                     ),
                     SwitchListTile(
                       value: includeMetadata,
-                      title: Text(copy.t('includeMetadata')),
+                      title: _HelpedLabel(
+                        label: copy.t('includeMetadata'),
+                        help: copy.t('helpIncludeMetadata'),
+                      ),
                       onChanged: onIncludeMetadataChanged,
                     ),
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: project == null ? null : onDownloadExport,
-                      icon: const Icon(Icons.download_outlined),
-                      label: Text(copy.t('downloadExport')),
+                    _ActionHelp(
+                      message: copy.t('helpDownloadExport'),
+                      child: OutlinedButton.icon(
+                        onPressed: project == null ? null : onDownloadExport,
+                        icon: const Icon(Icons.download_outlined),
+                        label: Text(copy.t('downloadExport')),
+                      ),
                     ),
                     const Divider(height: 28),
                     Text(copy.t('syncCheckpoint'),
@@ -156,10 +174,14 @@ final class _ExportCenter extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: project == null ? null : onCopySyncCheckpoint,
-                      icon: const Icon(Icons.sync_outlined),
-                      label: Text(copy.t('copySyncCheckpoint')),
+                    _ActionHelp(
+                      message: copy.t('helpCopySyncCheckpoint'),
+                      child: FilledButton.icon(
+                        onPressed:
+                            project == null ? null : onCopySyncCheckpoint,
+                        icon: const Icon(Icons.sync_outlined),
+                        label: Text(copy.t('copySyncCheckpoint')),
+                      ),
                     ),
                     const Divider(height: 28),
                     Text(copy.t('importArchive'),
@@ -182,6 +204,14 @@ final class _ExportCenter extends StatelessWidget {
                       maxLines: 8,
                       decoration: InputDecoration(
                         labelText: copy.t('pasteArchiveJson'),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: _HelpTooltip(
+                            message: copy.t('helpPasteImport'),
+                          ),
+                        ),
+                        suffixIconConstraints:
+                            const BoxConstraints(minWidth: 42),
                         border: const OutlineInputBorder(),
                         alignLabelWithHint: true,
                       ),
@@ -203,10 +233,14 @@ final class _ExportCenter extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: importPreview == null ? null : onImportArchive,
-                      icon: const Icon(Icons.upload_file_outlined),
-                      label: Text(copy.t('importProject')),
+                    _ActionHelp(
+                      message: copy.t('helpImportProject'),
+                      child: FilledButton.icon(
+                        onPressed:
+                            importPreview == null ? null : onImportArchive,
+                        icon: const Icon(Icons.upload_file_outlined),
+                        label: Text(copy.t('importProject')),
+                      ),
                     ),
                   ],
                 ),
@@ -388,6 +422,12 @@ final class _ImportDropZone extends StatelessWidget {
               icon: const Icon(Icons.folder_open_outlined),
               label: Text(copy.t('chooseImportFile')),
             ),
+            const SizedBox(height: 8),
+            _HelpedLabel(
+              label: copy.t('importSourceType'),
+              help: copy.t('helpImportFile'),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
             if (sourceName != null || preview != null) ...[
               const SizedBox(height: 10),
               Text(
@@ -540,6 +580,7 @@ final class _SettingsWorkspace extends StatelessWidget {
         const SizedBox(height: 16),
         _SettingsSection(
           title: copy.t('designSettings'),
+          help: copy.t('helpDesignSettings'),
           body: copy.t('designSettingsBody'),
           child: _DesignThemeSelector(
             copy: copy,
@@ -549,12 +590,16 @@ final class _SettingsWorkspace extends StatelessWidget {
         ),
         _SettingsSection(
           title: copy.t('globalProfileSettings'),
+          help: copy.t('helpGlobalProfileSettings'),
           body: copy.t('globalProfileSettingsBody'),
           child: Column(
             children: [
               SwitchListTile(
                 value: aiEnabled,
-                title: Text(copy.t('aiEnabled')),
+                title: _HelpedLabel(
+                  label: copy.t('aiEnabled'),
+                  help: copy.t('helpAiEnabled'),
+                ),
                 subtitle: Text(copy.t('globalAiEnabledHint')),
                 onChanged: (value) => onSaveProfileSettings(
                   aiEnabled: value,
@@ -564,7 +609,10 @@ final class _SettingsWorkspace extends StatelessWidget {
               ),
               SwitchListTile(
                 value: cloudSyncEnabled,
-                title: Text(copy.t('cloudSyncEnabled')),
+                title: _HelpedLabel(
+                  label: copy.t('cloudSyncEnabled'),
+                  help: copy.t('helpCloudSyncEnabled'),
+                ),
                 subtitle: Text(copy.t('globalCloudSyncHint')),
                 onChanged: noAiNoCloud
                     ? null
@@ -576,7 +624,10 @@ final class _SettingsWorkspace extends StatelessWidget {
               ),
               SwitchListTile(
                 value: noAiNoCloud,
-                title: Text(copy.t('noAiNoCloud')),
+                title: _HelpedLabel(
+                  label: copy.t('noAiNoCloud'),
+                  help: copy.t('helpNoAiNoCloud'),
+                ),
                 subtitle: Text(copy.t('globalNoAiNoCloudHint')),
                 onChanged: (value) => onSaveProfileSettings(
                   aiEnabled: value ? false : aiEnabled,
@@ -599,6 +650,7 @@ final class _SettingsWorkspace extends StatelessWidget {
         ),
         _SettingsSection(
           title: copy.t('providerConfig'),
+          help: copy.t('helpProviderKind'),
           body: copy.t('providerSettingsBody'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,6 +659,11 @@ final class _SettingsWorkspace extends StatelessWidget {
                 initialValue: providerKind,
                 decoration: InputDecoration(
                   labelText: copy.t('providerKind'),
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _HelpTooltip(message: copy.t('helpProviderKind')),
+                  ),
+                  suffixIconConstraints: const BoxConstraints(minWidth: 42),
                   border: const OutlineInputBorder(),
                 ),
                 items: [
@@ -623,7 +680,10 @@ final class _SettingsWorkspace extends StatelessWidget {
               const SizedBox(height: 12),
               SwitchListTile(
                 value: providerEnabled,
-                title: Text(copy.t('providerEnabled')),
+                title: _HelpedLabel(
+                  label: copy.t('providerEnabled'),
+                  help: copy.t('helpProviderEnabled'),
+                ),
                 onChanged: onProviderEnabledChanged,
               ),
               const SizedBox(height: 12),
@@ -631,6 +691,11 @@ final class _SettingsWorkspace extends StatelessWidget {
                 controller: providerNameController,
                 decoration: InputDecoration(
                   labelText: copy.t('providerName'),
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _HelpTooltip(message: copy.t('helpProviderName')),
+                  ),
+                  suffixIconConstraints: const BoxConstraints(minWidth: 42),
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -639,6 +704,11 @@ final class _SettingsWorkspace extends StatelessWidget {
                 controller: modelNameController,
                 decoration: InputDecoration(
                   labelText: copy.t('modelName'),
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _HelpTooltip(message: copy.t('helpModelName')),
+                  ),
+                  suffixIconConstraints: const BoxConstraints(minWidth: 42),
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -647,6 +717,11 @@ final class _SettingsWorkspace extends StatelessWidget {
                 controller: baseUrlController,
                 decoration: InputDecoration(
                   labelText: copy.t('baseUrl'),
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _HelpTooltip(message: copy.t('helpBaseUrl')),
+                  ),
+                  suffixIconConstraints: const BoxConstraints(minWidth: 42),
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -656,6 +731,11 @@ final class _SettingsWorkspace extends StatelessWidget {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: copy.t('apiKeyRef'),
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _HelpTooltip(message: copy.t('helpApiKey')),
+                  ),
+                  suffixIconConstraints: const BoxConstraints(minWidth: 42),
                   helperText: providerHasStoredApiKey
                       ? copy.t('apiKeyStoredHint')
                       : copy.t('apiKeyWebWarning'),
@@ -666,20 +746,26 @@ final class _SettingsWorkspace extends StatelessWidget {
                 const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: OutlinedButton.icon(
-                    onPressed: onDeleteProviderApiKey,
-                    icon: const Icon(Icons.delete_outline),
-                    label: Text(copy.t('deleteApiKey')),
+                  child: _ActionHelp(
+                    message: copy.t('helpDeleteApiKey'),
+                    child: OutlinedButton.icon(
+                      onPressed: onDeleteProviderApiKey,
+                      icon: const Icon(Icons.delete_outline),
+                      label: Text(copy.t('deleteApiKey')),
+                    ),
                   ),
                 ),
               ],
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerLeft,
-                child: FilledButton.icon(
-                  onPressed: onSaveProviderConfig,
-                  icon: const Icon(Icons.save_outlined),
-                  label: Text(copy.t('saveProviderConfig')),
+                child: _ActionHelp(
+                  message: copy.t('helpSaveProviderConfig'),
+                  child: FilledButton.icon(
+                    onPressed: onSaveProviderConfig,
+                    icon: const Icon(Icons.save_outlined),
+                    label: Text(copy.t('saveProviderConfig')),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -702,11 +788,13 @@ final class _SettingsSection extends StatelessWidget {
     required this.title,
     required this.body,
     required this.child,
+    this.help,
   });
 
   final String title;
   final String body;
   final Widget child;
+  final String? help;
 
   @override
   Widget build(BuildContext context) {
@@ -724,7 +812,13 @@ final class _SettingsSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              help == null
+                  ? Text(title, style: Theme.of(context).textTheme.titleMedium)
+                  : _HelpedLabel(
+                      label: title,
+                      help: help!,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
               const SizedBox(height: 4),
               Text(
                 body,

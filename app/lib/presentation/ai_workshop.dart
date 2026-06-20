@@ -361,6 +361,8 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
+                const SizedBox(width: 8),
+                _HelpTooltip(message: widget.copy.t('helpAiContext')),
               ],
             ),
             const SizedBox(height: 10),
@@ -379,8 +381,9 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
               config: widget.activeProviderConfig,
             ),
             const SizedBox(height: 14),
-            Text(
-              widget.copy.t('promptTemplates'),
+            _HelpedLabel(
+              label: widget.copy.t('promptTemplates'),
+              help: widget.copy.t('helpPromptTemplates'),
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
@@ -425,6 +428,13 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                   decoration: InputDecoration(
                     labelText: widget.copy.t('aiPrompt'),
                     helperText: widget.copy.t('aiPromptSubmitHint'),
+                    suffixIcon: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _HelpTooltip(
+                        message: widget.copy.t('helpSubmitAiPrompt'),
+                      ),
+                    ),
+                    suffixIconConstraints: const BoxConstraints(minWidth: 42),
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -435,12 +445,15 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
               spacing: 12,
               runSpacing: 12,
               children: [
-                FilledButton.icon(
-                  onPressed: widget.canRequest && !widget.isRequesting
-                      ? _submitCurrentTask
-                      : null,
-                  icon: const Icon(Icons.send_outlined),
-                  label: Text(widget.copy.t('submitAiPrompt')),
+                _ActionHelp(
+                  message: widget.copy.t('helpSubmitAiPrompt'),
+                  child: FilledButton.icon(
+                    onPressed: widget.canRequest && !widget.isRequesting
+                        ? _submitCurrentTask
+                        : null,
+                    icon: const Icon(Icons.send_outlined),
+                    label: Text(widget.copy.t('submitAiPrompt')),
+                  ),
                 ),
                 for (final action in primaryActions)
                   OutlinedButton.icon(
@@ -468,6 +481,7 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
                   ],
                   child: _AiMenuAnchor(copy: widget.copy),
                 ),
+                _HelpTooltip(message: widget.copy.t('helpAiQuickActions')),
               ],
             ),
             const SizedBox(height: 12),
@@ -637,7 +651,10 @@ final class _LivePromptPreview extends StatelessWidget {
       color: Colors.transparent,
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
-        title: Text(copy.t('promptPreview')),
+        title: _HelpedLabel(
+          label: copy.t('promptPreview'),
+          help: copy.t('helpPromptPreview'),
+        ),
         subtitle: Text(_aiTaskLabel(task.name, copy)),
         childrenPadding: const EdgeInsets.only(bottom: 10),
         children: [
@@ -994,18 +1011,20 @@ final class _AISuggestionTile extends StatelessWidget {
                     ),
               ),
               const Spacer(),
+              _HelpTooltip(message: copy.t('helpSuggestionActions')),
+              const SizedBox(width: 6),
               IconButton(
-                tooltip: copy.t('accept'),
+                tooltip: copy.t('helpAcceptSuggestion'),
                 onPressed: () => onAcceptSuggestion(suggestion),
                 icon: const Icon(Icons.check),
               ),
               IconButton(
-                tooltip: copy.t('convertToNote'),
+                tooltip: copy.t('helpConvertSuggestion'),
                 onPressed: () => onConvertSuggestion(suggestion),
                 icon: const Icon(Icons.sticky_note_2_outlined),
               ),
               IconButton(
-                tooltip: copy.t('reject'),
+                tooltip: copy.t('helpRejectSuggestion'),
                 onPressed: () => onRejectSuggestion(suggestion),
                 icon: const Icon(Icons.close),
               ),
