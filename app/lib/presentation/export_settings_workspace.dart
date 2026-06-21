@@ -11,9 +11,6 @@ final class _ExportCenter extends StatelessWidget {
     required this.notes,
     required this.catalogItems,
     required this.relationships,
-    required this.format,
-    required this.includeSceneTitles,
-    required this.includeMetadata,
     required this.exporter,
     required this.importController,
     required this.importPreview,
@@ -22,10 +19,6 @@ final class _ExportCenter extends StatelessWidget {
     required this.isImportDragging,
     required this.lastSyncCheckpoint,
     required this.syncImportPreview,
-    required this.onFormatChanged,
-    required this.onIncludeSceneTitlesChanged,
-    required this.onIncludeMetadataChanged,
-    required this.onCopyExport,
     required this.onDownloadExport,
     required this.onCopySyncCheckpoint,
     required this.onImportSourceChanged,
@@ -42,9 +35,6 @@ final class _ExportCenter extends StatelessWidget {
   final List<ProjectNote> notes;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
-  final ExportFormat format;
-  final bool includeSceneTitles;
-  final bool includeMetadata;
   final ProjectExporter exporter;
   final TextEditingController importController;
   final ProjectArchivePreview? importPreview;
@@ -53,10 +43,6 @@ final class _ExportCenter extends StatelessWidget {
   final bool isImportDragging;
   final SyncCheckpoint? lastSyncCheckpoint;
   final SyncEnvelopePreview? syncImportPreview;
-  final ValueChanged<ExportFormat> onFormatChanged;
-  final ValueChanged<bool> onIncludeSceneTitlesChanged;
-  final ValueChanged<bool> onIncludeMetadataChanged;
-  final VoidCallback onCopyExport;
   final VoidCallback onDownloadExport;
   final VoidCallback onCopySyncCheckpoint;
   final VoidCallback onImportSourceChanged;
@@ -81,9 +67,9 @@ final class _ExportCenter extends StatelessWidget {
               id: 'preview',
               projectId: project.id,
               name: copy.t('exportPreview'),
-              format: format,
-              includeMetadata: includeMetadata,
-              includeSceneTitles: includeSceneTitles,
+              format: ExportFormat.json,
+              includeMetadata: true,
+              includeSceneTitles: true,
             ),
           );
 
@@ -91,10 +77,6 @@ final class _ExportCenter extends StatelessWidget {
       children: [
         _WorkspaceHeader(
           title: copy.t('exports'),
-          actionLabel: copy.t('copyExport'),
-          actionIcon: Icons.copy,
-          actionHelp: copy.t('helpCopyExport'),
-          onAction: project == null ? null : onCopyExport,
         ),
         const Divider(height: 1),
         Expanded(
@@ -105,54 +87,14 @@ final class _ExportCenter extends StatelessWidget {
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
-                    DropdownButtonFormField<ExportFormat>(
-                      initialValue: format,
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        labelText: copy.t('format'),
-                        suffixIcon: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: _HelpTooltip(
-                            message: copy.t('helpExportFormat'),
-                          ),
-                        ),
-                        suffixIconConstraints:
-                            const BoxConstraints(minWidth: 42),
-                        border: const OutlineInputBorder(),
-                      ),
-                      items: [
-                        for (final item in ExportFormat.values)
-                          DropdownMenuItem(
-                            value: item,
-                            child: Text(
-                                _exportFormatLabel(item, copy.languageCode)),
-                          ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) onFormatChanged(value);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      value: includeSceneTitles,
-                      title: _HelpedLabel(
-                        label: copy.t('includeSceneTitles'),
-                        help: copy.t('helpIncludeSceneTitles'),
-                      ),
-                      onChanged: onIncludeSceneTitlesChanged,
-                    ),
-                    SwitchListTile(
-                      value: includeMetadata,
-                      title: _HelpedLabel(
-                        label: copy.t('includeMetadata'),
-                        help: copy.t('helpIncludeMetadata'),
-                      ),
-                      onChanged: onIncludeMetadataChanged,
+                    Text(
+                      copy.t('archiveExportBody'),
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 12),
                     _ActionHelp(
                       message: copy.t('helpDownloadExport'),
-                      child: OutlinedButton.icon(
+                      child: FilledButton.icon(
                         onPressed: project == null ? null : onDownloadExport,
                         icon: const Icon(Icons.download_outlined),
                         label: Text(copy.t('downloadExport')),
@@ -262,6 +204,163 @@ final class _ExportCenter extends StatelessWidget {
     );
   }
 }
+
+final class _SelfPublishingCenter extends StatelessWidget {
+  const _SelfPublishingCenter({
+    required this.copy,
+    required this.project,
+    required this.chapters,
+    required this.scenes,
+    required this.notes,
+    required this.catalogItems,
+    required this.relationships,
+    required this.format,
+    required this.includeSceneTitles,
+    required this.includeMetadata,
+    required this.exporter,
+    required this.onFormatChanged,
+    required this.onIncludeSceneTitlesChanged,
+    required this.onIncludeMetadataChanged,
+    required this.onDownload,
+  });
+
+  final WritelerCopy copy;
+  final Project? project;
+  final List<Chapter> chapters;
+  final List<Scene> scenes;
+  final List<ProjectNote> notes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final ExportFormat format;
+  final bool includeSceneTitles;
+  final bool includeMetadata;
+  final ProjectExporter exporter;
+  final ValueChanged<ExportFormat> onFormatChanged;
+  final ValueChanged<bool> onIncludeSceneTitlesChanged;
+  final ValueChanged<bool> onIncludeMetadataChanged;
+  final VoidCallback onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    final project = this.project;
+    final preview = project == null
+        ? ''
+        : exporter.exportProject(
+            project: project,
+            chapters: chapters,
+            scenes: scenes,
+            catalogItems: catalogItems,
+            relationships: relationships,
+            notes: notes,
+            profile: ExportProfile(
+              id: 'publishing-preview',
+              projectId: project.id,
+              name: copy.t('selfPublishing'),
+              format: format,
+              includeMetadata: includeMetadata,
+              includeSceneTitles: includeSceneTitles,
+            ),
+          );
+
+    return Column(
+      children: [
+        const Divider(height: 1),
+        Expanded(
+          child: Row(
+            children: [
+              SizedBox(
+                width: 300,
+                child: ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    Text(
+                      copy.t('selfPublishingBody'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<ExportFormat>(
+                      initialValue: format,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: copy.t('publishingFormat'),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: _HelpTooltip(
+                            message: copy.t('helpPublishingFormat'),
+                          ),
+                        ),
+                        suffixIconConstraints:
+                            const BoxConstraints(minWidth: 42),
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final item in _publishingFormats)
+                          DropdownMenuItem(
+                            value: item,
+                            child: Text(
+                                _exportFormatLabel(item, copy.languageCode)),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) onFormatChanged(value);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      value: includeSceneTitles,
+                      title: _HelpedLabel(
+                        label: copy.t('includeSceneTitles'),
+                        help: copy.t('helpIncludeSceneTitles'),
+                      ),
+                      onChanged: onIncludeSceneTitlesChanged,
+                    ),
+                    SwitchListTile(
+                      value: includeMetadata,
+                      title: _HelpedLabel(
+                        label: copy.t('includePublishingMetadata'),
+                        help: copy.t('helpIncludePublishingMetadata'),
+                      ),
+                      onChanged: onIncludeMetadataChanged,
+                    ),
+                    const SizedBox(height: 12),
+                    _ActionHelp(
+                      message: copy.t('helpDownloadManuscript'),
+                      child: FilledButton.icon(
+                        onPressed: project == null ? null : onDownload,
+                        icon: const Icon(Icons.download_outlined),
+                        label: Text(copy.t('downloadManuscript')),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: SelectableText(
+                    preview.isEmpty ? copy.t('nothingToExport') : preview,
+                    style: const TextStyle(fontFamily: 'monospace'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+const _publishingFormats = [
+  ExportFormat.pdf,
+  ExportFormat.docx,
+  ExportFormat.epub,
+  ExportFormat.plainText,
+  ExportFormat.markdown,
+  ExportFormat.html,
+  ExportFormat.outline,
+];
 
 final class _SyncStatusPanel extends StatelessWidget {
   const _SyncStatusPanel({

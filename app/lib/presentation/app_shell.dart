@@ -107,9 +107,9 @@ final class _WritelerShellState extends State<WritelerShell> {
   String? _selectedSceneChapterId;
   DraftStatus _selectedSceneStatus = DraftStatus.planned;
   int _selectedRailIndex = 1;
-  ExportFormat _selectedExportFormat = ExportFormat.markdown;
+  ExportFormat _selectedPublishingFormat = ExportFormat.pdf;
   bool _includeSceneTitles = true;
-  bool _includeExportMetadata = false;
+  bool _includePublishingMetadata = false;
   bool _isRequestingAi = false;
   String? _lastAiError;
   ProjectArchivePreview? _importPreview;
@@ -204,6 +204,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       icon: Icons.ios_share_outlined,
       selectedIcon: Icons.ios_share,
       labelBuilder: (copy) => copy.t('exports'),
+      group: _WorkspaceNavGroup.output,
+    ),
+    _WorkspaceNavItem(
+      index: 12,
+      icon: Icons.auto_stories_outlined,
+      selectedIcon: Icons.auto_stories,
+      labelBuilder: (copy) => copy.t('selfPublishing'),
       group: _WorkspaceNavGroup.output,
     ),
     _WorkspaceNavItem(
@@ -1070,43 +1077,6 @@ final class _WritelerShellState extends State<WritelerShell> {
     return note;
   }
 
-  Future<void> _copyExport(WritelerCopy copy) async {
-    final project = _selectedProject;
-    if (project == null) return;
-
-    final artifact = _projectExporter.exportArtifact(
-      project: project,
-      chapters: _chapters,
-      scenes: _scenes,
-      catalogItems: _catalogItems,
-      relationships: _relationships,
-      notes: _notes,
-      profile: ExportProfile(
-        id: 'ui-preview',
-        projectId: project.id,
-        name: copy.t('exportPreview'),
-        format: _selectedExportFormat,
-        includeMetadata: _includeExportMetadata,
-        includeSceneTitles: _includeSceneTitles,
-      ),
-    );
-    await Clipboard.setData(ClipboardData(text: artifact.clipboardText));
-    if (!mounted) return;
-    await _recordProjectMetric(
-      eventType: 'export.copied',
-      value: artifact.bytes.length,
-      metadata: {
-        'format': _selectedExportFormat.name,
-        'fileName': artifact.fileName,
-        'mimeType': artifact.mimeType,
-      },
-    );
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(copy.t('exportCopied'))),
-    );
-  }
-
   Future<void> _downloadExport(WritelerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
@@ -1122,21 +1092,50 @@ final class _WritelerShellState extends State<WritelerShell> {
         id: 'ui-download',
         projectId: project.id,
         name: copy.t('exportPreview'),
-        format: _selectedExportFormat,
-        includeMetadata: _includeExportMetadata,
+        format: ExportFormat.json,
+        includeMetadata: true,
+        includeSceneTitles: true,
+      ),
+    );
+    await _downloadArtifact(copy, artifact, eventPrefix: 'export');
+  }
+
+  Future<void> _downloadPublishing(WritelerCopy copy) async {
+    final project = _selectedProject;
+    if (project == null) return;
+
+    final artifact = _projectExporter.exportArtifact(
+      project: project,
+      chapters: _chapters,
+      scenes: _scenes,
+      catalogItems: _catalogItems,
+      relationships: _relationships,
+      notes: _notes,
+      profile: ExportProfile(
+        id: 'ui-publishing',
+        projectId: project.id,
+        name: copy.t('selfPublishing'),
+        format: _selectedPublishingFormat,
+        includeMetadata: _includePublishingMetadata,
         includeSceneTitles: _includeSceneTitles,
       ),
     );
+    await _downloadArtifact(copy, artifact, eventPrefix: 'publishing');
+  }
+
+  Future<void> _downloadArtifact(
+    WritelerCopy copy,
+    ExportArtifact artifact, {
+    required String eventPrefix,
+  }) async {
     final downloaded = await downloadExportArtifact(artifact);
-    if (!downloaded) {
-      await Clipboard.setData(ClipboardData(text: artifact.clipboardText));
-    }
     if (!mounted) return;
     await _recordProjectMetric(
-      eventType: downloaded ? 'export.downloaded' : 'export.copied',
+      eventType:
+          downloaded ? '$eventPrefix.downloaded' : '$eventPrefix.cancelled',
       value: artifact.bytes.length,
       metadata: {
-        'format': _selectedExportFormat.name,
+        'format': artifact.fileName.split('.').last,
         'fileName': artifact.fileName,
         'mimeType': artifact.mimeType,
       },
@@ -1144,8 +1143,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content:
-              Text(copy.t(downloaded ? 'exportDownloaded' : 'exportCopied'))),
+          content: Text(
+              copy.t(downloaded ? 'exportDownloaded' : 'exportCancelled'))),
     );
   }
 
@@ -1431,6 +1430,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         8 => copy.t('aiWorkshop'),
         9 => copy.t('exports'),
         11 => copy.t('protocols'),
+        12 => copy.t('selfPublishing'),
         _ => copy.t('settings'),
       };
 
@@ -1446,6 +1446,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         8 => Icons.psychology_alt_outlined,
         9 => Icons.ios_share_outlined,
         11 => Icons.receipt_long_outlined,
+        12 => Icons.auto_stories_outlined,
         _ => Icons.tune_outlined,
       };
 
@@ -1707,9 +1708,6 @@ final class _WritelerShellState extends State<WritelerShell> {
           chapters: _chapters,
           scenes: _scenes,
           notes: _notes,
-          format: _selectedExportFormat,
-          includeSceneTitles: _includeSceneTitles,
-          includeMetadata: _includeExportMetadata,
           exporter: _projectExporter,
           catalogItems: _catalogItems,
           relationships: _relationships,
@@ -1720,13 +1718,6 @@ final class _WritelerShellState extends State<WritelerShell> {
           isImportDragging: _isImportDragging,
           lastSyncCheckpoint: _lastSyncCheckpoint,
           syncImportPreview: _syncImportPreview,
-          onFormatChanged: (format) =>
-              setState(() => _selectedExportFormat = format),
-          onIncludeSceneTitlesChanged: (value) =>
-              setState(() => _includeSceneTitles = value),
-          onIncludeMetadataChanged: (value) =>
-              setState(() => _includeExportMetadata = value),
-          onCopyExport: () => _copyExport(copy),
           onDownloadExport: () => _downloadExport(copy),
           onCopySyncCheckpoint: () => _copySyncCheckpoint(copy),
           onImportSourceChanged: _refreshPastedImportPreview,
@@ -1735,6 +1726,26 @@ final class _WritelerShellState extends State<WritelerShell> {
           onImportDragChanged: (value) =>
               setState(() => _isImportDragging = value),
           onImportArchive: () => _importArchive(copy),
+        ),
+      12 => _SelfPublishingCenter(
+          copy: copy,
+          project: _selectedProject,
+          chapters: _chapters,
+          scenes: _scenes,
+          notes: _notes,
+          catalogItems: _catalogItems,
+          relationships: _relationships,
+          format: _selectedPublishingFormat,
+          includeSceneTitles: _includeSceneTitles,
+          includeMetadata: _includePublishingMetadata,
+          exporter: _projectExporter,
+          onFormatChanged: (format) =>
+              setState(() => _selectedPublishingFormat = format),
+          onIncludeSceneTitlesChanged: (value) =>
+              setState(() => _includeSceneTitles = value),
+          onIncludeMetadataChanged: (value) =>
+              setState(() => _includePublishingMetadata = value),
+          onDownload: () => _downloadPublishing(copy),
         ),
       _ => _SettingsWorkspace(
           copy: copy,

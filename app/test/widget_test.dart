@@ -42,6 +42,7 @@ void main() {
     expect(find.text('Notes'), findsOneWidget);
     expect(find.text('AI Workshop'), findsOneWidget);
     expect(find.text('Logs'), findsOneWidget);
+    expect(find.text('Self-publishing'), findsOneWidget);
     expect(find.text('New Project'), findsOneWidget);
   });
 

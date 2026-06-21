@@ -65,6 +65,7 @@ final class WritelerCopy {
     'analysis': 'Analyse',
     'aiWorkshop': 'KI-Werkstatt',
     'exports': 'Export/Import',
+    'selfPublishing': 'Veröffentlichung',
     'settings': 'Einstellungen',
     'language': 'Sprache',
     'languageGerman': 'Deutsch',
@@ -412,6 +413,14 @@ final class WritelerCopy {
     'downloadExport': 'Export herunterladen',
     'exportCopied': 'Export in die Zwischenablage kopiert',
     'exportDownloaded': 'Export heruntergeladen',
+    'exportCancelled': 'Export abgebrochen',
+    'archiveExportBody':
+        'Vollständiges Writeler-Archiv für Backup, Umzug oder Import in eine andere Writeler-Instanz.',
+    'selfPublishingBody':
+        'Lesbares Manuskript für Weitergabe, Lektorat oder Veröffentlichung.',
+    'publishingFormat': 'Ausgabeformat',
+    'downloadManuscript': 'Manuskript herunterladen',
+    'includePublishingMetadata': 'Notizen und Projektinfo einschließen',
     'syncCheckpoint': 'Sync-Checkpoint',
     'syncCheckpointBody':
         'Erzeugt ein vollständiges, lokales Sync-Paket für manuelle Ablage, WebDAV oder spätere Cloud-Adapter.',
@@ -439,13 +448,19 @@ final class WritelerCopy {
     'helpCopyExport':
         'Kopiert die aktuell angezeigte Exportvorschau mit den gewählten Einstellungen in die Zwischenablage.',
     'helpExportFormat':
-        'Legt fest, in welchem Dateiformat dein Projekt ausgegeben wird.',
+        'Der Export ist ein vollständiges Writeler-Archiv mit allen Projektdaten für den späteren Import.',
+    'helpPublishingFormat':
+        'Legt fest, in welchem lesbaren Manuskriptformat die Veröffentlichung ausgegeben wird.',
     'helpIncludeSceneTitles':
         'Fügt beim Export die Szenentitel vor den jeweiligen Textabschnitten ein.',
     'helpIncludeMetadata':
         'Nimmt Planungsdaten wie Status, Ziel, Konflikt und Ausgang in den Export auf.',
+    'helpIncludePublishingMetadata':
+        'Hängt Projektinfo und Notizen an das Manuskript an. Der reine Romantext bleibt ansonsten im Vordergrund.',
     'helpDownloadExport':
-        'Erstellt eine Datei aus dem aktuellen Projekt und speichert sie lokal.',
+        'Erstellt eine vollständige Writeler-Archivdatei und speichert sie lokal.',
+    'helpDownloadManuscript':
+        'Erstellt eine lesbare Manuskriptdatei im gewählten Format und speichert sie lokal.',
     'helpCopySyncCheckpoint':
         'Kopiert ein vollständiges lokales Sync-Paket, das später wieder importiert werden kann.',
     'helpImportFile':
@@ -579,6 +594,7 @@ final class WritelerCopy {
     'analysis': 'Analysis',
     'aiWorkshop': 'AI Workshop',
     'exports': 'Export/Import',
+    'selfPublishing': 'Self-publishing',
     'settings': 'Settings',
     'language': 'Language',
     'languageGerman': 'Deutsch',
@@ -922,6 +938,14 @@ final class WritelerCopy {
     'downloadExport': 'Download export',
     'exportCopied': 'Export copied to clipboard',
     'exportDownloaded': 'Export downloaded',
+    'exportCancelled': 'Export cancelled',
+    'archiveExportBody':
+        'Complete Writeler archive for backup, migration, or import into another Writeler instance.',
+    'selfPublishingBody':
+        'Readable manuscript output for sharing, editing, or publishing.',
+    'publishingFormat': 'Output format',
+    'downloadManuscript': 'Download manuscript',
+    'includePublishingMetadata': 'Include notes and project info',
     'syncCheckpoint': 'Sync checkpoint',
     'syncCheckpointBody':
         'Creates a complete local sync package for manual storage, WebDAV, or future cloud adapters.',
@@ -949,13 +973,19 @@ final class WritelerCopy {
     'helpCopyExport':
         'Copies the current export preview with the selected options to the clipboard.',
     'helpExportFormat':
-        'Controls which file format is used when the project is exported.',
+        'Export creates a complete Writeler archive with all project data for later import.',
+    'helpPublishingFormat':
+        'Controls which readable manuscript format is used for publishing output.',
     'helpIncludeSceneTitles':
         'Adds scene titles before the matching text sections in the export.',
     'helpIncludeMetadata':
         'Includes planning data such as status, goal, conflict, and outcome in the export.',
+    'helpIncludePublishingMetadata':
+        'Appends project info and notes to the manuscript while keeping the readable text primary.',
     'helpDownloadExport':
-        'Creates a file from the current project and saves it locally.',
+        'Creates a complete Writeler archive file and saves it locally.',
+    'helpDownloadManuscript':
+        'Creates a readable manuscript file in the selected format and saves it locally.',
     'helpCopySyncCheckpoint':
         'Copies a complete local sync package that can be imported again later.',
     'helpImportFile':

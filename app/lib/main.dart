@@ -39,6 +39,7 @@ import 'features/export/application/download_export.dart';
 import 'features/export/application/project_archive_codec.dart';
 import 'features/export/application/project_exporter.dart';
 import 'features/export/application/project_importer.dart';
+import 'features/export/domain/export_artifact.dart';
 import 'features/export/domain/export_profile.dart';
 import 'features/metrics/application/record_metric.dart';
 import 'features/metrics/domain/metric_event.dart';
