@@ -274,7 +274,7 @@ String _exportFormatLabel(ExportFormat format, String languageCode) {
       german ? 'Writeler-Archiv JSON' : 'Writeler archive JSON',
     ExportFormat.pdf => 'PDF',
     ExportFormat.epub => 'EPUB',
-    ExportFormat.docx => 'DOCX',
+    ExportFormat.docx => 'Word (.docx)',
   };
 }
 

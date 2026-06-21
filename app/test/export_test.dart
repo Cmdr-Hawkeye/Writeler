@@ -173,7 +173,11 @@ void main() {
       ),
     );
     expect(pdf.fileName, 'exportable-book.pdf');
-    expect(utf8.decode(pdf.bytes.take(8).toList()), startsWith('%PDF'));
+    final pdfText = utf8.decode(pdf.bytes, allowMalformed: true);
+    expect(pdfText, startsWith('%PDF'));
+    expect(pdfText, contains('/BaseFont /Times-Roman'));
+    expect(pdfText, contains('Manuscript export'));
+    expect(pdfText, contains('Page 1 of'));
 
     final epub = exporter.exportArtifact(
       project: project,
@@ -207,6 +211,11 @@ void main() {
     expect(docx.mimeType, contains('wordprocessingml.document'));
     expect(docx.bytes.take(2), [0x50, 0x4b]);
     expect(docx.previewText, contains('Notes: 1'));
+    final docxPackageText = utf8.decode(docx.bytes, allowMalformed: true);
+    expect(docxPackageText, contains('docProps/core.xml'));
+    expect(docxPackageText, contains('w:styleId="Manuscript"'));
+    expect(docxPackageText, contains('w:styleId="BookInfo"'));
+    expect(docxPackageText, contains('Manuscript export'));
 
     final json = jsonDecode(jsonText) as Map<String, Object?>;
     expect(json['schema'], 'writeler.project.v3');

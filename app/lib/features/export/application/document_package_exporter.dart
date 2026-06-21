@@ -16,38 +16,48 @@ final class DocumentPackageExporter {
     required Project project,
     required List<Chapter> chapters,
     required List<Scene> scenes,
+    required List<CatalogItem> catalogItems,
+    required List<Relationship> relationships,
+    required List<ProjectNote> notes,
+    required bool includeMetadata,
     required bool includeSceneTitles,
   }) {
-    final lines = _manuscriptLines(
+    final pages = _pdfPages(
       project: project,
       chapters: chapters,
       scenes: scenes,
+      catalogItems: catalogItems,
+      relationships: relationships,
+      notes: notes,
+      includeMetadata: includeMetadata,
       includeSceneTitles: includeSceneTitles,
-      maxLineLength: 86,
     );
-    final pages = <List<String>>[];
-    for (var index = 0; index < lines.length; index += 46) {
-      pages.add(lines.skip(index).take(46).toList());
-    }
-    if (pages.isEmpty) pages.add([project.title]);
 
     final objects = <String>[];
     final pageObjectIds = <int>[];
-    final contentObjectIds = <int>[];
     objects.add(''); // 1 catalog
     objects.add(''); // 2 pages
+    objects.add('<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman >>');
+    objects.add('<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold >>');
+    objects.add('<< /Type /Font /Subtype /Type1 /BaseFont /Times-Italic >>');
     objects.add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
 
-    for (final page in pages) {
+    for (var index = 0; index < pages.length; index++) {
+      final page = pages[index];
       final contentId = objects.length + 2;
       final pageId = objects.length + 1;
       pageObjectIds.add(pageId);
-      contentObjectIds.add(contentId);
       objects.add(
         '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] '
-        '/Resources << /Font << /F1 3 0 R >> >> /Contents $contentId 0 R >>',
+        '/Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> '
+        '/Contents $contentId 0 R >>',
       );
-      objects.add(_pdfStream(_pageContent(page)));
+      objects.add(_pdfStream(_pageContent(
+        projectTitle: project.title,
+        pageNumber: index + 1,
+        pageCount: pages.length,
+        lines: page,
+      )));
     }
 
     objects[0] = '<< /Type /Catalog /Pages 2 0 R >>';
@@ -129,6 +139,8 @@ final class DocumentPackageExporter {
   <Default Extension="xml" ContentType="application/xml"/>
   <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
   <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
 </Types>
 '''
             .trim());
@@ -138,9 +150,13 @@ final class DocumentPackageExporter {
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
 </Relationships>
 '''
             .trim());
+    zip.addText('docProps/core.xml', _docxCoreProperties(project));
+    zip.addText('docProps/app.xml', _docxAppProperties());
     zip.addText('word/styles.xml', _docxStyles());
     zip.addText(
       'word/document.xml',
@@ -158,33 +174,191 @@ final class DocumentPackageExporter {
     return zip.encode();
   }
 
-  List<String> _manuscriptLines({
+  List<List<_PdfLine>> _pdfPages({
     required Project project,
     required List<Chapter> chapters,
     required List<Scene> scenes,
+    required List<CatalogItem> catalogItems,
+    required List<Relationship> relationships,
+    required List<ProjectNote> notes,
+    required bool includeMetadata,
     required bool includeSceneTitles,
-    required int maxLineLength,
   }) {
-    final lines = <String>[project.title, ''];
+    const pageWidth = 595.0;
+    const left = 72.0;
+    const top = 740.0;
+    const bottom = 76.0;
+    const contentWidth = pageWidth - left - 72.0;
+    final pages = <List<_PdfLine>>[[]];
+    var y = top;
+
+    void addPage() {
+      pages.add([]);
+      y = top;
+    }
+
+    void ensure(double height) {
+      if (y - height < bottom && pages.last.isNotEmpty) {
+        addPage();
+      }
+    }
+
+    void addLine(
+      String text, {
+      String font = 'F1',
+      double fontSize = 11,
+      double lineHeight = 16,
+      double before = 0,
+      double after = 0,
+      double indent = 0,
+      double gray = 0,
+    }) {
+      ensure(before + lineHeight + after);
+      y -= before;
+      pages.last.add(_PdfLine(
+        text: text,
+        x: left + indent,
+        y: y,
+        font: font,
+        fontSize: fontSize,
+        gray: gray,
+      ));
+      y -= lineHeight + after;
+    }
+
+    void addWrappedParagraph(
+      String text, {
+      String font = 'F1',
+      double fontSize = 11.5,
+      double lineHeight = 17,
+      double before = 0,
+      double after = 8,
+      double indent = 0,
+      double firstLineIndent = 18,
+      double gray = 0,
+    }) {
+      final maxLineLength =
+          ((contentWidth - indent - firstLineIndent) / (fontSize * 0.47))
+              .floor()
+              .clamp(28, 92);
+      final lines = _wrap(text, maxLineLength.toInt());
+      for (var index = 0; index < lines.length; index++) {
+        addLine(
+          lines[index],
+          font: font,
+          fontSize: fontSize,
+          lineHeight: lineHeight,
+          before: index == 0 ? before : 0,
+          after: index == lines.length - 1 ? after : 0,
+          indent: indent + (index == 0 ? firstLineIndent : 0),
+          gray: gray,
+        );
+      }
+    }
+
+    addLine(
+      project.title,
+      font: 'F2',
+      fontSize: 28,
+      lineHeight: 34,
+      before: 16,
+      after: 8,
+    );
+    addLine(
+      'Manuscript export',
+      font: 'F3',
+      fontSize: 12,
+      lineHeight: 18,
+      after: includeMetadata ? 18 : 32,
+      gray: 0.35,
+    );
+
+    if (includeMetadata) {
+      final words =
+          scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
+      for (final line in [
+        '${chapters.length} chapters  |  ${scenes.length} scenes  |  $words words',
+        '${catalogItems.length} catalog items  |  ${relationships.length} links  |  ${notes.length} notes',
+      ]) {
+        addLine(
+          line,
+          font: 'F4',
+          fontSize: 10,
+          lineHeight: 15,
+          gray: 0.30,
+        );
+      }
+      y -= 20;
+    }
+
     for (final group in _chapterGroups(chapters, scenes)) {
       if (includeSceneTitles && group.chapter != null) {
-        lines
-          ..add(group.chapter!.title)
-          ..add('');
+        if (pages.last.isNotEmpty && y < 650) addPage();
+        addLine(
+          group.chapter!.title,
+          font: 'F2',
+          fontSize: 18,
+          lineHeight: 24,
+          before: 14,
+          after: 10,
+        );
       }
       for (final scene in group.scenes) {
         if (includeSceneTitles) {
-          lines
-            ..add(scene.title)
-            ..add('');
+          addLine(
+            scene.title,
+            font: group.chapter == null ? 'F2' : 'F3',
+            fontSize: group.chapter == null ? 17 : 13,
+            lineHeight: group.chapter == null ? 23 : 19,
+            before: 8,
+            after: 6,
+            gray: group.chapter == null ? 0 : 0.20,
+          );
         }
         for (final paragraph in _paragraphs(scene.manuscriptText)) {
-          lines.addAll(_wrap(paragraph, maxLineLength));
-          lines.add('');
+          addWrappedParagraph(paragraph);
         }
       }
     }
-    return lines;
+    if (includeMetadata && notes.isNotEmpty) {
+      addPage();
+      addLine(
+        'Notes',
+        font: 'F2',
+        fontSize: 18,
+        lineHeight: 24,
+        before: 14,
+        after: 10,
+      );
+      for (final note in notes) {
+        addLine(
+          note.title,
+          font: 'F2',
+          fontSize: 12,
+          lineHeight: 18,
+          before: 6,
+          after: 2,
+        );
+        addWrappedParagraph(
+          'Target: ${_noteTargetLabel(note, scenes, catalogItems)}',
+          font: 'F4',
+          fontSize: 9.5,
+          lineHeight: 14,
+          after: 4,
+          firstLineIndent: 0,
+          gray: 0.35,
+        );
+        for (final paragraph in _paragraphs(note.body)) {
+          addWrappedParagraph(
+            paragraph,
+            fontSize: 10.5,
+            lineHeight: 15,
+            firstLineIndent: 0,
+          );
+        }
+      }
+    }
+    return pages.where((page) => page.isNotEmpty).toList(growable: false);
   }
 
   String _pdfStream(String content) {
@@ -192,12 +366,27 @@ final class DocumentPackageExporter {
     return '<< /Length $length >>\nstream\n$content\nendstream';
   }
 
-  String _pageContent(List<String> lines) {
-    final buffer = StringBuffer('BT\n/F1 11 Tf\n14 TL\n72 770 Td\n');
+  String _pageContent({
+    required String projectTitle,
+    required int pageNumber,
+    required int pageCount,
+    required List<_PdfLine> lines,
+  }) {
+    final buffer = StringBuffer()
+      ..write('BT\n')
+      ..write('/F4 8 Tf\n0.45 g\n1 0 0 1 72 798 Tm\n')
+      ..write('(${_pdfText(projectTitle)}) Tj\n')
+      ..write('1 0 0 1 72 46 Tm\n')
+      ..write('(${_pdfText('Page $pageNumber of $pageCount')}) Tj\n')
+      ..write('0 g\n');
     for (final line in lines) {
       buffer
-        ..write('(${_pdfText(line)}) Tj\n')
-        ..write('T*\n');
+        ..write('/${line.font} ${line.fontSize.toStringAsFixed(1)} Tf\n')
+        ..write('${line.gray.toStringAsFixed(2)} g\n')
+        ..write(
+          '1 0 0 1 ${line.x.toStringAsFixed(1)} ${line.y.toStringAsFixed(1)} Tm\n',
+        )
+        ..write('(${_pdfText(line.text)}) Tj\n');
     }
     buffer.write('ET');
     return buffer.toString();
@@ -292,16 +481,24 @@ final class DocumentPackageExporter {
     required bool includeMetadata,
     required bool includeSceneTitles,
   }) {
+    final words =
+        scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
     final body = StringBuffer()
-      ..write(_docxParagraph(project.title, style: 'Title'));
+      ..write(_docxParagraph(project.title, style: 'Title'))
+      ..write(_docxParagraph('Manuscript export', style: 'Subtitle'));
     if (includeMetadata) {
       body
-        ..write(_docxParagraph('${scenes.length} scenes'))
         ..write(_docxParagraph(
-            '${scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount)} words'))
-        ..write(_docxParagraph('${catalogItems.length} catalog items'))
-        ..write(_docxParagraph('${relationships.length} links'))
-        ..write(_docxParagraph('${notes.length} notes'));
+          '${chapters.length} chapters  |  ${scenes.length} scenes  |  $words words',
+          style: 'BookInfo',
+        ))
+        ..write(_docxParagraph(
+          '${catalogItems.length} catalog items  |  ${relationships.length} links  |  ${notes.length} notes',
+          style: 'BookInfo',
+        ));
+    }
+    if (scenes.isNotEmpty) {
+      body.write(_docxPageBreak());
     }
     for (final group in _chapterGroups(chapters, scenes)) {
       if (includeSceneTitles && group.chapter != null) {
@@ -313,7 +510,7 @@ final class DocumentPackageExporter {
               style: group.chapter == null ? 'Heading1' : 'Heading2'));
         }
         for (final paragraph in _paragraphs(scene.manuscriptText)) {
-          body.write(_docxParagraph(paragraph));
+          body.write(_docxParagraph(paragraph, style: 'Manuscript'));
         }
       }
     }
@@ -324,9 +521,10 @@ final class DocumentPackageExporter {
           ..write(_docxParagraph(note.title, style: 'Heading2'))
           ..write(_docxParagraph(
             'Target: ${_noteTargetLabel(note, scenes, catalogItems)}',
+            style: 'BookInfo',
           ));
         for (final paragraph in _paragraphs(note.body)) {
-          body.write(_docxParagraph(paragraph));
+          body.write(_docxParagraph(paragraph, style: 'Manuscript'));
         }
       }
     }
@@ -335,7 +533,12 @@ final class DocumentPackageExporter {
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
     $body
-    <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+    <w:sectPr>
+      <w:pgSz w:w="11906" w:h="16838"/>
+      <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/>
+      <w:cols w:space="720"/>
+      <w:docGrid w:linePitch="360"/>
+    </w:sectPr>
   </w:body>
 </w:document>
 '''
@@ -348,13 +551,80 @@ final class DocumentPackageExporter {
     return '<w:p>$styleXml<w:r><w:t xml:space="preserve">${_xml(text)}</w:t></w:r></w:p>';
   }
 
+  String _docxPageBreak() => '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+
   String _docxStyles() => '''
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:rPr><w:b/><w:sz w:val="36"/></w:rPr></w:style>
-  <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:rPr><w:b/><w:sz w:val="28"/></w:rPr></w:style>
-  <w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:rPr><w:b/><w:sz w:val="24"/></w:rPr></w:style>
+  <w:docDefaults>
+    <w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:sz w:val="24"/></w:rPr></w:rPrDefault>
+    <w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="336" w:lineRule="auto"/></w:pPr></w:pPrDefault>
+  </w:docDefaults>
+  <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+    <w:name w:val="Normal"/>
+    <w:pPr><w:spacing w:after="120" w:line="336" w:lineRule="auto"/></w:pPr>
+    <w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:sz w:val="24"/></w:rPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Title">
+    <w:name w:val="Title"/>
+    <w:pPr><w:jc w:val="center"/><w:spacing w:before="288" w:after="120"/></w:pPr>
+    <w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/><w:b/><w:color w:val="1F2A32"/><w:sz w:val="52"/></w:rPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Subtitle">
+    <w:name w:val="Subtitle"/>
+    <w:pPr><w:jc w:val="center"/><w:spacing w:after="420"/></w:pPr>
+    <w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:i/><w:color w:val="69747C"/><w:sz w:val="22"/></w:rPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="BookInfo">
+    <w:name w:val="Book Info"/>
+    <w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="80"/></w:pPr>
+    <w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:color w:val="56616A"/><w:sz w:val="18"/></w:rPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Heading1">
+    <w:name w:val="Heading 1"/>
+    <w:pPr><w:keepNext/><w:spacing w:before="240" w:after="180"/></w:pPr>
+    <w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/><w:b/><w:color w:val="1F2A32"/><w:sz w:val="34"/></w:rPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Heading2">
+    <w:name w:val="Heading 2"/>
+    <w:pPr><w:keepNext/><w:spacing w:before="240" w:after="120"/></w:pPr>
+    <w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:color w:val="2F5963"/><w:sz w:val="24"/></w:rPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Manuscript">
+    <w:name w:val="Manuscript"/>
+    <w:pPr><w:ind w:firstLine="360"/><w:spacing w:before="0" w:after="160" w:line="360" w:lineRule="auto"/></w:pPr>
+    <w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:sz w:val="24"/></w:rPr>
+  </w:style>
 </w:styles>
+'''
+      .trim();
+
+  String _docxCoreProperties(Project project) {
+    final now = DateTime.now().toUtc().toIso8601String();
+    return '''
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:title>${_xml(project.title)}</dc:title>
+  <dc:creator>Writeler</dc:creator>
+  <cp:lastModifiedBy>Writeler</cp:lastModifiedBy>
+  <dcterms:created xsi:type="dcterms:W3CDTF">$now</dcterms:created>
+  <dcterms:modified xsi:type="dcterms:W3CDTF">$now</dcterms:modified>
+</cp:coreProperties>
+'''
+        .trim();
+  }
+
+  String _docxAppProperties() => '''
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
+  <Application>Writeler</Application>
+  <DocSecurity>0</DocSecurity>
+  <ScaleCrop>false</ScaleCrop>
+  <LinksUpToDate>false</LinksUpToDate>
+  <SharedDoc>false</SharedDoc>
+  <HyperlinksChanged>false</HyperlinksChanged>
+  <AppVersion>1.0</AppVersion>
+</Properties>
 '''
       .trim();
 
@@ -435,4 +705,22 @@ final class _ChapterSceneGroup {
 
   final Chapter? chapter;
   final List<Scene> scenes;
+}
+
+final class _PdfLine {
+  const _PdfLine({
+    required this.text,
+    required this.x,
+    required this.y,
+    required this.font,
+    required this.fontSize,
+    required this.gray,
+  });
+
+  final String text;
+  final double x;
+  final double y;
+  final String font;
+  final double fontSize;
+  final double gray;
 }
