@@ -121,6 +121,10 @@ final class WritelerCopy {
     'activityStream': 'Aktivität',
     'activityStreamBody': 'Lokale Ereignisse aus Schreiben, KI und Export.',
     'noActivityYet': 'Noch keine Aktivität für dieses Projekt.',
+    'protocols': 'Protokolle',
+    'protocolsBody':
+        'Chronologische Ereignisse des aktuellen Projekts: Schreiben, KI, Export, Import und Sync.',
+    'noProtocolsYet': 'Noch keine Protokolle für dieses Projekt.',
     'dashboardSignals': 'Signale',
     'dashboardSignalsBody':
         'Kurzstatus für KI, Notizen und heutige Schreibarbeit.',
@@ -631,6 +635,10 @@ final class WritelerCopy {
     'activityStream': 'Activity',
     'activityStreamBody': 'Local events from writing, AI, and export.',
     'noActivityYet': 'No activity for this project yet.',
+    'protocols': 'Logs',
+    'protocolsBody':
+        'Chronological events for the current project: writing, AI, export, import, and sync.',
+    'noProtocolsYet': 'No logs for this project yet.',
     'dashboardSignals': 'Signals',
     'dashboardSignalsBody':
         'Short status for AI, notes, and today writing work.',

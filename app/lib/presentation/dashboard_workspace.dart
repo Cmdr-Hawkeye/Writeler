@@ -263,7 +263,6 @@ final class _ProjectOverview extends StatelessWidget {
         metrics.where((event) => event.eventType.startsWith('ai.')).length;
     final recentScenes = [...scenes]
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    final recentMetrics = metrics.take(6).toList(growable: false);
     final urgentPlanningGaps = [...planningGaps]
       ..sort(_compareScenesByPlanningUrgency);
     final latestPendingSuggestion = pendingSuggestionItems.firstOrNull;
@@ -467,58 +466,21 @@ final class _ProjectOverview extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 24),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final compact = constraints.maxWidth < 960;
-                  final scenesSection = _DashboardSection(
-                    title: copy.t('recentScenes'),
-                    body: copy.t('recentScenesBody'),
-                    child: recentScenes.isEmpty
-                        ? _EmptyInlineMessage(message: copy.t('noRecentScenes'))
-                        : Column(
-                            children: [
-                              for (final scene in recentScenes.take(5))
-                                _DashboardSceneRow(
-                                  copy: copy,
-                                  scene: scene,
-                                  onTap: () => onOpenScene(scene),
-                                ),
-                            ],
-                          ),
-                  );
-                  final activitySection = _DashboardSection(
-                    title: copy.t('activityStream'),
-                    body: copy.t('activityStreamBody'),
-                    child: recentMetrics.isEmpty
-                        ? _EmptyInlineMessage(message: copy.t('noActivityYet'))
-                        : Column(
-                            children: [
-                              for (final event in recentMetrics)
-                                _DashboardActivityRow(
-                                  copy: copy,
-                                  event: event,
-                                ),
-                            ],
-                          ),
-                  );
-                  if (compact) {
-                    return Column(
-                      children: [
-                        scenesSection,
-                        const SizedBox(height: 22),
-                        activitySection,
-                      ],
-                    );
-                  }
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: scenesSection),
-                      const SizedBox(width: 24),
-                      Expanded(child: activitySection),
-                    ],
-                  );
-                },
+              _DashboardSection(
+                title: copy.t('recentScenes'),
+                body: copy.t('recentScenesBody'),
+                child: recentScenes.isEmpty
+                    ? _EmptyInlineMessage(message: copy.t('noRecentScenes'))
+                    : Column(
+                        children: [
+                          for (final scene in recentScenes.take(5))
+                            _DashboardSceneRow(
+                              copy: copy,
+                              scene: scene,
+                              onTap: () => onOpenScene(scene),
+                            ),
+                        ],
+                      ),
               ),
               const SizedBox(height: 24),
               _DashboardSection(
@@ -896,62 +858,6 @@ final class _DashboardSceneRow extends StatelessWidget {
             Icon(Icons.chevron_right, color: color.onSurfaceVariant),
           ],
         ),
-      ),
-    );
-  }
-}
-
-final class _DashboardActivityRow extends StatelessWidget {
-  const _DashboardActivityRow({
-    required this.copy,
-    required this.event,
-  });
-
-  final WritelerCopy copy;
-  final MetricEvent event;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
-    final time = event.occurredAt.toLocal();
-    final timestamp =
-        '${time.day.toString().padLeft(2, '0')}.${time.month.toString().padLeft(2, '0')} '
-        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      child: Row(
-        children: [
-          Icon(Icons.insights_outlined,
-              color: color.onSurfaceVariant, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _metricEventLabel(event.eventType, copy.languageCode),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  timestamp,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: color.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          if (event.value != null)
-            Text(
-              '${event.value}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color.onSurfaceVariant,
-                  ),
-            ),
-        ],
       ),
     );
   }

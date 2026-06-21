@@ -193,6 +193,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.review,
     ),
     _WorkspaceNavItem(
+      index: 11,
+      icon: Icons.receipt_long_outlined,
+      selectedIcon: Icons.receipt_long,
+      labelBuilder: (copy) => copy.t('protocols'),
+      group: _WorkspaceNavGroup.review,
+    ),
+    _WorkspaceNavItem(
       index: 9,
       icon: Icons.ios_share_outlined,
       selectedIcon: Icons.ios_share,
@@ -1423,6 +1430,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         7 => copy.t('notesCockpit'),
         8 => copy.t('aiWorkshop'),
         9 => copy.t('exports'),
+        11 => copy.t('protocols'),
         _ => copy.t('settings'),
       };
 
@@ -1437,6 +1445,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         7 => Icons.sticky_note_2_outlined,
         8 => Icons.psychology_alt_outlined,
         9 => Icons.ios_share_outlined,
+        11 => Icons.receipt_long_outlined,
         _ => Icons.tune_outlined,
       };
 
@@ -1686,6 +1695,11 @@ final class _WritelerShellState extends State<WritelerShell> {
           onConvertSuggestion: (suggestion) => _decideSuggestion(
               copy, suggestion, SuggestionDecision.convertedToNote),
           onDeleteNote: (note) => _deleteNote(note, copy),
+        ),
+      11 => _ProtocolsWorkspace(
+          copy: copy,
+          project: _selectedProject,
+          metrics: _metrics,
         ),
       9 => _ExportCenter(
           copy: copy,

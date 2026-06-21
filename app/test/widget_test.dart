@@ -41,6 +41,7 @@ void main() {
     expect(find.text('Scenes'), findsOneWidget);
     expect(find.text('Notes'), findsOneWidget);
     expect(find.text('AI Workshop'), findsOneWidget);
+    expect(find.text('Logs'), findsOneWidget);
     expect(find.text('New Project'), findsOneWidget);
   });
 
@@ -77,6 +78,13 @@ void main() {
     expect(find.text('Draft Atlas'), findsWidgets);
     expect(find.text('Local - novel'), findsOneWidget);
     expect(find.text('Project created'), findsOneWidget);
+    expect(find.text('Activity'), findsNothing);
+
+    await tester.tap(find.text('Logs').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Logs'), findsWidgets);
+    expect(find.textContaining('Chronological events'), findsOneWidget);
 
     await tester.tap(find.text('Scenes').first);
     await tester.pumpAndSettle();

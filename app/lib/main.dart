@@ -85,6 +85,7 @@ part 'presentation/app_shell.dart';
 part 'presentation/shell_dialogs.dart';
 part 'presentation/navigation_chrome.dart';
 part 'presentation/dashboard_workspace.dart';
+part 'presentation/protocols_workspace.dart';
 part 'presentation/structure_workspace.dart';
 part 'presentation/catalog_analysis_notes.dart';
 part 'presentation/ai_workshop.dart';
