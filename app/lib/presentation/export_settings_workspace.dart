@@ -80,124 +80,130 @@ final class _ExportCenter extends StatelessWidget {
         ),
         const Divider(height: 1),
         Expanded(
-          child: Row(
-            children: [
-              SizedBox(
-                width: 300,
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    Text(
-                      copy.t('archiveExportBody'),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
-                    _ActionHelp(
-                      message: copy.t('helpDownloadExport'),
-                      child: FilledButton.icon(
-                        onPressed: project == null ? null : onDownloadExport,
-                        icon: const Icon(Icons.download_outlined),
-                        label: Text(copy.t('downloadExport')),
+          child: DropTarget(
+            onDragEntered: (_) => onImportDragChanged(true),
+            onDragExited: (_) => onImportDragChanged(false),
+            onDragDone: (details) {
+              onImportDragChanged(false);
+              onImportDropped(details);
+            },
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 300,
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      Text(
+                        copy.t('archiveExportBody'),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                    ),
-                    const Divider(height: 28),
-                    Text(copy.t('syncCheckpoint'),
-                        style: Theme.of(context).textTheme.titleSmall),
-                    const SizedBox(height: 6),
-                    Text(
-                      copy.t('syncCheckpointBody'),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    if (lastSyncCheckpoint != null) ...[
-                      const SizedBox(height: 10),
-                      _SyncStatusPanel(
-                        copy: copy,
-                        checkpoint: lastSyncCheckpoint!,
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    _ActionHelp(
-                      message: copy.t('helpCopySyncCheckpoint'),
-                      child: FilledButton.icon(
-                        onPressed:
-                            project == null ? null : onCopySyncCheckpoint,
-                        icon: const Icon(Icons.sync_outlined),
-                        label: Text(copy.t('copySyncCheckpoint')),
-                      ),
-                    ),
-                    const Divider(height: 28),
-                    Text(copy.t('importArchive'),
-                        style: Theme.of(context).textTheme.titleSmall),
-                    const SizedBox(height: 8),
-                    _ImportDropZone(
-                      copy: copy,
-                      sourceName: importSourceName,
-                      preview: importPreview,
-                      isDragging: isImportDragging,
-                      onPickFile: onPickImportFile,
-                      onDropped: onImportDropped,
-                      onDragChanged: onImportDragChanged,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: importController,
-                      onChanged: (_) => onImportSourceChanged(),
-                      minLines: 5,
-                      maxLines: 8,
-                      decoration: InputDecoration(
-                        labelText: copy.t('pasteArchiveJson'),
-                        suffixIcon: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: _HelpTooltip(
-                            message: copy.t('helpPasteImport'),
-                          ),
-                        ),
-                        suffixIconConstraints:
-                            const BoxConstraints(minWidth: 42),
-                        border: const OutlineInputBorder(),
-                        alignLabelWithHint: true,
-                      ),
-                    ),
-                    if (importPreview != null ||
-                        importPreviewError != null) ...[
                       const SizedBox(height: 12),
-                      if (syncImportPreview != null) ...[
-                        _SyncEnvelopePanel(
-                          copy: copy,
-                          preview: syncImportPreview!,
+                      _ActionHelp(
+                        message: copy.t('helpDownloadExport'),
+                        child: FilledButton.icon(
+                          onPressed: project == null ? null : onDownloadExport,
+                          icon: const Icon(Icons.download_outlined),
+                          label: Text(copy.t('downloadExport')),
                         ),
-                        const SizedBox(height: 12),
+                      ),
+                      const Divider(height: 28),
+                      Text(copy.t('syncCheckpoint'),
+                          style: Theme.of(context).textTheme.titleSmall),
+                      const SizedBox(height: 6),
+                      Text(
+                        copy.t('syncCheckpointBody'),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      if (lastSyncCheckpoint != null) ...[
+                        const SizedBox(height: 10),
+                        _SyncStatusPanel(
+                          copy: copy,
+                          checkpoint: lastSyncCheckpoint!,
+                        ),
                       ],
-                      _ImportArchivePreview(
+                      const SizedBox(height: 12),
+                      _ActionHelp(
+                        message: copy.t('helpCopySyncCheckpoint'),
+                        child: FilledButton.icon(
+                          onPressed:
+                              project == null ? null : onCopySyncCheckpoint,
+                          icon: const Icon(Icons.sync_outlined),
+                          label: Text(copy.t('copySyncCheckpoint')),
+                        ),
+                      ),
+                      const Divider(height: 28),
+                      Text(copy.t('importArchive'),
+                          style: Theme.of(context).textTheme.titleSmall),
+                      const SizedBox(height: 8),
+                      _ImportDropZone(
                         copy: copy,
+                        sourceName: importSourceName,
                         preview: importPreview,
-                        error: importPreviewError,
+                        isDragging: isImportDragging,
+                        onPickFile: onPickImportFile,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: importController,
+                        onChanged: (_) => onImportSourceChanged(),
+                        minLines: 5,
+                        maxLines: 8,
+                        decoration: InputDecoration(
+                          labelText: copy.t('pasteArchiveJson'),
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: _HelpTooltip(
+                              message: copy.t('helpPasteImport'),
+                            ),
+                          ),
+                          suffixIconConstraints:
+                              const BoxConstraints(minWidth: 42),
+                          border: const OutlineInputBorder(),
+                          alignLabelWithHint: true,
+                        ),
+                      ),
+                      if (importPreview != null ||
+                          importPreviewError != null) ...[
+                        const SizedBox(height: 12),
+                        if (syncImportPreview != null) ...[
+                          _SyncEnvelopePanel(
+                            copy: copy,
+                            preview: syncImportPreview!,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        _ImportArchivePreview(
+                          copy: copy,
+                          preview: importPreview,
+                          error: importPreviewError,
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      _ActionHelp(
+                        message: copy.t('helpImportProject'),
+                        child: FilledButton.icon(
+                          onPressed:
+                              importPreview == null ? null : onImportArchive,
+                          icon: const Icon(Icons.upload_file_outlined),
+                          label: Text(copy.t('importProject')),
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 12),
-                    _ActionHelp(
-                      message: copy.t('helpImportProject'),
-                      child: FilledButton.icon(
-                        onPressed:
-                            importPreview == null ? null : onImportArchive,
-                        icon: const Icon(Icons.upload_file_outlined),
-                        label: Text(copy.t('importProject')),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: SelectableText(
-                    preview.isEmpty ? copy.t('nothingToExport') : preview,
-                    style: const TextStyle(fontFamily: 'monospace'),
                   ),
                 ),
-              ),
-            ],
+                const VerticalDivider(width: 1),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: SelectableText(
+                      preview.isEmpty ? copy.t('nothingToExport') : preview,
+                      style: const TextStyle(fontFamily: 'monospace'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -451,8 +457,6 @@ final class _ImportDropZone extends StatelessWidget {
     required this.preview,
     required this.isDragging,
     required this.onPickFile,
-    required this.onDropped,
-    required this.onDragChanged,
   });
 
   final WritelerCopy copy;
@@ -460,8 +464,6 @@ final class _ImportDropZone extends StatelessWidget {
   final ProjectArchivePreview? preview;
   final bool isDragging;
   final VoidCallback onPickFile;
-  final ValueChanged<DropDoneDetails> onDropped;
-  final ValueChanged<bool> onDragChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -472,77 +474,69 @@ final class _ImportDropZone extends StatelessWidget {
         : color.surfaceContainerHighest;
     final sourceName = this.sourceName;
     final preview = this.preview;
-    return DropTarget(
-      onDragEntered: (_) => onDragChanged(true),
-      onDragExited: (_) => onDragChanged(false),
-      onDragDone: (details) {
-        onDragChanged(false);
-        onDropped(details);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: borderColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.file_upload_outlined, color: color.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        copy.t('dropImportFile'),
-                        style: Theme.of(context).textTheme.labelLarge,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        copy.t('dropImportFileBody'),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: color.onSurfaceVariant,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: onPickFile,
-              icon: const Icon(Icons.folder_open_outlined),
-              label: Text(copy.t('chooseImportFile')),
-            ),
-            const SizedBox(height: 8),
-            _HelpedLabel(
-              label: copy.t('importSourceType'),
-              help: copy.t('helpImportFile'),
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-            if (sourceName != null || preview != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                [
-                  if (sourceName != null)
-                    '${copy.t('selectedImportFile')}: $sourceName',
-                  if (preview != null)
-                    '${copy.t('importSourceType')}: ${preview.sourceFormat}',
-                ].join('\n'),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color.onSurfaceVariant,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.file_upload_outlined, color: color.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      copy.t('dropImportFile'),
+                      style: Theme.of(context).textTheme.labelLarge,
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      copy.t('dropImportFileBody'),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onPickFile,
+            icon: const Icon(Icons.folder_open_outlined),
+            label: Text(copy.t('chooseImportFile')),
+          ),
+          const SizedBox(height: 8),
+          _HelpedLabel(
+            label: copy.t('importSourceType'),
+            help: copy.t('helpImportFile'),
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+          if (sourceName != null || preview != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              [
+                if (sourceName != null)
+                  '${copy.t('selectedImportFile')}: $sourceName',
+                if (preview != null)
+                  '${copy.t('importSourceType')}: ${preview.sourceFormat}',
+              ].join('\n'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
