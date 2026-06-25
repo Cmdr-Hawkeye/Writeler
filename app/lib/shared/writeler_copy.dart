@@ -251,6 +251,13 @@ final class WritelerCopy {
     'sceneContextEmpty':
         'Lege Figuren, Orte oder Objekte an, um sie mit dieser Szene zu verknüpfen.',
     'addSceneContext': 'Figur, Ort oder Objekt zur Szene hinzufügen',
+    'newSceneContextItem': 'Neu',
+    'addExistingSceneContext': 'Bestehendes hinzufügen',
+    'addSelectedSceneContext': 'Auswahl hinzufügen',
+    'sceneContextNoLinkedItems': 'Noch nichts mit dieser Szene verknüpft.',
+    'noExistingSceneContextItems':
+        'Keine passenden unverknüpften Einträge vorhanden.',
+    'removeSceneContext': 'Aus Szene entfernen',
     'relationships': 'Verknüpfungen',
     'openSuggestions': 'Offene Vorschläge',
     'metricEvents': 'Lokale Events',
@@ -842,6 +849,12 @@ final class WritelerCopy {
     'sceneContextEmpty':
         'Create characters, locations, or objects to link them with this scene.',
     'addSceneContext': 'Add character, location, or object to this scene',
+    'newSceneContextItem': 'New',
+    'addExistingSceneContext': 'Add existing',
+    'addSelectedSceneContext': 'Add selection',
+    'sceneContextNoLinkedItems': 'Nothing linked to this scene yet.',
+    'noExistingSceneContextItems': 'No matching unlinked entries available.',
+    'removeSceneContext': 'Remove from scene',
     'relationships': 'Relationships',
     'openSuggestions': 'Open suggestions',
     'metricEvents': 'Local events',

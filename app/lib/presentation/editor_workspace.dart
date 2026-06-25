@@ -1900,22 +1900,25 @@ final class _SceneContextLinks extends StatelessWidget {
               item.type == EntityType.object,
         )
         .toList();
+    final linkedItems = relevantItems.where(_isLinked).toList(growable: false);
+    final availableItems =
+        relevantItems.where((item) => !_isLinked(item)).toList(growable: false);
     final color = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Text(
+          copy.t('sceneContext'),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            Expanded(
-              child: Text(
-                copy.t('sceneContext'),
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
             PopupMenuButton<EntityType>(
               tooltip: copy.t('addSceneContext'),
-              icon: const Icon(Icons.add_link_outlined),
               onSelected: onCreateItem,
               itemBuilder: (context) => [
                 for (final type in const [
@@ -1934,15 +1937,31 @@ final class _SceneContextLinks extends StatelessWidget {
                     ),
                   ),
               ],
+              child: IgnorePointer(
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.add),
+                  label: Text(copy.t('newSceneContextItem')),
+                ),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: availableItems.isEmpty
+                  ? null
+                  : () => _showExistingContextDialog(context, availableItems),
+              icon: const Icon(Icons.library_add_outlined),
+              label: Text(copy.t('addExistingSceneContext')),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        if (relevantItems.isEmpty)
+        const SizedBox(height: 10),
+        if (linkedItems.isEmpty)
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              copy.t('sceneContextEmpty'),
+              relevantItems.isEmpty
+                  ? copy.t('sceneContextEmpty')
+                  : copy.t('sceneContextNoLinkedItems'),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: color.onSurfaceVariant,
                   ),
@@ -1953,17 +1972,35 @@ final class _SceneContextLinks extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final item in relevantItems)
-                FilterChip(
+              for (final item in linkedItems)
+                InputChip(
                   avatar: Icon(_catalogIcon(item.type), size: 18),
                   label: Text(item.name),
-                  selected: _isLinked(item),
-                  onSelected: (selected) => onToggleLink(item, selected),
+                  tooltip: copy.t('removeSceneContext'),
+                  deleteButtonTooltipMessage: copy.t('removeSceneContext'),
+                  onDeleted: () => onToggleLink(item, false),
                 ),
             ],
           ),
       ],
     );
+  }
+
+  Future<void> _showExistingContextDialog(
+    BuildContext context,
+    List<CatalogItem> availableItems,
+  ) async {
+    final selectedItems = await showDialog<List<CatalogItem>>(
+      context: context,
+      builder: (context) => _ExistingSceneContextDialog(
+        copy: copy,
+        availableItems: availableItems,
+      ),
+    );
+    if (selectedItems == null || selectedItems.isEmpty) return;
+    for (final item in selectedItems) {
+      onToggleLink(item, true);
+    }
   }
 
   bool _isLinked(CatalogItem item) {
@@ -1974,6 +2011,120 @@ final class _SceneContextLinks extends StatelessWidget {
           relationship.target.type == item.type &&
           relationship.target.id == item.id &&
           relationship.relationshipType == 'appearsIn',
+    );
+  }
+}
+
+final class _ExistingSceneContextDialog extends StatefulWidget {
+  const _ExistingSceneContextDialog({
+    required this.copy,
+    required this.availableItems,
+  });
+
+  final WritelerCopy copy;
+  final List<CatalogItem> availableItems;
+
+  @override
+  State<_ExistingSceneContextDialog> createState() =>
+      _ExistingSceneContextDialogState();
+}
+
+final class _ExistingSceneContextDialogState
+    extends State<_ExistingSceneContextDialog> {
+  EntityType _typeFilter = EntityType.character;
+  final Set<String> _selectedIds = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final copy = widget.copy;
+    final filteredItems = widget.availableItems
+        .where((item) => item.type == _typeFilter)
+        .toList(growable: false);
+    return AlertDialog(
+      title: Text(copy.t('addExistingSceneContext')),
+      content: SizedBox(
+        width: 460,
+        height: 420,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SegmentedButton<EntityType>(
+              segments: [
+                for (final type in const [
+                  EntityType.character,
+                  EntityType.location,
+                  EntityType.object,
+                ])
+                  ButtonSegment(
+                    value: type,
+                    icon: Icon(_catalogIcon(type), size: 18),
+                    label: Text(copy.t(_catalogTitleKey(type))),
+                  ),
+              ],
+              selected: {_typeFilter},
+              onSelectionChanged: (selection) {
+                setState(() => _typeFilter = selection.first);
+              },
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: filteredItems.isEmpty
+                  ? Center(
+                      child: Text(
+                        copy.t('noExistingSceneContextItems'),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: filteredItems.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final item = filteredItems[index];
+                        return CheckboxListTile(
+                          secondary: Icon(_catalogIcon(item.type)),
+                          title: Text(item.name),
+                          subtitle: item.summary.trim().isEmpty
+                              ? null
+                              : Text(
+                                  item.summary,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                          value: _selectedIds.contains(item.id),
+                          onChanged: (selected) {
+                            setState(() {
+                              if (selected ?? false) {
+                                _selectedIds.add(item.id);
+                              } else {
+                                _selectedIds.remove(item.id);
+                              }
+                            });
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(copy.t('cancel')),
+        ),
+        FilledButton.icon(
+          onPressed: _selectedIds.isEmpty
+              ? null
+              : () {
+                  final selectedItems = widget.availableItems
+                      .where((item) => _selectedIds.contains(item.id))
+                      .toList(growable: false);
+                  Navigator.of(context).pop(selectedItems);
+                },
+          icon: const Icon(Icons.add_link_outlined),
+          label: Text(copy.t('addSelectedSceneContext')),
+        ),
+      ],
     );
   }
 }

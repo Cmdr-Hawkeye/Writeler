@@ -370,6 +370,19 @@ void main() {
 
     expect(find.text('Mara'), findsOneWidget);
 
+    await tester.tap(find.byTooltip('Remove from scene').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Mara'), findsNothing);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Add existing'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mara'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add selection'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mara'), findsOneWidget);
+
     await tester.ensureVisible(find.text('AI help'));
     expect(find.text('AI help'), findsOneWidget);
     await tester
