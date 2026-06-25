@@ -134,20 +134,20 @@ final class _WritelerShellState extends State<WritelerShell> {
       icon: Icons.dashboard_outlined,
       selectedIcon: Icons.dashboard,
       labelBuilder: (copy) => copy.t('dashboard'),
-      group: _WorkspaceNavGroup.organize,
+      group: _WorkspaceNavGroup.write,
+    ),
+    _WorkspaceNavItem(
+      index: 2,
+      icon: Icons.account_tree_outlined,
+      selectedIcon: Icons.account_tree,
+      labelBuilder: (copy) => copy.t('projectStructure'),
+      group: _WorkspaceNavGroup.write,
     ),
     _WorkspaceNavItem(
       index: 1,
       icon: Icons.edit_note_outlined,
       selectedIcon: Icons.edit_note,
       labelBuilder: (copy) => copy.t('editor'),
-      group: _WorkspaceNavGroup.write,
-    ),
-    _WorkspaceNavItem(
-      index: 2,
-      icon: Icons.auto_awesome_motion_outlined,
-      selectedIcon: Icons.auto_awesome_motion,
-      labelBuilder: (copy) => copy.t('scenes'),
       group: _WorkspaceNavGroup.write,
     ),
     _WorkspaceNavItem(

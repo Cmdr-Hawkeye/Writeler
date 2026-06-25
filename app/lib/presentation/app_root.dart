@@ -272,41 +272,174 @@ final class _WritelerThemeTokens {
   final Color error;
 }
 
+final class WritelerDesignTokens extends ThemeExtension<WritelerDesignTokens> {
+  const WritelerDesignTokens({
+    required this.ink,
+    required this.inkSoft,
+    required this.inkContrast,
+    required this.pencil,
+    required this.pencilStrong,
+    required this.pencilBackground,
+    required this.pencilBorder,
+    required this.statusPlanned,
+    required this.statusProgress,
+    required this.statusDone,
+    required this.statusLocked,
+    required this.statusArchived,
+    required this.panelShadow,
+  });
+
+  final Color ink;
+  final Color inkSoft;
+  final Color inkContrast;
+  final Color pencil;
+  final Color pencilStrong;
+  final Color pencilBackground;
+  final Color pencilBorder;
+  final Color statusPlanned;
+  final Color statusProgress;
+  final Color statusDone;
+  final Color statusLocked;
+  final Color statusArchived;
+  final BoxShadow panelShadow;
+
+  @override
+  WritelerDesignTokens copyWith({
+    Color? ink,
+    Color? inkSoft,
+    Color? inkContrast,
+    Color? pencil,
+    Color? pencilStrong,
+    Color? pencilBackground,
+    Color? pencilBorder,
+    Color? statusPlanned,
+    Color? statusProgress,
+    Color? statusDone,
+    Color? statusLocked,
+    Color? statusArchived,
+    BoxShadow? panelShadow,
+  }) {
+    return WritelerDesignTokens(
+      ink: ink ?? this.ink,
+      inkSoft: inkSoft ?? this.inkSoft,
+      inkContrast: inkContrast ?? this.inkContrast,
+      pencil: pencil ?? this.pencil,
+      pencilStrong: pencilStrong ?? this.pencilStrong,
+      pencilBackground: pencilBackground ?? this.pencilBackground,
+      pencilBorder: pencilBorder ?? this.pencilBorder,
+      statusPlanned: statusPlanned ?? this.statusPlanned,
+      statusProgress: statusProgress ?? this.statusProgress,
+      statusDone: statusDone ?? this.statusDone,
+      statusLocked: statusLocked ?? this.statusLocked,
+      statusArchived: statusArchived ?? this.statusArchived,
+      panelShadow: panelShadow ?? this.panelShadow,
+    );
+  }
+
+  @override
+  WritelerDesignTokens lerp(
+    covariant ThemeExtension<WritelerDesignTokens>? other,
+    double t,
+  ) {
+    if (other is! WritelerDesignTokens) return this;
+    return WritelerDesignTokens(
+      ink: Color.lerp(ink, other.ink, t)!,
+      inkSoft: Color.lerp(inkSoft, other.inkSoft, t)!,
+      inkContrast: Color.lerp(inkContrast, other.inkContrast, t)!,
+      pencil: Color.lerp(pencil, other.pencil, t)!,
+      pencilStrong: Color.lerp(pencilStrong, other.pencilStrong, t)!,
+      pencilBackground:
+          Color.lerp(pencilBackground, other.pencilBackground, t)!,
+      pencilBorder: Color.lerp(pencilBorder, other.pencilBorder, t)!,
+      statusPlanned: Color.lerp(statusPlanned, other.statusPlanned, t)!,
+      statusProgress: Color.lerp(statusProgress, other.statusProgress, t)!,
+      statusDone: Color.lerp(statusDone, other.statusDone, t)!,
+      statusLocked: Color.lerp(statusLocked, other.statusLocked, t)!,
+      statusArchived: Color.lerp(statusArchived, other.statusArchived, t)!,
+      panelShadow: BoxShadow.lerp(panelShadow, other.panelShadow, t)!,
+    );
+  }
+}
+
+WritelerDesignTokens _semanticTokensFor(_WritelerThemeTokens tokens) {
+  final dark = tokens.brightness == Brightness.dark;
+  if (dark) {
+    return const WritelerDesignTokens(
+      ink: Color(0xFF4FB3AD),
+      inkSoft: Color(0x244FB3AD),
+      inkContrast: Color(0xFF06201D),
+      pencil: Color(0xFFD99A52),
+      pencilStrong: Color(0xFFB97A36),
+      pencilBackground: Color(0x1AD99A52),
+      pencilBorder: Color(0x73D99A52),
+      statusPlanned: Color(0xFF8A93A3),
+      statusProgress: Color(0xFF4F8FD1),
+      statusDone: Color(0xFF5CB37A),
+      statusLocked: Color(0xFFA48CC9),
+      statusArchived: Color(0xFF5B6472),
+      panelShadow: BoxShadow(
+        color: Color(0x52000000),
+        blurRadius: 24,
+        offset: Offset(0, 8),
+      ),
+    );
+  }
+  return const WritelerDesignTokens(
+    ink: Color(0xFF1F7F78),
+    inkSoft: Color(0x1A1F7F78),
+    inkContrast: Color(0xFFEAFBF8),
+    pencil: Color(0xFF9A6A2E),
+    pencilStrong: Color(0xFF7A521F),
+    pencilBackground: Color(0x149A6A2E),
+    pencilBorder: Color(0x669A6A2E),
+    statusPlanned: Color(0xFF6B7480),
+    statusProgress: Color(0xFF2F6FAD),
+    statusDone: Color(0xFF2F8A57),
+    statusLocked: Color(0xFF7A5FA3),
+    statusArchived: Color(0xFF7A8390),
+    panelShadow: BoxShadow(
+      color: Color(0x1A141410),
+      blurRadius: 24,
+      offset: Offset(0, 8),
+    ),
+  );
+}
+
 _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
   return switch (theme) {
     WritelerDesignTheme.paper => const _WritelerThemeTokens(
         brightness: Brightness.light,
-        seed: Color(0xFF2A8C7D),
-        primary: Color(0xFF087467),
-        onPrimary: Colors.white,
-        secondary: Color(0xFF7D5A16),
-        tertiary: Color(0xFF35618C),
-        surface: Color(0xFFF6FAFB),
+        seed: Color(0xFF1F7F78),
+        primary: Color(0xFF1F7F78),
+        onPrimary: Color(0xFFEAFBF8),
+        secondary: Color(0xFF9A6A2E),
+        tertiary: Color(0xFF2F6FAD),
+        surface: Color(0xFFF3F3EF),
         surfaceLowest: Color(0xFFFFFFFF),
-        surfaceLow: Color(0xFFF0F7F8),
-        surfaceMid: Color(0xFFE9F2F3),
-        surfaceHigh: Color(0xFFDDE9EA),
-        surfaceHighest: Color(0xFFD1E0E2),
-        outline: Color(0xFF8BA2A5),
-        outlineVariant: Color(0xFFC9D8DA),
-        error: Color(0xFFBA1A1A),
+        surfaceLow: Color(0xFFFBFBF9),
+        surfaceMid: Color(0xFFE9E8E2),
+        surfaceHigh: Color(0xFFE7E5DD),
+        surfaceHighest: Color(0xFFDCDAD2),
+        outline: Color(0xFF838D97),
+        outlineVariant: Color(0xFFDCDAD2),
+        error: Color(0xFFC5453D),
       ),
     WritelerDesignTheme.dusk => const _WritelerThemeTokens(
         brightness: Brightness.dark,
-        seed: Color(0xFF9BE7D8),
-        primary: Color(0xFFA7EEE1),
+        seed: Color(0xFF4FB3AD),
+        primary: Color(0xFF4FB3AD),
         onPrimary: Color(0xFF062321),
-        secondary: Color(0xFFFFCE7A),
-        tertiary: Color(0xFFAFCBFF),
-        surface: Color(0xFF081312),
-        surfaceLowest: Color(0xFF040908),
-        surfaceLow: Color(0xFF0A1715),
-        surfaceMid: Color(0xFF0F201D),
-        surfaceHigh: Color(0xFF152A27),
-        surfaceHighest: Color(0xFF1B3430),
-        outline: Color(0xFF4D6864),
-        outlineVariant: Color(0xFF243C38),
-        error: Color(0xFFFFA0A8),
+        secondary: Color(0xFFD99A52),
+        tertiary: Color(0xFF4F8FD1),
+        surface: Color(0xFF11151A),
+        surfaceLowest: Color(0xFF0D1116),
+        surfaceLow: Color(0xFF171D24),
+        surfaceMid: Color(0xFF1D2430),
+        surfaceHigh: Color(0xFF202936),
+        surfaceHighest: Color(0xFF262E38),
+        outline: Color(0xFF5F6B79),
+        outlineVariant: Color(0xFF262E38),
+        error: Color(0xFFE2675F),
       ),
     WritelerDesignTheme.sapphire => const _WritelerThemeTokens(
         brightness: Brightness.dark,
@@ -381,6 +514,7 @@ _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
 
 ThemeData _buildWritelerTheme(WritelerDesignTheme designTheme) {
   final tokens = _tokensFor(designTheme);
+  final design = _semanticTokensFor(tokens);
   final dark = tokens.brightness == Brightness.dark;
   final baseScheme = ColorScheme.fromSeed(
     seedColor: tokens.seed,
@@ -404,7 +538,7 @@ ThemeData _buildWritelerTheme(WritelerDesignTheme designTheme) {
   final textTheme =
       (dark ? Typography.material2021().white : Typography.material2021().black)
           .apply(
-    fontFamily: 'Roboto',
+    fontFamily: 'Inter',
     displayColor: scheme.onSurface,
     bodyColor: scheme.onSurface,
   );
@@ -418,14 +552,14 @@ ThemeData _buildWritelerTheme(WritelerDesignTheme designTheme) {
   return ThemeData(
     brightness: tokens.brightness,
     colorScheme: scheme,
+    extensions: [design],
     scaffoldBackgroundColor: scheme.surface,
     canvasColor: scheme.surface,
-    fontFamily: 'Aptos',
+    fontFamily: 'Inter',
     fontFamilyFallback: const [
+      'Roboto',
       'Segoe UI Variable',
       'Segoe UI',
-      'Inter',
-      'Roboto',
       'Arial',
       'sans-serif',
     ],
@@ -524,6 +658,8 @@ ThemeData _buildWritelerTheme(WritelerDesignTheme designTheme) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(48, 44),
+        backgroundColor: design.ink,
+        foregroundColor: design.inkContrast,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
         ),
@@ -533,7 +669,7 @@ ThemeData _buildWritelerTheme(WritelerDesignTheme designTheme) {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(48, 44),
-        foregroundColor: scheme.primary,
+        foregroundColor: design.ink,
         side: BorderSide(color: scheme.outline),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),

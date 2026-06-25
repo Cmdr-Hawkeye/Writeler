@@ -35,10 +35,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Writeler'), findsOneWidget);
+    expect(find.text('writeler'), findsOneWidget);
     expect(find.text('Dashboard'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
-    expect(find.text('Scenes'), findsOneWidget);
+    expect(find.text('Project structure'), findsOneWidget);
     expect(find.text('Notes'), findsOneWidget);
     expect(find.text('AI Workshop'), findsOneWidget);
     expect(find.text('Logs'), findsOneWidget);
@@ -87,7 +87,7 @@ void main() {
     expect(find.text('Logs'), findsWidgets);
     expect(find.textContaining('Chronological events'), findsOneWidget);
 
-    await tester.tap(find.text('Scenes').first);
+    await tester.tap(find.text('Project structure').first);
     await tester.pumpAndSettle();
 
     expect(find.text('Structure cockpit'), findsOneWidget);
@@ -280,7 +280,7 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    final context = tester.element(find.text('Writeler'));
+    final context = tester.element(find.text('writeler'));
 
     expect(
       Theme.of(context).colorScheme.primary,

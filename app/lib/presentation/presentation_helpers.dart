@@ -322,9 +322,9 @@ String _draftStatusLabel(DraftStatus status, String languageCode) {
     DraftStatus.planned => german ? 'Geplant' : 'Planned',
     DraftStatus.outlined => german ? 'Strukturiert' : 'Outlined',
     DraftStatus.drafting => german ? 'Im Entwurf' : 'Drafting',
-    DraftStatus.needsRevision => german ? 'Ueberarbeiten' : 'Needs revision',
-    DraftStatus.revised => german ? 'Ueberarbeitet' : 'Revised',
-    DraftStatus.reviewed => german ? 'Geprueft' : 'Reviewed',
+    DraftStatus.needsRevision => german ? 'Überarbeiten' : 'Needs revision',
+    DraftStatus.revised => german ? 'Überarbeitet' : 'Revised',
+    DraftStatus.reviewed => german ? 'Geprüft' : 'Reviewed',
     DraftStatus.locked => german ? 'Gesperrt' : 'Locked',
     DraftStatus.archived => german ? 'Archiviert' : 'Archived',
   };

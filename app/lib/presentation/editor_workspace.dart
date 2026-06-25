@@ -390,14 +390,27 @@ final class _SceneNavigatorTile extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${scene.actualWordCount} ${copy.t('words')} - '
-                      '${_draftStatusLabel(scene.status, copy.languageCode)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: color.onSurfaceVariant,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '${scene.actualWordCount} ${copy.t('words')}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: color.onSurfaceVariant,
+                                    ),
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        _StatusChip(
+                          status: scene.status,
+                          label: _draftStatusLabel(
+                              scene.status, copy.languageCode),
+                          compact: true,
+                        ),
+                      ],
                     ),
                     if (missing.isNotEmpty) ...[
                       const SizedBox(height: 5),
@@ -567,7 +580,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
       padding: EdgeInsets.all(_focusMode ? 32 : 24),
-      color: _focusMode ? color.surfaceContainerLowest : Colors.transparent,
+      color: color.surfaceContainerLowest,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -685,37 +698,40 @@ final class _ManuscriptField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: focusMode
-            ? color.surfaceContainerLowest
-            : color.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: focusMode
-              ? color.primary.withValues(alpha: 0.42)
-              : color.outlineVariant,
-        ),
-      ),
-      child: TextField(
-        controller: controller,
-        expands: true,
-        maxLines: null,
-        minLines: null,
-        textAlignVertical: TextAlignVertical.top,
-        cursorColor: color.primary,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontSize: focusMode ? 19 : 17,
-              height: 1.7,
+    return ColoredBox(
+      color: color.surfaceContainerLowest,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: TextField(
+            controller: controller,
+            expands: true,
+            maxLines: null,
+            minLines: null,
+            textAlignVertical: TextAlignVertical.top,
+            cursorColor: color.primary,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontFamily: 'Literata',
+                  fontFamilyFallback: const [
+                    'Iowan Old Style',
+                    'Source Serif Pro',
+                    'Georgia',
+                    'Times New Roman',
+                    'serif',
+                  ],
+                  fontSize: focusMode ? 20 : 18,
+                  height: 1.75,
+                ),
+            decoration: InputDecoration(
+              hintText: copy.t('manuscript'),
+              alignLabelWithHint: true,
+              filled: false,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 28),
             ),
-        decoration: InputDecoration(
-          labelText: copy.t('manuscript'),
-          alignLabelWithHint: true,
-          filled: false,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.all(22),
+          ),
         ),
       ),
     );

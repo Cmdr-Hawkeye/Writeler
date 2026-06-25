@@ -2,7 +2,7 @@ part of '../main.dart';
 
 // Workspace navigation, brand mark, and top bar chrome.
 
-enum _WorkspaceNavGroup { organize, write, world, review, output }
+enum _WorkspaceNavGroup { write, world, review, output }
 
 final class _WorkspaceNavItem {
   const _WorkspaceNavItem({
@@ -84,11 +84,10 @@ final class _WorkspaceNavigation extends StatelessWidget {
 
 String _navGroupLabel(_WorkspaceNavGroup group, WritelerCopy copy) =>
     switch (group) {
-      _WorkspaceNavGroup.organize => copy.t('project'),
-      _WorkspaceNavGroup.write => copy.t('manuscript'),
+      _WorkspaceNavGroup.write => copy.t('navGroupWriting'),
       _WorkspaceNavGroup.world => copy.t('catalog'),
-      _WorkspaceNavGroup.review => copy.t('analysis'),
-      _WorkspaceNavGroup.output => copy.t('exports'),
+      _WorkspaceNavGroup.review => copy.t('navGroupAnalysisAi'),
+      _WorkspaceNavGroup.output => copy.t('navGroupAdministration'),
     };
 
 final class _NavigationGroupLabel extends StatelessWidget {
@@ -137,12 +136,12 @@ final class _WorkspaceNavButtonState extends State<_WorkspaceNavButton> {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
     final active = widget.selected || _hovered;
-    final foreground = widget.selected
-        ? color.primary
-        : color.onSurface.withValues(alpha: 0.86);
+    final foreground =
+        widget.selected ? design.ink : color.onSurface.withValues(alpha: 0.86);
     final background = widget.selected
-        ? color.primary.withValues(alpha: 0.12)
+        ? design.inkSoft
         : _hovered
             ? color.surfaceContainer
             : Colors.transparent;
@@ -173,7 +172,7 @@ final class _WorkspaceNavButtonState extends State<_WorkspaceNavButton> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: widget.selected
-                        ? color.primary.withValues(alpha: 0.24)
+                        ? design.ink.withValues(alpha: 0.24)
                         : Colors.transparent,
                   ),
                 ),
@@ -185,7 +184,7 @@ final class _WorkspaceNavButtonState extends State<_WorkspaceNavButton> {
                       height: active ? 20 : 12,
                       decoration: BoxDecoration(
                         color: widget.selected
-                            ? color.primary
+                            ? design.ink
                             : _hovered
                                 ? color.outline
                                 : Colors.transparent,
@@ -231,6 +230,7 @@ final class _BrandMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
     return Tooltip(
       message: 'Writeler',
       child: Semantics(
@@ -239,29 +239,19 @@ final class _BrandMark extends StatelessWidget {
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
-                color: color.primary.withValues(alpha: 0.12),
-                border: Border.all(
-                  color: color.primary.withValues(alpha: 0.36),
-                ),
+                color: design.inkSoft,
+                border: Border.all(color: design.ink.withValues(alpha: 0.36)),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: SizedBox(
-                width: 46,
-                height: 46,
-                child: CustomPaint(
-                  painter: _WritelerMarkPainter(
-                    primary: color.primary,
-                    secondary: color.secondary,
-                    surface: color.surfaceContainerLowest,
-                  ),
-                  child: const SizedBox.expand(),
-                ),
+              child: const Padding(
+                padding: EdgeInsets.all(9),
+                child: _InkThreadMark(size: 28),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Writeler',
+                'writeler',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -274,72 +264,6 @@ final class _BrandMark extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-final class _WritelerMarkPainter extends CustomPainter {
-  const _WritelerMarkPainter({
-    required this.primary,
-    required this.secondary,
-    required this.surface,
-  });
-
-  final Color primary;
-  final Color secondary;
-  final Color surface;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final stroke = Paint()
-      ..color = primary
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.6
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final fill = Paint()
-      ..color = primary.withValues(alpha: 0.14)
-      ..style = PaintingStyle.fill;
-    final accent = Paint()
-      ..color = secondary
-      ..style = PaintingStyle.fill;
-
-    final page = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        size.width * 0.22,
-        size.height * 0.22,
-        size.width * 0.46,
-        size.height * 0.52,
-      ),
-      const Radius.circular(5),
-    );
-    canvas.drawRRect(page, fill);
-    canvas.drawRRect(page, stroke);
-
-    final path = Path()
-      ..moveTo(size.width * 0.24, size.height * 0.66)
-      ..lineTo(size.width * 0.35, size.height * 0.43)
-      ..lineTo(size.width * 0.46, size.height * 0.66)
-      ..lineTo(size.width * 0.58, size.height * 0.39)
-      ..lineTo(size.width * 0.72, size.height * 0.66);
-    canvas.drawPath(path, stroke);
-
-    canvas.drawCircle(
-      Offset(size.width * 0.72, size.height * 0.70),
-      3.3,
-      accent,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.72, size.height * 0.70),
-      1.4,
-      Paint()..color = surface,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _WritelerMarkPainter oldDelegate) {
-    return primary != oldDelegate.primary ||
-        secondary != oldDelegate.secondary ||
-        surface != oldDelegate.surface;
   }
 }
 

@@ -934,6 +934,7 @@ final class _AISuggestionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
     final scene = suggestion.target.type == EntityType.scene
         ? scenes.where((scene) => scene.id == suggestion.target.id).firstOrNull
         : null;
@@ -943,95 +944,121 @@ final class _AISuggestionTile extends StatelessWidget {
             suggestion: suggestion,
             scene: scene,
           );
-    return Material(
+    final pending = suggestion.userDecision == SuggestionDecision.pending;
+    final tile = Material(
       color: Colors.transparent,
-      child: ExpansionTile(
-        leading: const Icon(Icons.psychology_alt_outlined),
-        title: Text(_aiTaskLabel(suggestion.suggestionType, copy)),
-        subtitle: Text(
-          '${suggestion.modelName} - ${_decisionLabel(suggestion.userDecision, copy)}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
         ),
-        childrenPadding: const EdgeInsets.fromLTRB(56, 0, 16, 16),
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  copy.t('aiResponse'),
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 6),
-                _AIResponseDigest(copy: copy, text: suggestion.responseText),
-                const SizedBox(height: 12),
-                SelectableText(
-                  suggestion.responseText,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                _ScenePatchPreview(
-                  copy: copy,
-                  patch: patch,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  copy.t('sentPrompt'),
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 6),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: color.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.fromLTRB(34, 0, 0, 0),
+          leading: Icon(
+            Icons.edit_outlined,
+            color: pending ? design.pencil : color.onSurfaceVariant,
+          ),
+          title: Text(_aiTaskLabel(suggestion.suggestionType, copy)),
+          subtitle: Text(
+            '${suggestion.modelName} - ${_decisionLabel(suggestion.userDecision, copy)}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    copy.t('aiResponse'),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: pending ? design.pencil : null,
+                        ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: SelectableText(
-                      suggestion.promptText,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
-                            color: color.onSurfaceVariant,
-                          ),
+                  const SizedBox(height: 6),
+                  _AIResponseDigest(copy: copy, text: suggestion.responseText),
+                  const SizedBox(height: 12),
+                  SelectableText(
+                    suggestion.responseText,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  _ScenePatchPreview(
+                    copy: copy,
+                    patch: patch,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    copy.t('sentPrompt'),
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: 6),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: color.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: SelectableText(
+                        suggestion.promptText,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontFamily: 'JetBrains Mono',
+                              fontFamilyFallback: const [
+                                'Consolas',
+                                'monospace'
+                              ],
+                              color: color.onSurfaceVariant,
+                            ),
+                      ),
                     ),
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text(
+                  _formatLocalDateTime(suggestion.createdAt),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+                const Spacer(),
+                _HelpTooltip(message: copy.t('helpSuggestionActions')),
+                const SizedBox(width: 6),
+                IconButton(
+                  tooltip: copy.t('helpAcceptSuggestion'),
+                  onPressed: () => onAcceptSuggestion(suggestion),
+                  icon: const Icon(Icons.check),
+                ),
+                IconButton(
+                  tooltip: copy.t('helpConvertSuggestion'),
+                  onPressed: () => onConvertSuggestion(suggestion),
+                  icon: const Icon(Icons.sticky_note_2_outlined),
+                ),
+                IconButton(
+                  tooltip: copy.t('helpRejectSuggestion'),
+                  onPressed: () => onRejectSuggestion(suggestion),
+                  icon: const Icon(Icons.close),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                _formatLocalDateTime(suggestion.createdAt),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color.onSurfaceVariant,
-                    ),
-              ),
-              const Spacer(),
-              _HelpTooltip(message: copy.t('helpSuggestionActions')),
-              const SizedBox(width: 6),
-              IconButton(
-                tooltip: copy.t('helpAcceptSuggestion'),
-                onPressed: () => onAcceptSuggestion(suggestion),
-                icon: const Icon(Icons.check),
-              ),
-              IconButton(
-                tooltip: copy.t('helpConvertSuggestion'),
-                onPressed: () => onConvertSuggestion(suggestion),
-                icon: const Icon(Icons.sticky_note_2_outlined),
-              ),
-              IconButton(
-                tooltip: copy.t('helpRejectSuggestion'),
-                onPressed: () => onRejectSuggestion(suggestion),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+    if (!pending) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: tile,
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: _PencilSuggestionFrame(child: tile),
     );
   }
 }
