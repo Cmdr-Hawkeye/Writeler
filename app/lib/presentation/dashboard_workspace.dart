@@ -10,6 +10,7 @@ final class _WorkspaceView extends StatelessWidget {
     required this.chapters,
     required this.catalogItems,
     required this.relationships,
+    required this.suggestions,
     required this.scenes,
     required this.selectedScene,
     required this.manuscriptController,
@@ -31,6 +32,8 @@ final class _WorkspaceView extends StatelessWidget {
     required this.onSceneStatusChanged,
     required this.onCreateChapter,
     required this.onCreateScene,
+    required this.isRequestingAi,
+    required this.onRequestSceneAiHelp,
     required this.onSaveScene,
   });
 
@@ -40,6 +43,7 @@ final class _WorkspaceView extends StatelessWidget {
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<AISuggestion> suggestions;
   final List<Scene> scenes;
   final Scene? selectedScene;
   final TextEditingController manuscriptController;
@@ -61,6 +65,8 @@ final class _WorkspaceView extends StatelessWidget {
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final VoidCallback onCreateChapter;
   final VoidCallback onCreateScene;
+  final bool isRequestingAi;
+  final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
   final VoidCallback onSaveScene;
 
   @override
@@ -78,6 +84,7 @@ final class _WorkspaceView extends StatelessWidget {
       chapters: chapters,
       catalogItems: catalogItems,
       relationships: relationships,
+      suggestions: suggestions,
       scenes: scenes,
       selectedScene: selectedScene,
       manuscriptController: manuscriptController,
@@ -97,6 +104,8 @@ final class _WorkspaceView extends StatelessWidget {
       onSceneStatusChanged: onSceneStatusChanged,
       onCreateChapter: onCreateChapter,
       onCreateScene: onCreateScene,
+      isRequestingAi: isRequestingAi,
+      onRequestSceneAiHelp: onRequestSceneAiHelp,
       onSaveScene: onSaveScene,
     );
 

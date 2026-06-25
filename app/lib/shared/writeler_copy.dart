@@ -359,6 +359,14 @@ final class WritelerCopy {
     'aiPrompt': 'Auftrag an die KI',
     'defaultAiPrompt':
         'Prüfe diese Szene und schlage strukturierende Fragen vor.',
+    'editorAiHelp': 'KI-Hilfe',
+    'editorAiHelpInput': 'Frage oder Auftrag zur aktuellen Szene',
+    'helpEditorAiHelp':
+        'Nutzt den Kontext der aktuellen Szene und speichert die Antwort als KI-Vorschlag.',
+    'sendAiHelp': 'KI fragen',
+    'latestAiHelpAnswer': 'Letzte Antwort',
+    'defaultEditorAiHelpPrompt':
+        'Analysiere die aktuelle Szene und nenne die hilfreichsten nächsten Entscheidungen.',
     'requestSceneIdeas': 'Szenenideen',
     'requestStructure': 'Ziel/Konflikt/Ausgang',
     'moreAiChecks': 'Weitere Prüfungen',
@@ -935,6 +943,14 @@ final class WritelerCopy {
         'Project-wide analysis uses title, description, chapters, and scene overview.',
     'aiPrompt': 'AI task',
     'defaultAiPrompt': 'Review this scene and suggest structuring questions.',
+    'editorAiHelp': 'AI help',
+    'editorAiHelpInput': 'Question or task for the current scene',
+    'helpEditorAiHelp':
+        'Uses the current scene context and stores the answer as an AI suggestion.',
+    'sendAiHelp': 'Ask AI',
+    'latestAiHelpAnswer': 'Latest answer',
+    'defaultEditorAiHelpPrompt':
+        'Analyze the current scene and name the most useful next decisions.',
     'requestSceneIdeas': 'Scene ideas',
     'requestStructure': 'Goal/conflict/outcome',
     'moreAiChecks': 'More checks',

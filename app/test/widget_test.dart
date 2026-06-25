@@ -342,6 +342,12 @@ void main() {
 
     expect(find.text('Opening'), findsWidgets);
     expect(find.text('Manuscript'), findsWidgets);
+    expect(find.text('AI help'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Author questions'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Latest answer'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.fullscreen).first);
     await tester.pumpAndSettle();
@@ -349,6 +355,7 @@ void main() {
     expect(find.text('Opening'), findsOneWidget);
     expect(find.textContaining('No chapter'), findsNothing);
     expect(find.text('Manuscript'), findsWidgets);
+    expect(find.text('AI help'), findsNothing);
   });
 
   testWidgets('relationship graph explains required endpoints', (tester) async {

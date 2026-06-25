@@ -9,6 +9,7 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.chapters,
     required this.catalogItems,
     required this.relationships,
+    required this.suggestions,
     required this.scenes,
     required this.selectedScene,
     required this.manuscriptController,
@@ -28,6 +29,8 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.onSceneStatusChanged,
     required this.onCreateChapter,
     required this.onCreateScene,
+    required this.isRequestingAi,
+    required this.onRequestSceneAiHelp,
     required this.onSaveScene,
   });
 
@@ -36,6 +39,7 @@ final class _ProjectWorkspace extends StatefulWidget {
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<AISuggestion> suggestions;
   final List<Scene> scenes;
   final Scene? selectedScene;
   final TextEditingController manuscriptController;
@@ -55,6 +59,8 @@ final class _ProjectWorkspace extends StatefulWidget {
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final VoidCallback onCreateChapter;
   final VoidCallback onCreateScene;
+  final bool isRequestingAi;
+  final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
   final VoidCallback onSaveScene;
 
   @override
@@ -155,6 +161,7 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                         chapters: widget.chapters,
                         catalogItems: widget.catalogItems,
                         relationships: widget.relationships,
+                        suggestions: widget.suggestions,
                         controller: widget.manuscriptController,
                         summaryController: widget.summaryController,
                         goalController: widget.goalController,
@@ -175,6 +182,8 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                         onToggleSceneCatalogLink:
                             widget.onToggleSceneCatalogLink,
                         onSceneStatusChanged: widget.onSceneStatusChanged,
+                        isRequestingAi: widget.isRequestingAi,
+                        onRequestSceneAiHelp: widget.onRequestSceneAiHelp,
                         onSaveScene: widget.onSaveScene,
                       ),
               ),
@@ -525,6 +534,7 @@ final class _SceneEditor extends StatefulWidget {
     required this.chapters,
     required this.catalogItems,
     required this.relationships,
+    required this.suggestions,
     required this.controller,
     required this.summaryController,
     required this.goalController,
@@ -542,6 +552,8 @@ final class _SceneEditor extends StatefulWidget {
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
     required this.onSceneStatusChanged,
+    required this.isRequestingAi,
+    required this.onRequestSceneAiHelp,
     required this.onSaveScene,
   });
 
@@ -550,6 +562,7 @@ final class _SceneEditor extends StatefulWidget {
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<AISuggestion> suggestions;
   final TextEditingController controller;
   final TextEditingController summaryController;
   final TextEditingController goalController;
@@ -567,6 +580,8 @@ final class _SceneEditor extends StatefulWidget {
   final ValueChanged<String?> onSceneChapterChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
+  final bool isRequestingAi;
+  final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
   final VoidCallback onSaveScene;
 
   @override
@@ -602,6 +617,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
       chapters: widget.chapters,
       catalogItems: widget.catalogItems,
       relationships: widget.relationships,
+      suggestions: widget.suggestions,
       summaryController: widget.summaryController,
       goalController: widget.goalController,
       conflictController: widget.conflictController,
@@ -612,6 +628,8 @@ final class _SceneEditorState extends State<_SceneEditor> {
       onSceneChapterChanged: widget.onSceneChapterChanged,
       onSceneStatusChanged: widget.onSceneStatusChanged,
       onToggleSceneCatalogLink: widget.onToggleSceneCatalogLink,
+      isRequestingAi: widget.isRequestingAi,
+      onRequestSceneAiHelp: widget.onRequestSceneAiHelp,
     );
 
     return AnimatedContainer(
@@ -920,6 +938,7 @@ final class _SceneInspector extends StatelessWidget {
     required this.chapters,
     required this.catalogItems,
     required this.relationships,
+    required this.suggestions,
     required this.summaryController,
     required this.goalController,
     required this.conflictController,
@@ -930,6 +949,8 @@ final class _SceneInspector extends StatelessWidget {
     required this.onSceneChapterChanged,
     required this.onSceneStatusChanged,
     required this.onToggleSceneCatalogLink,
+    required this.isRequestingAi,
+    required this.onRequestSceneAiHelp,
   });
 
   final WritelerCopy copy;
@@ -937,6 +958,7 @@ final class _SceneInspector extends StatelessWidget {
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<AISuggestion> suggestions;
   final TextEditingController summaryController;
   final TextEditingController goalController;
   final TextEditingController conflictController;
@@ -947,6 +969,8 @@ final class _SceneInspector extends StatelessWidget {
   final ValueChanged<String?> onSceneChapterChanged;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
+  final bool isRequestingAi;
+  final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -971,6 +995,16 @@ final class _SceneInspector extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          _SceneAiHelpBox(
+            copy: copy,
+            scene: scene,
+            isRequesting: isRequestingAi,
+            latestSuggestion: _latestSceneSuggestion(scene, suggestions),
+            onRequest: onRequestSceneAiHelp,
+          ),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: color.outlineVariant),
+          const SizedBox(height: 14),
           _ScenePlanningFields(
             copy: copy,
             summaryController: summaryController,
@@ -997,6 +1031,171 @@ final class _SceneInspector extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+AISuggestion? _latestSceneSuggestion(
+  Scene scene,
+  List<AISuggestion> suggestions,
+) {
+  final sceneSuggestions = suggestions
+      .where((suggestion) =>
+          suggestion.target.type == EntityType.scene &&
+          suggestion.target.id == scene.id &&
+          suggestion.userDecision == SuggestionDecision.pending)
+      .toList()
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  return sceneSuggestions.firstOrNull;
+}
+
+final class _SceneAiHelpBox extends StatefulWidget {
+  const _SceneAiHelpBox({
+    required this.copy,
+    required this.scene,
+    required this.isRequesting,
+    required this.latestSuggestion,
+    required this.onRequest,
+  });
+
+  final WritelerCopy copy;
+  final Scene scene;
+  final bool isRequesting;
+  final AISuggestion? latestSuggestion;
+  final void Function(AITaskKind task, String prompt) onRequest;
+
+  @override
+  State<_SceneAiHelpBox> createState() => _SceneAiHelpBoxState();
+}
+
+final class _SceneAiHelpBoxState extends State<_SceneAiHelpBox> {
+  late final TextEditingController _promptController = TextEditingController();
+
+  @override
+  void dispose() {
+    _promptController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SceneAiHelpBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scene.id != widget.scene.id) {
+      _promptController.clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final copy = widget.copy;
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLowest,
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.psychology_alt_outlined,
+                    color: color.primary, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    copy.t('editorAiHelp'),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                _HelpTooltip(message: copy.t('helpEditorAiHelp')),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${copy.t('sceneContext')}: ${widget.scene.title}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: widget.isRequesting
+                      ? null
+                      : () => _send(AITaskKind.authorQuestions),
+                  icon: const Icon(Icons.help_outline),
+                  label: Text(copy.t('aiTaskAuthorQuestions')),
+                ),
+                OutlinedButton.icon(
+                  onPressed: widget.isRequesting
+                      ? null
+                      : () => _send(AITaskKind.sceneGoalConflictOutcome),
+                  icon: const Icon(Icons.account_tree_outlined),
+                  label: Text(copy.t('requestStructure')),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _promptController,
+              minLines: 2,
+              maxLines: 4,
+              decoration: InputDecoration(
+                labelText: copy.t('editorAiHelpInput'),
+                alignLabelWithHint: true,
+                border: const OutlineInputBorder(),
+              ),
+              textInputAction: TextInputAction.newline,
+            ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: widget.isRequesting
+                    ? null
+                    : () => _send(AITaskKind.customScenePrompt),
+                icon: widget.isRequesting
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send_outlined),
+                label: Text(copy.t('sendAiHelp')),
+              ),
+            ),
+            if (widget.latestSuggestion != null) ...[
+              const SizedBox(height: 12),
+              Divider(height: 1, color: color.outlineVariant),
+              const SizedBox(height: 10),
+              Text(
+                copy.t('latestAiHelpAnswer'),
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 8),
+              _AIResponseDigest(
+                copy: copy,
+                text: widget.latestSuggestion!.responseText,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _send(AITaskKind task) {
+    widget.onRequest(task, _promptController.text.trim());
+    if (task == AITaskKind.customScenePrompt) {
+      _promptController.clear();
+    }
   }
 }
 

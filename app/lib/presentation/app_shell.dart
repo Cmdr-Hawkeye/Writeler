@@ -1086,6 +1086,62 @@ final class _WritelerShellState extends State<WritelerShell> {
     }
   }
 
+  Future<void> _requestEditorSceneAiHelp(
+    WritelerCopy copy,
+    AITaskKind task,
+    String prompt,
+  ) async {
+    final project = _selectedProject;
+    final scene = _selectedScene;
+    if (project == null || scene == null || _isRequestingAi) return;
+    if (_sceneSaveState == _SceneSaveState.unsaved) {
+      await _saveSelectedScene(copy, showSnackBar: false);
+    }
+    if (!mounted) return;
+
+    setState(() => _isRequestingAi = true);
+    try {
+      final requester = await _createSuggestionRequester();
+      await requester.forScene(
+        project: _effectiveProjectForGlobalProfile(project),
+        scene: _selectedScene ?? scene,
+        task: task,
+        languageCode: copy.languageCode,
+        userPrompt: prompt.trim().isEmpty
+            ? copy.t('defaultEditorAiHelpPrompt')
+            : prompt,
+      );
+      final suggestions =
+          await widget.aiSuggestionRepository.listForProject(project.id);
+      if (!mounted) return;
+      setState(() {
+        _suggestions = suggestions;
+        _lastAiError = null;
+      });
+      await _recordProjectMetric(
+        eventType: 'ai.suggestion.created',
+        metadata: {
+          'task': task.name,
+          'context': 'editorScene',
+          'sceneId': scene.id,
+        },
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(copy.t('aiSuggestionCreated'))),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = _providerErrorMessage(error);
+      setState(() => _lastAiError = message);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      if (mounted) setState(() => _isRequestingAi = false);
+    }
+  }
+
   String _providerErrorMessage(Object error) {
     if (error is DomainFailure) {
       if (error.message == 'AI_API_KEY_MISSING') {
@@ -1842,6 +1898,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           chapters: _chapters,
           catalogItems: _catalogItems,
           relationships: _relationships,
+          suggestions: _suggestions,
           selectedScene: _selectedScene,
           manuscriptController: _manuscriptController,
           summaryController: _summaryController,
@@ -1866,6 +1923,9 @@ final class _WritelerShellState extends State<WritelerShell> {
           ),
           onCreateChapter: () => _showCreateChapterDialog(copy),
           onCreateScene: () => _showCreateSceneDialog(copy),
+          isRequestingAi: _isRequestingAi,
+          onRequestSceneAiHelp: (task, prompt) =>
+              _requestEditorSceneAiHelp(copy, task, prompt),
           onSaveScene: () => _saveSelectedScene(copy),
         ),
       2 => _SceneBoard(
