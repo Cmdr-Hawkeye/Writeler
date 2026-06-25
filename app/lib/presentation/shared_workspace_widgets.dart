@@ -347,11 +347,13 @@ final class _EmptyPanel extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.body,
+    this.action,
   });
 
   final IconData icon;
   final String title;
   final String body;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -371,6 +373,10 @@ final class _EmptyPanel extends StatelessWidget {
               Text(title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               Text(body, style: TextStyle(color: color.onSurfaceVariant)),
+              if (action != null) ...[
+                const SizedBox(height: 18),
+                action!,
+              ],
             ],
           ),
         ),

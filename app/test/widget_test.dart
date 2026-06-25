@@ -199,6 +199,54 @@ void main() {
     expect(find.text('Manuscript'), findsWidgets);
   });
 
+  testWidgets('relationship graph explains required endpoints', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: InMemoryProjectRepository(),
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('New Project'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText), 'Relationship Check');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Relationship graph');
+
+    expect(
+      find.text(
+          'Create at least two scenes, characters, locations, or objects first.'),
+      findsOneWidget,
+    );
+
+    await tester
+        .tap(find.widgetWithText(FilledButton, 'New relationship').last);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+          'Create at least two scenes, characters, locations, or objects first.'),
+      findsWidgets,
+    );
+  });
+
   testWidgets('top bar language switch updates workspace copy', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

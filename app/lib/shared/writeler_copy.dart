@@ -280,6 +280,8 @@ final class WritelerCopy {
     'noRelationshipsTitle': 'Noch keine Beziehungen',
     'noRelationshipsBody':
         'Lege Beziehungen zwischen Figuren, Orten, Objekten oder Szenen an.',
+    'relationshipNeedsEndpoints':
+        'Lege zuerst mindestens zwei Szenen, Figuren, Orte oder Objekte an.',
     'strength': 'Stärke',
     'entityDetails': 'Entitätsdetails',
     'newRelationship': 'Neue Beziehung',
@@ -834,6 +836,8 @@ final class WritelerCopy {
     'noRelationshipsTitle': 'No relationships yet',
     'noRelationshipsBody':
         'Create relationships between characters, locations, objects, or scenes.',
+    'relationshipNeedsEndpoints':
+        'Create at least two scenes, characters, locations, or objects first.',
     'strength': 'Strength',
     'entityDetails': 'Entity details',
     'newRelationship': 'New relationship',

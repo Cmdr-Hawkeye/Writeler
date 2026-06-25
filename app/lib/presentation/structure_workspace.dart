@@ -530,6 +530,8 @@ final class _RelationshipGraphWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final endpointCount = scenes.length + catalogItems.length;
+    final canCreateRelationship = endpointCount >= 2;
     return Column(
       children: [
         _WorkspaceHeader(
@@ -545,7 +547,14 @@ final class _RelationshipGraphWorkspace extends StatelessWidget {
               ? _EmptyPanel(
                   icon: Icons.hub_outlined,
                   title: copy.t('noRelationshipsTitle'),
-                  body: copy.t('noRelationshipsBody'),
+                  body: canCreateRelationship
+                      ? copy.t('noRelationshipsBody')
+                      : copy.t('relationshipNeedsEndpoints'),
+                  action: FilledButton.icon(
+                    onPressed: () => onCreateRelationship(null),
+                    icon: const Icon(Icons.add),
+                    label: Text(copy.t('newRelationship')),
+                  ),
                 )
               : ListView.separated(
                   padding: const EdgeInsets.all(24),

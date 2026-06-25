@@ -396,7 +396,12 @@ extension _WritelerShellDialogs on _WritelerShellState {
     if (project == null) return;
 
     final endpoints = _relationshipEndpoints(copy);
-    if (endpoints.length < 2) return;
+    if (endpoints.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(copy.t('relationshipNeedsEndpoints'))),
+      );
+      return;
+    }
 
     final sourceFallback = initialSource ?? existing?.source;
     var sourceKey = _endpointKey(sourceFallback) ?? endpoints.first.key;
