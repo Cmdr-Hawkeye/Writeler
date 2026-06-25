@@ -767,11 +767,13 @@ final class _SceneEditorState extends State<_SceneEditor> {
                   return manuscriptField;
                 }
                 if (compact) {
+                  final inspectorHeight =
+                      (constraints.maxHeight * 0.52).clamp(420.0, 540.0);
                   return Column(
                     children: [
                       Expanded(child: manuscriptField),
                       const SizedBox(height: 12),
-                      SizedBox(height: 280, child: inspector),
+                      SizedBox(height: inspectorHeight, child: inspector),
                     ],
                   );
                 }
@@ -995,6 +997,16 @@ final class _SceneInspector extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          _SceneMetaOverview(
+            copy: copy,
+            scene: scene,
+            chapters: chapters,
+            catalogItems: catalogItems,
+            relationships: relationships,
+            suggestions: suggestions,
+            targetText: wordTargetController.text,
+          ),
+          const SizedBox(height: 14),
           _SceneAiHelpBox(
             copy: copy,
             scene: scene,
@@ -1027,6 +1039,193 @@ final class _SceneInspector extends StatelessWidget {
             catalogItems: catalogItems,
             relationships: relationships,
             onToggleLink: onToggleSceneCatalogLink,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _SceneMetaOverview extends StatelessWidget {
+  const _SceneMetaOverview({
+    required this.copy,
+    required this.scene,
+    required this.chapters,
+    required this.catalogItems,
+    required this.relationships,
+    required this.suggestions,
+    required this.targetText,
+  });
+
+  final WritelerCopy copy;
+  final Scene scene;
+  final List<Chapter> chapters;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final List<AISuggestion> suggestions;
+  final String targetText;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final chapter =
+        chapters.where((chapter) => chapter.id == scene.chapterId).firstOrNull;
+    final missing = _missingScenePlanningLabels(scene, copy);
+    final planningProgress = _scenePlanningProgress(scene);
+    final linkedItems = _linkedSceneCatalogItems().length;
+    final pendingSuggestions = suggestions
+        .where((suggestion) =>
+            suggestion.target.type == EntityType.scene &&
+            suggestion.target.id == scene.id &&
+            suggestion.userDecision == SuggestionDecision.pending)
+        .length;
+    final target = int.tryParse(targetText);
+    final wordValue = target == null || target <= 0
+        ? '${scene.actualWordCount}'
+        : '${scene.actualWordCount} / $target';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.info_outline, size: 17, color: color.onSurfaceVariant),
+            const SizedBox(width: 7),
+            Text(
+              copy.t('sceneMeta'),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: color.onSurfaceVariant,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 9),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _SceneMetaChip(
+              icon: Icons.account_tree_outlined,
+              label: copy.t('chapter'),
+              value: chapter?.title ?? copy.t('noChapter'),
+            ),
+            _SceneMetaChip(
+              icon: Icons.flag_outlined,
+              label: copy.t('status'),
+              value: _draftStatusLabel(scene.status, copy.languageCode),
+            ),
+            _SceneMetaChip(
+              icon: Icons.notes_outlined,
+              label: copy.t('words'),
+              value: wordValue,
+            ),
+            _SceneMetaChip(
+              icon: missing.isEmpty
+                  ? Icons.check_circle_outline
+                  : Icons.radio_button_unchecked,
+              label: copy.t('planningProgress'),
+              value: missing.isEmpty
+                  ? copy.t('planningComplete')
+                  : '${(planningProgress * 100).round()}%',
+              accent: missing.isEmpty ? color.primary : color.tertiary,
+            ),
+            _SceneMetaChip(
+              icon: Icons.hub_outlined,
+              label: copy.t('linkedContext'),
+              value: '$linkedItems',
+            ),
+            _SceneMetaChip(
+              icon: Icons.psychology_alt_outlined,
+              label: copy.t('openAiSuggestions'),
+              value: '$pendingSuggestions',
+              accent: pendingSuggestions > 0 ? color.primary : null,
+            ),
+          ],
+        ),
+        if (missing.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            '${copy.t('missing')}: ${missing.join(', ')}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color.onSurfaceVariant,
+                ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<CatalogItem> _linkedSceneCatalogItems() {
+    return catalogItems.where((item) {
+      return relationships.any(
+        (relationship) =>
+            relationship.source.type == EntityType.scene &&
+            relationship.source.id == scene.id &&
+            relationship.target.type == item.type &&
+            relationship.target.id == item.id &&
+            relationship.relationshipType == 'appearsIn',
+      );
+    }).toList(growable: false);
+  }
+}
+
+final class _SceneMetaChip extends StatelessWidget {
+  const _SceneMetaChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.accent,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final foreground = accent ?? color.onSurfaceVariant;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 38, maxWidth: 158),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLowest,
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: foreground),
+          const SizedBox(width: 7),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: color.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

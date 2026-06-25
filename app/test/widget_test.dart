@@ -344,9 +344,12 @@ void main() {
     expect(find.text('Manuscript'), findsWidgets);
     expect(find.text('AI help'), findsOneWidget);
 
+    await tester
+        .ensureVisible(find.widgetWithText(OutlinedButton, 'Author questions'));
     await tester.tap(find.widgetWithText(OutlinedButton, 'Author questions'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Latest answer'));
     expect(find.text('Latest answer'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.fullscreen).first);
