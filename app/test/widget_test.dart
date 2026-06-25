@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:writeler/core/domain/draft_status.dart';
 import 'package:writeler/features/ai_harness/infrastructure/in_memory_ai_suggestion_repository.dart';
 import 'package:writeler/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
 import 'package:writeler/features/catalog/infrastructure/in_memory_relationship_repository.dart';
 import 'package:writeler/features/metrics/application/in_memory_metric_repository.dart';
 import 'package:writeler/features/notes/infrastructure/in_memory_project_note_repository.dart';
+import 'package:writeler/features/projects/application/create_project.dart';
 import 'package:writeler/features/projects/infrastructure/in_memory_project_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_ai_provider_config_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_app_preference_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_secret_vault.dart';
+import 'package:writeler/features/structure/application/create_chapter.dart';
+import 'package:writeler/features/structure/application/create_scene.dart';
 import 'package:writeler/features/structure/application/in_memory_chapter_repository.dart';
 import 'package:writeler/features/structure/application/in_memory_scene_repository.dart';
 import 'package:writeler/main.dart';
@@ -138,6 +142,116 @@ void main() {
     final projects = await projectRepository.listActive();
     expect(projects.single.title, 'Wizard Book');
     expect(projects.single.metadata['authorName'], 'Ada Author');
+  });
+
+  testWidgets('desktop drag moves a scene to another chapter', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final chapterRepository = InMemoryChapterRepository();
+    final sceneRepository = InMemorySceneRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Drag Book'),
+    );
+    final chapterOne = await CreateChapter(chapterRepository)(
+      CreateChapterCommand(
+        projectId: project.id,
+        title: 'Chapter One',
+        orderIndex: 1,
+      ),
+    );
+    final chapterTwo = await CreateChapter(chapterRepository)(
+      CreateChapterCommand(
+        projectId: project.id,
+        title: 'Chapter Two',
+        orderIndex: 2,
+      ),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(
+        projectId: project.id,
+        chapterId: chapterOne.id,
+        title: 'Move Me',
+      ),
+    );
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: chapterRepository,
+        sceneRepository: sceneRepository,
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Project structure').first);
+    await tester.pumpAndSettle();
+
+    final sourceCenter = tester.getCenter(find.text('Move Me').first);
+    final targetCenter = tester.getCenter(find.text('Chapter Two').last);
+    await tester.dragFrom(sourceCenter, targetCenter - sourceCenter);
+    await tester.pumpAndSettle();
+
+    final moved = await sceneRepository.findById(scene.id);
+    expect(moved?.chapterId, chapterTwo.id);
+  });
+
+  testWidgets('desktop drag on scene board asks for grouped target status',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final sceneRepository = InMemorySceneRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Status Drag Book'),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(projectId: project.id, title: 'Status Move'),
+    );
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: sceneRepository,
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Scene board');
+
+    final sourceCenter = tester.getCenter(find.text('Status Move').first);
+    final targetCenter = tester.getCenter(find.text('Done').first);
+    await tester.dragFrom(sourceCenter, targetCenter - sourceCenter);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Choose status'), findsOneWidget);
+
+    await tester.tap(find.text('Revised'));
+    await tester.pumpAndSettle();
+
+    final moved = await sceneRepository.findById(scene.id);
+    expect(moved?.status, DraftStatus.revised);
   });
 
   testWidgets('AI workshop opens with actionable project context',

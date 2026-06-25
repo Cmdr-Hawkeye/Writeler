@@ -434,12 +434,16 @@ final class _SceneStatusColumn extends StatelessWidget {
                           ),
                           onTap: () => onOpenScene(scene),
                         );
-                        return LongPressDraggable<Scene>(
+                        return Draggable<Scene>(
                           data: scene,
+                          dragAnchorStrategy: pointerDragAnchorStrategy,
                           feedback: _DragSceneFeedback(title: scene.title),
                           childWhenDragging:
                               Opacity(opacity: 0.36, child: tile),
-                          child: tile,
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.grab,
+                            child: tile,
+                          ),
                         );
                       },
                     ),
@@ -933,11 +937,15 @@ final class _SceneStructureColumn extends StatelessWidget {
                           onMoveSceneToChapter(scene, chapterId),
                       onDeleteScene: () => onDeleteScene(scene),
                     );
-                    return LongPressDraggable<Scene>(
+                    return Draggable<Scene>(
                       data: scene,
+                      dragAnchorStrategy: pointerDragAnchorStrategy,
                       feedback: _DragSceneFeedback(title: scene.title),
                       childWhenDragging: Opacity(opacity: 0.36, child: tile),
-                      child: tile,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.grab,
+                        child: tile,
+                      ),
                     );
                   },
                 ),
