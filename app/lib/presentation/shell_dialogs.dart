@@ -439,12 +439,12 @@ extension _WritelerShellDialogs on _WritelerShellState {
     );
   }
 
-  Future<void> _showCreateCatalogItemDialog(
+  Future<CatalogItem?> _showCreateCatalogItemDialog(
     WritelerCopy copy,
     EntityType type,
   ) async {
     final project = _selectedProject;
-    if (project == null) return;
+    if (project == null) return null;
 
     var draftName = '';
     var draftSummary = '';
@@ -487,9 +487,9 @@ extension _WritelerShellDialogs on _WritelerShellState {
       },
     );
 
-    if (created != true) return;
+    if (created != true) return null;
     final name = draftName.trim();
-    await _createCatalogItem(
+    final item = await _createCatalogItem(
       CreateCatalogItemCommand(
         projectId: project.id,
         type: type,
@@ -499,7 +499,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
     );
     final items = await widget.catalogItemRepository.listByProject(project.id);
 
-    if (!mounted) return;
+    if (!mounted) return null;
     _setShellState(() {
       _catalogItems = items;
     });
@@ -507,10 +507,11 @@ extension _WritelerShellDialogs on _WritelerShellState {
       eventType: 'catalog.created',
       metadata: {'type': type.wireName},
     );
-    if (!mounted) return;
+    if (!mounted) return null;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(copy.t('catalogItemCreated'))),
     );
+    return item;
   }
 
   Future<void> _showEditCatalogItemDialog(

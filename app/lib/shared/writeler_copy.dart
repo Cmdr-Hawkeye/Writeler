@@ -250,6 +250,7 @@ final class WritelerCopy {
     'sceneContext': 'Szenenkontext',
     'sceneContextEmpty':
         'Lege Figuren, Orte oder Objekte an, um sie mit dieser Szene zu verknüpfen.',
+    'addSceneContext': 'Figur, Ort oder Objekt zur Szene hinzufügen',
     'relationships': 'Verknüpfungen',
     'openSuggestions': 'Offene Vorschläge',
     'metricEvents': 'Lokale Events',
@@ -840,6 +841,7 @@ final class WritelerCopy {
     'sceneContext': 'Scene context',
     'sceneContextEmpty':
         'Create characters, locations, or objects to link them with this scene.',
+    'addSceneContext': 'Add character, location, or object to this scene',
     'relationships': 'Relationships',
     'openSuggestions': 'Open suggestions',
     'metricEvents': 'Local events',

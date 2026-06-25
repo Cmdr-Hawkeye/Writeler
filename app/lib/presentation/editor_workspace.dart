@@ -26,6 +26,7 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.onDeleteScene,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
+    required this.onCreateSceneCatalogItem,
     required this.onSceneStatusChanged,
     required this.onCreateChapter,
     required this.onCreateScene,
@@ -56,6 +57,7 @@ final class _ProjectWorkspace extends StatefulWidget {
   final ValueChanged<Scene> onDeleteScene;
   final ValueChanged<String?> onSceneChapterChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
+  final ValueChanged<EntityType> onCreateSceneCatalogItem;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final VoidCallback onCreateChapter;
   final VoidCallback onCreateScene;
@@ -181,6 +183,8 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                         onSceneChapterChanged: widget.onSceneChapterChanged,
                         onToggleSceneCatalogLink:
                             widget.onToggleSceneCatalogLink,
+                        onCreateSceneCatalogItem:
+                            widget.onCreateSceneCatalogItem,
                         onSceneStatusChanged: widget.onSceneStatusChanged,
                         isRequestingAi: widget.isRequestingAi,
                         onRequestSceneAiHelp: widget.onRequestSceneAiHelp,
@@ -551,6 +555,7 @@ final class _SceneEditor extends StatefulWidget {
     required this.onFocusModeChanged,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
+    required this.onCreateSceneCatalogItem,
     required this.onSceneStatusChanged,
     required this.isRequestingAi,
     required this.onRequestSceneAiHelp,
@@ -579,6 +584,7 @@ final class _SceneEditor extends StatefulWidget {
   final ValueChanged<bool> onFocusModeChanged;
   final ValueChanged<String?> onSceneChapterChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
+  final ValueChanged<EntityType> onCreateSceneCatalogItem;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final bool isRequestingAi;
   final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
@@ -628,6 +634,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
       onSceneChapterChanged: widget.onSceneChapterChanged,
       onSceneStatusChanged: widget.onSceneStatusChanged,
       onToggleSceneCatalogLink: widget.onToggleSceneCatalogLink,
+      onCreateSceneCatalogItem: widget.onCreateSceneCatalogItem,
       isRequestingAi: widget.isRequestingAi,
       onRequestSceneAiHelp: widget.onRequestSceneAiHelp,
     );
@@ -951,6 +958,7 @@ final class _SceneInspector extends StatelessWidget {
     required this.onSceneChapterChanged,
     required this.onSceneStatusChanged,
     required this.onToggleSceneCatalogLink,
+    required this.onCreateSceneCatalogItem,
     required this.isRequestingAi,
     required this.onRequestSceneAiHelp,
   });
@@ -971,6 +979,7 @@ final class _SceneInspector extends StatelessWidget {
   final ValueChanged<String?> onSceneChapterChanged;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
+  final ValueChanged<EntityType> onCreateSceneCatalogItem;
   final bool isRequestingAi;
   final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
 
@@ -984,6 +993,7 @@ final class _SceneInspector extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListView(
+        key: const ValueKey('scene-inspector-scroll'),
         padding: const EdgeInsets.all(14),
         children: [
           Row(
@@ -1007,16 +1017,6 @@ final class _SceneInspector extends StatelessWidget {
             targetText: wordTargetController.text,
           ),
           const SizedBox(height: 14),
-          _SceneAiHelpBox(
-            copy: copy,
-            scene: scene,
-            isRequesting: isRequestingAi,
-            latestSuggestion: _latestSceneSuggestion(scene, suggestions),
-            onRequest: onRequestSceneAiHelp,
-          ),
-          const SizedBox(height: 16),
-          Divider(height: 1, color: color.outlineVariant),
-          const SizedBox(height: 14),
           _ScenePlanningFields(
             copy: copy,
             summaryController: summaryController,
@@ -1039,6 +1039,17 @@ final class _SceneInspector extends StatelessWidget {
             catalogItems: catalogItems,
             relationships: relationships,
             onToggleLink: onToggleSceneCatalogLink,
+            onCreateItem: onCreateSceneCatalogItem,
+          ),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: color.outlineVariant),
+          const SizedBox(height: 14),
+          _SceneAiHelpBox(
+            copy: copy,
+            scene: scene,
+            isRequesting: isRequestingAi,
+            latestSuggestion: _latestSceneSuggestion(scene, suggestions),
+            onRequest: onRequestSceneAiHelp,
           ),
         ],
       ),
@@ -1869,6 +1880,7 @@ final class _SceneContextLinks extends StatelessWidget {
     required this.catalogItems,
     required this.relationships,
     required this.onToggleLink,
+    required this.onCreateItem,
   });
 
   final WritelerCopy copy;
@@ -1876,6 +1888,7 @@ final class _SceneContextLinks extends StatelessWidget {
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
   final void Function(CatalogItem item, bool selected) onToggleLink;
+  final ValueChanged<EntityType> onCreateItem;
 
   @override
   Widget build(BuildContext context) {
@@ -1887,37 +1900,68 @@ final class _SceneContextLinks extends StatelessWidget {
               item.type == EntityType.object,
         )
         .toList();
-    if (relevantItems.isEmpty) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          copy.t('sceneContextEmpty'),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-        ),
-      );
-    }
+    final color = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(copy.t('sceneContext'),
-            style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        Row(
           children: [
-            for (final item in relevantItems)
-              FilterChip(
-                avatar: Icon(_catalogIcon(item.type), size: 18),
-                label: Text(item.name),
-                selected: _isLinked(item),
-                onSelected: (selected) => onToggleLink(item, selected),
+            Expanded(
+              child: Text(
+                copy.t('sceneContext'),
+                style: Theme.of(context).textTheme.titleSmall,
               ),
+            ),
+            PopupMenuButton<EntityType>(
+              tooltip: copy.t('addSceneContext'),
+              icon: const Icon(Icons.add_link_outlined),
+              onSelected: onCreateItem,
+              itemBuilder: (context) => [
+                for (final type in const [
+                  EntityType.character,
+                  EntityType.location,
+                  EntityType.object,
+                ])
+                  PopupMenuItem(
+                    value: type,
+                    child: Row(
+                      children: [
+                        Icon(_catalogIcon(type), size: 18),
+                        const SizedBox(width: 10),
+                        Text(copy.t(_newCatalogKey(type))),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
+        const SizedBox(height: 8),
+        if (relevantItems.isEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              copy.t('sceneContextEmpty'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in relevantItems)
+                FilterChip(
+                  avatar: Icon(_catalogIcon(item.type), size: 18),
+                  label: Text(item.name),
+                  selected: _isLinked(item),
+                  onSelected: (selected) => onToggleLink(item, selected),
+                ),
+            ],
+          ),
       ],
     );
   }

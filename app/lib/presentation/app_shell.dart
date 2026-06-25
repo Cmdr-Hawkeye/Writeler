@@ -877,6 +877,17 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<void> _createSceneCatalogItem(
+    WritelerCopy copy,
+    EntityType type,
+  ) async {
+    final scene = _selectedScene;
+    if (scene == null) return;
+    final item = await _showCreateCatalogItemDialog(copy, type);
+    if (item == null) return;
+    await _toggleSceneCatalogLink(item, true);
+  }
+
   Future<void> _moveSceneInStructure(Scene scene, int direction) async {
     final project = _selectedProject;
     if (project == null) return;
@@ -1918,6 +1929,8 @@ final class _WritelerShellState extends State<WritelerShell> {
             () => _selectedSceneChapterId = chapterId,
           ),
           onToggleSceneCatalogLink: _toggleSceneCatalogLink,
+          onCreateSceneCatalogItem: (type) =>
+              _createSceneCatalogItem(copy, type),
           onSceneStatusChanged: (status) => setState(
             () => _selectedSceneStatus = status,
           ),

@@ -342,8 +342,36 @@ void main() {
 
     expect(find.text('Opening'), findsWidgets);
     expect(find.text('Manuscript'), findsWidgets);
-    expect(find.text('AI help'), findsOneWidget);
 
+    await tester.drag(
+      find.byKey(const ValueKey('scene-inspector-scroll')),
+      const Offset(0, -900),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Scene context'), findsOneWidget);
+
+    await tester.tap(find.byTooltip(
+      'Add character, location, or object to this scene',
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('New Character'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find
+          .descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          )
+          .first,
+      'Mara',
+    );
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mara'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('AI help'));
+    expect(find.text('AI help'), findsOneWidget);
     await tester
         .ensureVisible(find.widgetWithText(OutlinedButton, 'Author questions'));
     await tester.tap(find.widgetWithText(OutlinedButton, 'Author questions'));
