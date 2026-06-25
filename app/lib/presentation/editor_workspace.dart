@@ -775,8 +775,15 @@ final class _SceneEditorState extends State<_SceneEditor> {
               replaceController: _replaceController,
               onChanged: () => setState(() {}),
             ),
+            const SizedBox(height: 12),
           ],
-          const SizedBox(height: 12),
+          if (!widget.focusMode) ...[
+            _ManuscriptFormatToolbar(
+              copy: copy,
+              controller: widget.controller,
+            ),
+            const SizedBox(height: 12),
+          ],
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -785,8 +792,12 @@ final class _SceneEditorState extends State<_SceneEditor> {
                   return manuscriptField;
                 }
                 if (compact) {
-                  final inspectorHeight =
-                      (constraints.maxHeight * 0.52).clamp(420.0, 540.0);
+                  final desiredInspectorHeight =
+                      (constraints.maxHeight * 0.48).clamp(280.0, 440.0);
+                  final inspectorHeight = math.min(
+                    desiredInspectorHeight,
+                    math.max(220.0, constraints.maxHeight - 180.0),
+                  );
                   return Column(
                     children: [
                       Expanded(child: manuscriptField),
@@ -868,6 +879,7 @@ final class _ManuscriptField extends StatelessWidget {
                   ),
                 ),
                 child: TextField(
+                  key: const ValueKey('manuscript-field'),
                   controller: controller,
                   expands: true,
                   maxLines: null,
@@ -901,6 +913,313 @@ final class _ManuscriptField extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+enum _ManuscriptBlockFormat {
+  heading1,
+  heading2,
+  quote,
+  bulletList,
+  numberedList,
+  sceneBreak,
+}
+
+final class _ManuscriptFormatToolbar extends StatelessWidget {
+  const _ManuscriptFormatToolbar({
+    required this.copy,
+    required this.controller,
+  });
+
+  final WritelerCopy copy;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLow,
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            _FormatIconButton(
+              tooltip: copy.t('formatBold'),
+              icon: Icons.format_bold,
+              onPressed: () => _wrapSelection(
+                prefix: '**',
+                suffix: '**',
+                placeholder: copy.t('formatPlaceholder'),
+              ),
+            ),
+            _FormatIconButton(
+              tooltip: copy.t('formatItalic'),
+              icon: Icons.format_italic,
+              onPressed: () => _wrapSelection(
+                prefix: '*',
+                suffix: '*',
+                placeholder: copy.t('formatPlaceholder'),
+              ),
+            ),
+            _FormatIconButton(
+              tooltip: copy.t('formatEmphasis'),
+              icon: Icons.format_underlined,
+              onPressed: () => _wrapSelection(
+                prefix: '_',
+                suffix: '_',
+                placeholder: copy.t('formatPlaceholder'),
+              ),
+            ),
+            _ToolbarDivider(color: color.outlineVariant),
+            PopupMenuButton<_ManuscriptBlockFormat>(
+              tooltip: copy.t('formatParagraphMenu'),
+              icon: const Icon(Icons.text_fields),
+              onSelected: _applyBlockFormat,
+              itemBuilder: (context) => [
+                _formatMenuItem(
+                  _ManuscriptBlockFormat.heading1,
+                  Icons.title,
+                  copy.t('formatHeading1'),
+                ),
+                _formatMenuItem(
+                  _ManuscriptBlockFormat.heading2,
+                  Icons.short_text,
+                  copy.t('formatHeading2'),
+                ),
+                _formatMenuItem(
+                  _ManuscriptBlockFormat.quote,
+                  Icons.format_quote,
+                  copy.t('formatQuote'),
+                ),
+                _formatMenuItem(
+                  _ManuscriptBlockFormat.bulletList,
+                  Icons.format_list_bulleted,
+                  copy.t('formatBulletedList'),
+                ),
+                _formatMenuItem(
+                  _ManuscriptBlockFormat.numberedList,
+                  Icons.format_list_numbered,
+                  copy.t('formatNumberedList'),
+                ),
+                _formatMenuItem(
+                  _ManuscriptBlockFormat.sceneBreak,
+                  Icons.horizontal_rule,
+                  copy.t('formatSceneBreak'),
+                ),
+              ],
+            ),
+            _ToolbarDivider(color: color.outlineVariant),
+            _FormatIconButton(
+              tooltip: copy.t('formatSceneBreak'),
+              icon: Icons.horizontal_rule,
+              onPressed: () => _insertBlock('***'),
+            ),
+            _FormatIconButton(
+              tooltip: copy.t('formatDialogueDash'),
+              icon: Icons.keyboard_return,
+              onPressed: () => _insertAtCursor('- '),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  PopupMenuItem<_ManuscriptBlockFormat> _formatMenuItem(
+    _ManuscriptBlockFormat value,
+    IconData icon,
+    String label,
+  ) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 10),
+          Text(label),
+        ],
+      ),
+    );
+  }
+
+  void _applyBlockFormat(_ManuscriptBlockFormat format) {
+    switch (format) {
+      case _ManuscriptBlockFormat.heading1:
+        _prefixSelectedLines((_, line) => '# ${_stripHeading(line)}');
+      case _ManuscriptBlockFormat.heading2:
+        _prefixSelectedLines((_, line) => '## ${_stripHeading(line)}');
+      case _ManuscriptBlockFormat.quote:
+        _prefixSelectedLines((_, line) => '> ${_stripLinePrefix(line)}');
+      case _ManuscriptBlockFormat.bulletList:
+        _prefixSelectedLines((_, line) => '- ${_stripLinePrefix(line)}');
+      case _ManuscriptBlockFormat.numberedList:
+        _prefixSelectedLines(
+          (index, line) => '${index + 1}. ${_stripLinePrefix(line)}',
+        );
+      case _ManuscriptBlockFormat.sceneBreak:
+        _insertBlock('***');
+    }
+  }
+
+  void _wrapSelection({
+    required String prefix,
+    required String suffix,
+    required String placeholder,
+  }) {
+    final value = controller.value;
+    final text = value.text;
+    final selection = _safeSelection(value);
+    final selectedText = selection.isCollapsed
+        ? placeholder
+        : text.substring(selection.start, selection.end);
+    final replacement = '$prefix$selectedText$suffix';
+    final updated =
+        text.replaceRange(selection.start, selection.end, replacement);
+    final selectionStart = selection.start + prefix.length;
+    final selectionEnd = selectionStart + selectedText.length;
+    controller.value = value.copyWith(
+      text: updated,
+      selection: selection.isCollapsed
+          ? TextSelection(
+              baseOffset: selectionStart, extentOffset: selectionEnd)
+          : TextSelection.collapsed(
+              offset: selection.start + replacement.length),
+      composing: TextRange.empty,
+    );
+  }
+
+  void _prefixSelectedLines(String Function(int index, String line) transform) {
+    final value = controller.value;
+    final text = value.text;
+    final selection = _safeSelection(value);
+    final lineStart =
+        text.lastIndexOf('\n', math.max(0, selection.start - 1)) + 1;
+    final lineEnd = _selectedLineEnd(text, selection);
+    final segment = text.substring(lineStart, lineEnd);
+    final lines = segment.isEmpty ? [''] : segment.split('\n');
+    final replacement = [
+      for (var index = 0; index < lines.length; index++)
+        transform(index, lines[index]),
+    ].join('\n');
+    final updated = text.replaceRange(lineStart, lineEnd, replacement);
+    controller.value = value.copyWith(
+      text: updated,
+      selection: TextSelection(
+        baseOffset: lineStart,
+        extentOffset: lineStart + replacement.length,
+      ),
+      composing: TextRange.empty,
+    );
+  }
+
+  void _insertBlock(String block) {
+    final value = controller.value;
+    final text = value.text;
+    final selection = _safeSelection(value);
+    final before = selection.start == 0 ||
+            text.substring(0, selection.start).endsWith('\n\n')
+        ? ''
+        : '\n\n';
+    final after = selection.end >= text.length ||
+            text.substring(selection.end).startsWith('\n\n')
+        ? ''
+        : '\n\n';
+    _replaceRange(selection, '$before$block$after');
+  }
+
+  void _insertAtCursor(String insert) {
+    final value = controller.value;
+    final selection = _safeSelection(value);
+    _replaceRange(selection, insert);
+  }
+
+  void _replaceRange(TextSelection selection, String replacement) {
+    final value = controller.value;
+    final text = value.text;
+    final updated =
+        text.replaceRange(selection.start, selection.end, replacement);
+    final offset = selection.start + replacement.length;
+    controller.value = value.copyWith(
+      text: updated,
+      selection: TextSelection.collapsed(offset: offset),
+      composing: TextRange.empty,
+    );
+  }
+
+  TextSelection _safeSelection(TextEditingValue value) {
+    final textLength = value.text.length;
+    final selection = value.selection;
+    if (!selection.isValid) {
+      return TextSelection.collapsed(offset: textLength);
+    }
+    final start = selection.start.clamp(0, textLength);
+    final end = selection.end.clamp(0, textLength);
+    return TextSelection(
+        baseOffset: math.min(start, end), extentOffset: math.max(start, end));
+  }
+
+  int _selectedLineEnd(String text, TextSelection selection) {
+    var probe = selection.end;
+    if (!selection.isCollapsed &&
+        probe > selection.start &&
+        text[probe - 1] == '\n') {
+      probe -= 1;
+    }
+    final nextBreak = text.indexOf('\n', probe);
+    return nextBreak == -1 ? text.length : nextBreak;
+  }
+
+  String _stripHeading(String line) {
+    return line.replaceFirst(RegExp(r'^\s{0,3}#{1,6}\s+'), '');
+  }
+
+  String _stripLinePrefix(String line) {
+    return line
+        .replaceFirst(RegExp(r'^\s{0,3}([>*-]|\d+\.)\s+'), '')
+        .trimLeft();
+  }
+}
+
+final class _FormatIconButton extends StatelessWidget {
+  const _FormatIconButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.outlined(
+      visualDensity: VisualDensity.compact,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon),
+    );
+  }
+}
+
+final class _ToolbarDivider extends StatelessWidget {
+  const _ToolbarDivider({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 34,
+      child: VerticalDivider(width: 12, color: color),
     );
   }
 }

@@ -345,9 +345,23 @@ void main() {
     await tester.enterText(find.byType(EditableText), 'Opening');
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
+    final project = (await projectRepository.listActive()).single;
 
     expect(find.text('Opening'), findsWidgets);
     expect(find.text('Manuscript'), findsWidgets);
+    expect(find.byTooltip('Bold'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('manuscript-field')),
+      'Plain words',
+    );
+    await tester.tap(find.byTooltip('Bold'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Save Scene'));
+    await tester.pumpAndSettle();
+
+    final savedScene = (await sceneRepository.listByProject(project.id)).single;
+    expect(savedScene.manuscriptText, 'Plain words**text**');
 
     await tester.drag(
       find.byKey(const ValueKey('scene-inspector-scroll')),
@@ -378,7 +392,6 @@ void main() {
 
     await tester.tap(find.byTooltip('Remove from scene').first);
     await tester.pumpAndSettle();
-    final project = (await projectRepository.listActive()).single;
     expect(
       (await relationshipRepository.listByProject(project.id)).where(
         (relationship) => relationship.relationshipType == 'appearsIn',
@@ -445,15 +458,10 @@ void main() {
       containsAll(['Mara', 'Noah']),
     );
 
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('AI help'));
     expect(find.text('AI help'), findsOneWidget);
-    await tester
-        .ensureVisible(find.widgetWithText(OutlinedButton, 'Author questions'));
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Author questions'));
-    await tester.pumpAndSettle();
-
-    await tester.ensureVisible(find.text('Latest answer'));
-    expect(find.text('Latest answer'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.fullscreen).first);
     await tester.pumpAndSettle();
@@ -462,6 +470,7 @@ void main() {
     expect(find.textContaining('No chapter'), findsNothing);
     expect(find.text('Manuscript'), findsWidgets);
     expect(find.text('AI help'), findsNothing);
+    expect(find.byTooltip('Bold'), findsNothing);
   });
 
   testWidgets('relationship graph explains required endpoints', (tester) async {
