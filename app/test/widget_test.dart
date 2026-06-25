@@ -102,6 +102,44 @@ void main() {
     expect(find.text('Author cockpit'), findsOneWidget);
   });
 
+  testWidgets('project wizard stores author metadata', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('New Project'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText), 'Wizard Book');
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText).first, 'Ada Author');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    final projects = await projectRepository.listActive();
+    expect(projects.single.title, 'Wizard Book');
+    expect(projects.single.metadata['authorName'], 'Ada Author');
+  });
+
   testWidgets('AI workshop opens with actionable project context',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));

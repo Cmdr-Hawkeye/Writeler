@@ -14,6 +14,7 @@ final class _SceneBoard extends StatelessWidget {
     required this.onMoveSceneUp,
     required this.onMoveSceneDown,
     required this.onMoveSceneToChapter,
+    required this.onDropSceneToChapter,
     required this.onDeleteScene,
     required this.onDeleteChapter,
     required this.onCreateScene,
@@ -33,6 +34,7 @@ final class _SceneBoard extends StatelessWidget {
   final ValueChanged<Scene> onMoveSceneUp;
   final ValueChanged<Scene> onMoveSceneDown;
   final void Function(Scene scene, String? chapterId) onMoveSceneToChapter;
+  final void Function(Scene scene, String? chapterId) onDropSceneToChapter;
   final ValueChanged<Scene> onDeleteScene;
   final ValueChanged<Chapter> onDeleteChapter;
   final VoidCallback onCreateScene;
@@ -199,6 +201,7 @@ final class _SceneBoard extends StatelessWidget {
                       onMoveSceneUp: onMoveSceneUp,
                       onMoveSceneDown: onMoveSceneDown,
                       onMoveSceneToChapter: onMoveSceneToChapter,
+                      onDropSceneToChapter: onDropSceneToChapter,
                       onDeleteScene: onDeleteScene,
                     ),
                   );
@@ -262,6 +265,7 @@ final class _SceneStatusBoard extends StatelessWidget {
     required this.onOpenScene,
     required this.onCreateScene,
     required this.onDeleteScene,
+    required this.onChangeSceneStatus,
   });
 
   final WritelerCopy copy;
@@ -269,6 +273,7 @@ final class _SceneStatusBoard extends StatelessWidget {
   final ValueChanged<Scene> onOpenScene;
   final VoidCallback onCreateScene;
   final ValueChanged<Scene> onDeleteScene;
+  final void Function(Scene scene, DraftStatus status) onChangeSceneStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -322,8 +327,10 @@ final class _SceneStatusBoard extends StatelessWidget {
                   copy: copy,
                   title: column.title,
                   scenes: columnScenes,
+                  statuses: column.statuses,
                   onOpenScene: onOpenScene,
                   onDeleteScene: onDeleteScene,
+                  onChangeSceneStatus: onChangeSceneStatus,
                 ),
               );
             },
@@ -349,20 +356,24 @@ final class _SceneStatusColumn extends StatelessWidget {
     required this.copy,
     required this.title,
     required this.scenes,
+    required this.statuses,
     required this.onOpenScene,
     required this.onDeleteScene,
+    required this.onChangeSceneStatus,
   });
 
   final WritelerCopy copy;
   final String title;
   final List<Scene> scenes;
+  final List<DraftStatus> statuses;
   final ValueChanged<Scene> onOpenScene;
   final ValueChanged<Scene> onDeleteScene;
+  final void Function(Scene scene, DraftStatus status) onChangeSceneStatus;
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return DecoratedBox(
+    final column = DecoratedBox(
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: color.outlineVariant)),
       ),
@@ -395,8 +406,9 @@ final class _SceneStatusColumn extends StatelessWidget {
                           const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final scene = scenes[index];
-                        return ListTile(
+                        final tile = ListTile(
                           contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.drag_indicator, size: 18),
                           title: Text(
                             scene.title,
                             maxLines: 1,
@@ -422,12 +434,25 @@ final class _SceneStatusColumn extends StatelessWidget {
                           ),
                           onTap: () => onOpenScene(scene),
                         );
+                        return LongPressDraggable<Scene>(
+                          data: scene,
+                          feedback: _DragSceneFeedback(title: scene.title),
+                          childWhenDragging:
+                              Opacity(opacity: 0.36, child: tile),
+                          child: tile,
+                        );
                       },
                     ),
             ),
           ],
         ),
       ),
+    );
+    return _StatusSceneDropTarget(
+      copy: copy,
+      statuses: statuses,
+      onChangeSceneStatus: onChangeSceneStatus,
+      child: column,
     );
   }
 }
@@ -818,6 +843,7 @@ final class _SceneStructureColumn extends StatelessWidget {
     required this.onMoveSceneUp,
     required this.onMoveSceneDown,
     required this.onMoveSceneToChapter,
+    required this.onDropSceneToChapter,
     required this.onDeleteScene,
   });
 
@@ -829,78 +855,190 @@ final class _SceneStructureColumn extends StatelessWidget {
   final ValueChanged<Scene> onMoveSceneUp;
   final ValueChanged<Scene> onMoveSceneDown;
   final void Function(Scene scene, String? chapterId) onMoveSceneToChapter;
+  final void Function(Scene scene, String? chapterId) onDropSceneToChapter;
   final ValueChanged<Scene> onDeleteScene;
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: color.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    group.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+    return DragTarget<Scene>(
+      onWillAcceptWithDetails: (details) => details.data.chapterId != group.id,
+      onAcceptWithDetails: (details) =>
+          onDropSceneToChapter(details.data, group.id),
+      builder: (context, candidateData, rejectedData) {
+        final highlighted = candidateData.isNotEmpty;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: highlighted ? color.primary : color.outlineVariant,
+              width: highlighted ? 1.6 : 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        group.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Text('${group.scenes.length}'),
+                  ],
+                ),
+              ),
+              if (group.summary.trim().isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      group.summary,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
                   ),
                 ),
-                Text('${group.scenes.length}'),
+                const Divider(height: 1),
               ],
-            ),
+              if (group.summary.trim().isEmpty) const Divider(height: 1),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: group.scenes.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final scene = group.scenes[index];
+                    final selected = selectedScene?.id == scene.id;
+                    final tile = _SceneStructureTile(
+                      copy: copy,
+                      scene: scene,
+                      selected: selected,
+                      chapters: chapters,
+                      onTap: () => onSelectScene(scene),
+                      onMoveSceneUp: () => onMoveSceneUp(scene),
+                      onMoveSceneDown: () => onMoveSceneDown(scene),
+                      onMoveSceneToChapter: (chapterId) =>
+                          onMoveSceneToChapter(scene, chapterId),
+                      onDeleteScene: () => onDeleteScene(scene),
+                    );
+                    return LongPressDraggable<Scene>(
+                      data: scene,
+                      feedback: _DragSceneFeedback(title: scene.title),
+                      childWhenDragging: Opacity(opacity: 0.36, child: tile),
+                      child: tile,
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-          if (group.summary.trim().isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  group.summary,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: color.onSurfaceVariant,
-                      ),
+        );
+      },
+    );
+  }
+}
+
+final class _DragSceneFeedback extends StatelessWidget {
+  const _DragSceneFeedback({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 8,
+      borderRadius: BorderRadius.circular(8),
+      color: color.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.drag_indicator, color: color.onSurfaceVariant),
+            const SizedBox(width: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 240),
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: color.onSurface,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-            const Divider(height: 1),
           ],
-          if (group.summary.trim().isEmpty) const Divider(height: 1),
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(8),
-              itemCount: group.scenes.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final scene = group.scenes[index];
-                final selected = selectedScene?.id == scene.id;
-                return _SceneStructureTile(
-                  copy: copy,
-                  scene: scene,
-                  selected: selected,
-                  chapters: chapters,
-                  onTap: () => onSelectScene(scene),
-                  onMoveSceneUp: () => onMoveSceneUp(scene),
-                  onMoveSceneDown: () => onMoveSceneDown(scene),
-                  onMoveSceneToChapter: (chapterId) =>
-                      onMoveSceneToChapter(scene, chapterId),
-                  onDeleteScene: () => onDeleteScene(scene),
-                );
-              },
-            ),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+}
+
+final class _StatusSceneDropTarget extends StatelessWidget {
+  const _StatusSceneDropTarget({
+    required this.copy,
+    required this.statuses,
+    required this.onChangeSceneStatus,
+    required this.child,
+  });
+
+  final WritelerCopy copy;
+  final List<DraftStatus> statuses;
+  final void Function(Scene scene, DraftStatus status) onChangeSceneStatus;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DragTarget<Scene>(
+      onWillAcceptWithDetails: (details) =>
+          !statuses.contains(details.data.status),
+      onAcceptWithDetails: (details) async {
+        final status = statuses.length == 1
+            ? statuses.first
+            : await showDialog<DraftStatus>(
+                context: context,
+                builder: (context) => SimpleDialog(
+                  title: Text(copy.t('chooseStatus')),
+                  children: [
+                    for (final status in statuses)
+                      SimpleDialogOption(
+                        onPressed: () => Navigator.of(context).pop(status),
+                        child:
+                            Text(_draftStatusLabel(status, copy.languageCode)),
+                      ),
+                  ],
+                ),
+              );
+        if (status != null) onChangeSceneStatus(details.data, status);
+      },
+      builder: (context, candidateData, rejectedData) {
+        final highlighted = candidateData.isNotEmpty;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: highlighted ? color.primary : Colors.transparent,
+              width: 1.4,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: child,
+        );
+      },
     );
   }
 }

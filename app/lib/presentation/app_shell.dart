@@ -935,6 +935,83 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<void> _moveSceneToChapterOrder(
+    Scene scene, {
+    required String? chapterId,
+    double? orderIndex,
+  }) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    if (scene.chapterId == chapterId && orderIndex == null) return;
+
+    final updated = scene.copyWith(
+      chapterId: chapterId,
+      clearChapterId: chapterId == null,
+      orderIndex: orderIndex,
+    );
+    await widget.sceneRepository.save(updated);
+    final scenes = await widget.sceneRepository.listByProject(project.id);
+    final selected = scenes.firstWhere(
+      (item) => item.id == scene.id,
+      orElse: () => updated,
+    );
+    if (!mounted) return;
+    setState(() {
+      _scenes = scenes;
+      _selectedScene = selected;
+      _syncSceneControllers(selected);
+    });
+    await _recordProjectMetric(
+      eventType: 'scene.moved',
+      metadata: {'sceneId': scene.id, 'chapterId': chapterId},
+    );
+  }
+
+  Future<void> _changeSceneStatus(Scene scene, DraftStatus status) async {
+    final project = _selectedProject;
+    if (project == null || scene.status == status) return;
+
+    final updated = scene.copyWith(status: status);
+    await widget.sceneRepository.save(updated);
+    final scenes = await widget.sceneRepository.listByProject(project.id);
+    if (!mounted) return;
+    setState(() {
+      _scenes = scenes;
+      if (_selectedScene?.id == scene.id) {
+        _selectedScene = updated;
+        _selectedSceneStatus = status;
+      }
+    });
+    await _recordProjectMetric(
+      eventType: 'scene.status.changed',
+      metadata: {'sceneId': scene.id, 'status': status.wireName},
+    );
+  }
+
+  Future<void> _saveProjectAuthorName(String authorName) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final trimmed = authorName.trim();
+    final metadata = Map<String, Object?>.from(project.metadata);
+    if (trimmed.isEmpty) {
+      metadata.remove('authorName');
+    } else {
+      metadata['authorName'] = trimmed;
+    }
+    final updated = project.copyWith(metadata: metadata);
+    await widget.projectRepository.save(updated);
+    final projects = await widget.projectRepository.listActive();
+    if (!mounted) return;
+    setState(() {
+      _projects = projects;
+      _selectedProject = updated;
+    });
+    await _recordProjectMetric(
+      eventType: 'project.author.updated',
+      metadata: {'authorNameSet': trimmed.isNotEmpty},
+    );
+  }
+
   Future<void> _requestAiSuggestion(
     WritelerCopy copy,
     AITaskKind task, {
@@ -1805,6 +1882,10 @@ final class _WritelerShellState extends State<WritelerShell> {
           onMoveSceneUp: (scene) => _moveSceneInStructure(scene, -1),
           onMoveSceneDown: (scene) => _moveSceneInStructure(scene, 1),
           onMoveSceneToChapter: _moveSceneToChapter,
+          onDropSceneToChapter: (scene, chapterId) => _moveSceneToChapterOrder(
+            scene,
+            chapterId: chapterId,
+          ),
           onDeleteScene: (scene) => _deleteScene(scene, copy),
           onDeleteChapter: (chapter) => _deleteChapter(chapter, copy),
           onCreateScene: () => _showCreateSceneDialog(copy),
@@ -1829,6 +1910,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           },
           onCreateScene: () => _showCreateSceneDialog(copy),
           onDeleteScene: (scene) => _deleteScene(scene, copy),
+          onChangeSceneStatus: _changeSceneStatus,
         ),
       3 => _CatalogWorkspace(
           copy: copy,
@@ -2017,6 +2099,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         ),
       _ => _SettingsWorkspace(
           copy: copy,
+          project: _selectedProject,
           aiEnabled: widget.globalAiEnabled,
           cloudSyncEnabled: widget.globalCloudSyncEnabled,
           noAiNoCloud: widget.globalNoAiNoCloud,
@@ -2035,6 +2118,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               setState(() => _providerEnabled = enabled),
           onSaveProviderConfig: () => _saveProviderConfig(copy),
           onDeleteProviderApiKey: () => _deleteProviderApiKey(copy),
+          onSaveProjectAuthorName: _saveProjectAuthorName,
           onSaveProfileSettings: widget.onGlobalProfileSettingsChanged,
           syncAdapterName: _syncAdapter.adapterName,
         ),

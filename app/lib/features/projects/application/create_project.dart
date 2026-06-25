@@ -27,6 +27,7 @@ final class CreateProject {
       aiEnabled: command.aiEnabled,
       cloudSyncEnabled: false,
       noAiNoCloud: command.noAiNoCloud,
+      metadata: command.metadata,
       createdAt: now,
       updatedAt: now,
     );
@@ -45,6 +46,7 @@ final class CreateProjectCommand {
     this.wordTarget,
     this.aiEnabled = true,
     this.noAiNoCloud = false,
+    this.metadata = const {},
   });
 
   final String title;
@@ -54,4 +56,5 @@ final class CreateProjectCommand {
   final int? wordTarget;
   final bool aiEnabled;
   final bool noAiNoCloud;
+  final Map<String, Object?> metadata;
 }

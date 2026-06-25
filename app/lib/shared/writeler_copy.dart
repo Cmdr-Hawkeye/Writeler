@@ -138,6 +138,25 @@ final class WritelerCopy {
     'notesQueue': 'Notizen',
     'newProject': 'Neues Projekt',
     'projectTitle': 'Projekttitel',
+    'projectWizardBasics': 'Projekt benennen',
+    'projectWizardAuthor': 'Autor und Form',
+    'projectWizardScope': 'Umfang und Notiz',
+    'authorName': 'Autorenname',
+    'projectType': 'Projektart',
+    'projectTypeNovel': 'Roman',
+    'projectTypeShortStory': 'Kurzgeschichte',
+    'projectTypeNonfiction': 'Sachbuch',
+    'projectLanguage': 'Projektsprache',
+    'projectDescription': 'Projektbeschreibung',
+    'projectMetadata': 'Projektangaben',
+    'projectMetadataBody':
+        'Projektbezogene Angaben, die Export, Self-Publishing und KI-Kontext nutzen können.',
+    'selectProjectForMetadata':
+        'Wähle ein Projekt aus, um Projektangaben zu bearbeiten.',
+    'saveProjectMetadata': 'Projektangaben speichern',
+    'step': 'Schritt',
+    'back': 'Zurück',
+    'next': 'Weiter',
     'create': 'Anlegen',
     'cancel': 'Abbrechen',
     'delete': 'Löschen',
@@ -246,6 +265,7 @@ final class WritelerCopy {
     'done': 'Fertig',
     'lockedOrArchived': 'Gesperrt oder archiviert',
     'noScenesInStatus': 'Keine Szenen in diesem Status.',
+    'chooseStatus': 'Status auswählen',
     'structureCockpit': 'Struktur-Cockpit',
     'planningGaps': 'Planungslücken',
     'unassignedScenes': 'Ohne Kapitel',
@@ -525,6 +545,8 @@ final class WritelerCopy {
         'Ändert nur die Darstellung der App. Inhalte und Projekte bleiben unverändert.',
     'helpGlobalProfileSettings':
         'Diese Optionen gelten appweit, solange spätere Projektprofile sie nicht überschreiben.',
+    'helpProjectMetadata':
+        'Speichert Angaben zum aktuellen Projekt, zum Beispiel den Autorennamen.',
     'helpAiEnabled':
         'Schaltet KI-Funktionen global ein oder aus. Manuskripttext wird dadurch nicht automatisch verändert.',
     'helpCloudSyncEnabled':
@@ -696,6 +718,24 @@ final class WritelerCopy {
     'notesQueue': 'Notes',
     'newProject': 'New Project',
     'projectTitle': 'Project title',
+    'projectWizardBasics': 'Name the project',
+    'projectWizardAuthor': 'Author and form',
+    'projectWizardScope': 'Scope and note',
+    'authorName': 'Author name',
+    'projectType': 'Project type',
+    'projectTypeNovel': 'Novel',
+    'projectTypeShortStory': 'Short story',
+    'projectTypeNonfiction': 'Nonfiction',
+    'projectLanguage': 'Project language',
+    'projectDescription': 'Project description',
+    'projectMetadata': 'Project details',
+    'projectMetadataBody':
+        'Project-specific details that export, self-publishing, and AI context can use.',
+    'selectProjectForMetadata': 'Select a project to edit project details.',
+    'saveProjectMetadata': 'Save project details',
+    'step': 'Step',
+    'back': 'Back',
+    'next': 'Next',
     'create': 'Create',
     'cancel': 'Cancel',
     'delete': 'Delete',
@@ -802,6 +842,7 @@ final class WritelerCopy {
     'done': 'Done',
     'lockedOrArchived': 'Locked or archived',
     'noScenesInStatus': 'No scenes in this status.',
+    'chooseStatus': 'Choose status',
     'structureCockpit': 'Structure cockpit',
     'planningGaps': 'Planning gaps',
     'unassignedScenes': 'No chapter',
@@ -1078,6 +1119,8 @@ final class WritelerCopy {
         'Changes only the app appearance. Projects and writing content stay untouched.',
     'helpGlobalProfileSettings':
         'These options apply app-wide until future project profiles override them.',
+    'helpProjectMetadata':
+        'Stores details for the current project, such as the author name.',
     'helpAiEnabled':
         'Turns AI features on or off globally. Manuscript text is never changed automatically.',
     'helpCloudSyncEnabled':

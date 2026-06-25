@@ -3,45 +3,275 @@ part of '../main.dart';
 // Dialog workflows used by the shell. Kept as an extension so the shell state
 // remains private while dialog code stays out of the main orchestration file.
 
-extension _WritelerShellDialogs on _WritelerShellState {
-  Future<void> _showCreateProjectDialog(WritelerCopy copy) async {
-    var draftTitle = '';
-    final title = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(copy.t('newProject')),
-          content: TextField(
-            autofocus: true,
-            decoration: InputDecoration(labelText: copy.t('projectTitle')),
-            textInputAction: TextInputAction.done,
-            onChanged: (value) => draftTitle = value,
-            onSubmitted: (value) => Navigator.of(context).pop(value),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(copy.t('cancel')),
+final class _ProjectWizardResult {
+  const _ProjectWizardResult({
+    required this.title,
+    required this.authorName,
+    required this.projectType,
+    required this.languageCode,
+    required this.description,
+    required this.wordTarget,
+  });
+
+  final String title;
+  final String authorName;
+  final String projectType;
+  final String languageCode;
+  final String description;
+  final int? wordTarget;
+}
+
+final class _ProjectWizardDialog extends StatefulWidget {
+  const _ProjectWizardDialog({required this.copy});
+
+  final WritelerCopy copy;
+
+  @override
+  State<_ProjectWizardDialog> createState() => _ProjectWizardDialogState();
+}
+
+final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
+  late final TextEditingController _titleController = TextEditingController();
+  late final TextEditingController _authorController = TextEditingController();
+  late final TextEditingController _descriptionController =
+      TextEditingController();
+  late final TextEditingController _wordTargetController =
+      TextEditingController();
+  var _step = 0;
+  var _projectType = 'novel';
+  late var _languageCode = WritelerCopy.normalizeLanguageCode(
+    Localizations.localeOf(context).languageCode,
+  );
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _authorController.dispose();
+    _descriptionController.dispose();
+    _wordTargetController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final copy = widget.copy;
+    final steps = [
+      _ProjectWizardStep(
+        title: copy.t('projectWizardBasics'),
+        child: TextField(
+          controller: _titleController,
+          autofocus: true,
+          decoration: InputDecoration(labelText: copy.t('projectTitle')),
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => setState(() => _step = 1),
+        ),
+      ),
+      _ProjectWizardStep(
+        title: copy.t('projectWizardAuthor'),
+        child: Column(
+          children: [
+            TextField(
+              controller: _authorController,
+              decoration: InputDecoration(labelText: copy.t('authorName')),
+              textInputAction: TextInputAction.next,
             ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(draftTitle),
-              child: Text(copy.t('create')),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _projectType,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+              decoration: InputDecoration(
+                labelText: copy.t('projectType'),
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: 'novel',
+                  child: Text(copy.t('projectTypeNovel')),
+                ),
+                DropdownMenuItem(
+                  value: 'shortStory',
+                  child: Text(copy.t('projectTypeShortStory')),
+                ),
+                DropdownMenuItem(
+                  value: 'nonfiction',
+                  child: Text(copy.t('projectTypeNonfiction')),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _projectType = value);
+              },
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _languageCode,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+              decoration: InputDecoration(
+                labelText: copy.t('projectLanguage'),
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                for (final language in WritelerCopy.supportedLanguages)
+                  DropdownMenuItem(
+                    value: language.code,
+                    child: Text(language.nativeName),
+                  ),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _languageCode = value);
+              },
             ),
           ],
-        );
-      },
+        ),
+      ),
+      _ProjectWizardStep(
+        title: copy.t('projectWizardScope'),
+        child: Column(
+          children: [
+            TextField(
+              controller: _wordTargetController,
+              decoration: InputDecoration(labelText: copy.t('wordTarget')),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _descriptionController,
+              decoration: InputDecoration(
+                labelText: copy.t('projectDescription'),
+                alignLabelWithHint: true,
+              ),
+              maxLines: 4,
+            ),
+          ],
+        ),
+      ),
+    ];
+    final current = steps[_step];
+
+    return AlertDialog(
+      title: Text(copy.t('newProject')),
+      content: SizedBox(
+        width: 520,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ProjectWizardProgress(
+              step: _step,
+              stepCount: steps.length,
+              copy: copy,
+            ),
+            const SizedBox(height: 18),
+            Text(
+              current.title,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            current.child,
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(copy.t('cancel')),
+        ),
+        if (_step > 0)
+          TextButton(
+            onPressed: () => setState(() => _step -= 1),
+            child: Text(copy.t('back')),
+          ),
+        if (_step < steps.length - 1)
+          OutlinedButton(
+            onPressed: () => setState(() => _step += 1),
+            child: Text(copy.t('next')),
+          ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_result()),
+          child: Text(copy.t('create')),
+        ),
+      ],
+    );
+  }
+
+  _ProjectWizardResult _result() {
+    final wordTargetText = _wordTargetController.text.trim();
+    return _ProjectWizardResult(
+      title: _titleController.text.trim(),
+      authorName: _authorController.text.trim(),
+      projectType: _projectType,
+      languageCode: _languageCode,
+      description: _descriptionController.text.trim(),
+      wordTarget: wordTargetText.isEmpty ? null : int.tryParse(wordTargetText),
+    );
+  }
+}
+
+final class _ProjectWizardStep {
+  const _ProjectWizardStep({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+}
+
+final class _ProjectWizardProgress extends StatelessWidget {
+  const _ProjectWizardProgress({
+    required this.step,
+    required this.stepCount,
+    required this.copy,
+  });
+
+  final int step;
+  final int stepCount;
+  final WritelerCopy copy;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Text(
+          '${copy.t('step')} ${step + 1}/$stepCount',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: color.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: LinearProgressIndicator(
+            value: (step + 1) / stepCount,
+            minHeight: 3,
+            borderRadius: BorderRadius.circular(99),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+extension _WritelerShellDialogs on _WritelerShellState {
+  Future<void> _showCreateProjectDialog(WritelerCopy copy) async {
+    final result = await showDialog<_ProjectWizardResult>(
+      context: context,
+      builder: (context) => _ProjectWizardDialog(copy: copy),
     );
 
-    final normalizedTitle = title?.trim();
-    if (normalizedTitle == null) return;
+    if (result == null) return;
     if (!mounted) return;
 
     final project = await _createProject(
       CreateProjectCommand(
-        title: normalizedTitle.isEmpty
-            ? copy.t('untitledProject')
-            : normalizedTitle,
-        languageCode: Localizations.localeOf(context).languageCode,
+        title: result.title.isEmpty ? copy.t('untitledProject') : result.title,
+        description: result.description,
+        projectType: result.projectType,
+        languageCode: result.languageCode,
+        wordTarget: result.wordTarget,
+        metadata: {
+          if (result.authorName.isNotEmpty) 'authorName': result.authorName,
+        },
       ),
     );
     final projects = await widget.projectRepository.listActive();

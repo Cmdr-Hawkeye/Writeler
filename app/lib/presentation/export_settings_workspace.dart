@@ -618,6 +618,7 @@ final class _ImportArchivePreview extends StatelessWidget {
 final class _SettingsWorkspace extends StatelessWidget {
   const _SettingsWorkspace({
     required this.copy,
+    required this.project,
     required this.aiEnabled,
     required this.cloudSyncEnabled,
     required this.noAiNoCloud,
@@ -635,11 +636,13 @@ final class _SettingsWorkspace extends StatelessWidget {
     required this.onProviderEnabledChanged,
     required this.onSaveProviderConfig,
     required this.onDeleteProviderApiKey,
+    required this.onSaveProjectAuthorName,
     required this.onSaveProfileSettings,
     required this.syncAdapterName,
   });
 
   final WritelerCopy copy;
+  final Project? project;
   final bool aiEnabled;
   final bool cloudSyncEnabled;
   final bool noAiNoCloud;
@@ -657,6 +660,7 @@ final class _SettingsWorkspace extends StatelessWidget {
   final ValueChanged<bool> onProviderEnabledChanged;
   final VoidCallback onSaveProviderConfig;
   final VoidCallback onDeleteProviderApiKey;
+  final ValueChanged<String> onSaveProjectAuthorName;
   final String syncAdapterName;
   final FutureOr<void> Function({
     required bool aiEnabled,
@@ -740,6 +744,16 @@ final class _SettingsWorkspace extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+        _SettingsSection(
+          title: copy.t('projectMetadata'),
+          help: copy.t('helpProjectMetadata'),
+          body: copy.t('projectMetadataBody'),
+          child: _ProjectMetadataSettings(
+            copy: copy,
+            project: project,
+            onSaveAuthorName: onSaveProjectAuthorName,
           ),
         ),
         _SettingsSection(
@@ -927,6 +941,75 @@ final class _SettingsSection extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+final class _ProjectMetadataSettings extends StatefulWidget {
+  const _ProjectMetadataSettings({
+    required this.copy,
+    required this.project,
+    required this.onSaveAuthorName,
+  });
+
+  final WritelerCopy copy;
+  final Project? project;
+  final ValueChanged<String> onSaveAuthorName;
+
+  @override
+  State<_ProjectMetadataSettings> createState() =>
+      _ProjectMetadataSettingsState();
+}
+
+final class _ProjectMetadataSettingsState
+    extends State<_ProjectMetadataSettings> {
+  late final TextEditingController _authorController = TextEditingController(
+    text: _authorName,
+  );
+
+  String get _authorName =>
+      widget.project?.metadata['authorName'] as String? ?? '';
+
+  @override
+  void didUpdateWidget(covariant _ProjectMetadataSettings oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.project?.id != widget.project?.id) {
+      _authorController.text = _authorName;
+    }
+  }
+
+  @override
+  void dispose() {
+    _authorController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final project = widget.project;
+    if (project == null) {
+      return _EmptyInlineMessage(
+          message: widget.copy.t('selectProjectForMetadata'));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _authorController,
+          decoration: InputDecoration(
+            labelText: widget.copy.t('authorName'),
+            border: const OutlineInputBorder(),
+          ),
+          textInputAction: TextInputAction.done,
+          onSubmitted: widget.onSaveAuthorName,
+        ),
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: () => widget.onSaveAuthorName(_authorController.text),
+          icon: const Icon(Icons.save_outlined),
+          label: Text(widget.copy.t('saveProjectMetadata')),
+        ),
+      ],
     );
   }
 }
