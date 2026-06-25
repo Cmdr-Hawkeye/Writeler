@@ -142,6 +142,55 @@ void main() {
     expect(find.textContaining('MockProvider'), findsOneWidget);
   });
 
+  testWidgets('editor opens a scene and focus mode keeps manuscript usable',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: InMemoryProjectRepository(),
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('New Project'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText), 'Editor Check');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Editor').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('New Scene').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText), 'Opening');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Opening'), findsWidgets);
+    expect(find.text('Manuscript'), findsWidgets);
+
+    await tester.tap(find.byIcon(Icons.fullscreen).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Opening'), findsOneWidget);
+    expect(find.textContaining('No chapter'), findsNothing);
+    expect(find.text('Manuscript'), findsWidgets);
+  });
+
   testWidgets('top bar language switch updates workspace copy', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

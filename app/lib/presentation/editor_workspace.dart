@@ -2,7 +2,7 @@ part of '../main.dart';
 
 // Manuscript editor, scene navigator, focus mode, autosave status, and scene planning widgets.
 
-final class _ProjectWorkspace extends StatelessWidget {
+final class _ProjectWorkspace extends StatefulWidget {
   const _ProjectWorkspace({
     required this.copy,
     required this.project,
@@ -58,68 +58,90 @@ final class _ProjectWorkspace extends StatelessWidget {
   final VoidCallback onSaveScene;
 
   @override
+  State<_ProjectWorkspace> createState() => _ProjectWorkspaceState();
+}
+
+final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
+  bool _focusMode = false;
+
+  @override
+  void didUpdateWidget(covariant _ProjectWorkspace oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedScene == null && _focusMode) {
+      _focusMode = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final project = this.project;
+    final project = widget.project;
     if (project == null) {
-      return _EmptyWorkspace(copy: copy);
+      return _EmptyWorkspace(copy: widget.copy);
     }
 
     return Column(
       children: [
-        SizedBox(
-          height: 64,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    project.title,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+        if (!_focusMode) ...[
+          SizedBox(
+            height: 64,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      project.title,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
                   ),
-                ),
-                FilledButton.icon(
-                  onPressed: onCreateScene,
-                  icon: const Icon(Icons.add),
-                  label: Text(copy.t('newScene')),
-                ),
-                const SizedBox(width: 8),
-                IconButton.outlined(
-                  tooltip: copy.t('newChapter'),
-                  onPressed: onCreateChapter,
-                  icon: const Icon(Icons.create_new_folder_outlined),
-                ),
-              ],
+                  FilledButton.icon(
+                    onPressed: widget.onCreateScene,
+                    icon: const Icon(Icons.add),
+                    label: Text(widget.copy.t('newScene')),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.outlined(
+                    tooltip: widget.copy.t('newChapter'),
+                    onPressed: widget.onCreateChapter,
+                    icon: const Icon(Icons.create_new_folder_outlined),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        const Divider(height: 1),
+          const Divider(height: 1),
+        ],
         Expanded(
           child: Row(
             children: [
-              SizedBox(
-                width: 320,
-                child: scenes.isEmpty
-                    ? _NoScenes(copy: copy, onCreateScene: onCreateScene)
-                    : _SceneNavigator(
-                        copy: copy,
-                        chapters: chapters,
-                        scenes: scenes,
-                        selectedScene: selectedScene,
-                        onSelectScene: onSelectScene,
-                        onDeleteScene: onDeleteScene,
-                      ),
-              ),
-              const VerticalDivider(width: 1),
+              if (!_focusMode) ...[
+                SizedBox(
+                  width: 320,
+                  child: widget.scenes.isEmpty
+                      ? _NoScenes(
+                          copy: widget.copy,
+                          onCreateScene: widget.onCreateScene,
+                        )
+                      : _SceneNavigator(
+                          copy: widget.copy,
+                          chapters: widget.chapters,
+                          scenes: widget.scenes,
+                          selectedScene: widget.selectedScene,
+                          onSelectScene: widget.onSelectScene,
+                          onDeleteScene: widget.onDeleteScene,
+                        ),
+                ),
+                const VerticalDivider(width: 1),
+              ],
               Expanded(
-                child: selectedScene == null
+                child: widget.selectedScene == null
                     ? Center(
                         child: Text(
-                          copy.t('selectScene'),
+                          widget.copy.t('selectScene'),
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     color: color.onSurfaceVariant,
@@ -127,25 +149,29 @@ final class _ProjectWorkspace extends StatelessWidget {
                         ),
                       )
                     : _SceneEditor(
-                        copy: copy,
-                        scene: selectedScene!,
-                        chapters: chapters,
-                        catalogItems: catalogItems,
-                        relationships: relationships,
-                        controller: manuscriptController,
-                        summaryController: summaryController,
-                        goalController: goalController,
-                        conflictController: conflictController,
-                        outcomeController: outcomeController,
-                        wordTargetController: wordTargetController,
-                        selectedSceneStatus: selectedSceneStatus,
-                        selectedSceneChapterId: selectedSceneChapterId,
-                        saveState: sceneSaveState,
-                        lastSavedAt: lastSceneSavedAt,
-                        onSceneChapterChanged: onSceneChapterChanged,
-                        onToggleSceneCatalogLink: onToggleSceneCatalogLink,
-                        onSceneStatusChanged: onSceneStatusChanged,
-                        onSaveScene: onSaveScene,
+                        copy: widget.copy,
+                        scene: widget.selectedScene!,
+                        chapters: widget.chapters,
+                        catalogItems: widget.catalogItems,
+                        relationships: widget.relationships,
+                        controller: widget.manuscriptController,
+                        summaryController: widget.summaryController,
+                        goalController: widget.goalController,
+                        conflictController: widget.conflictController,
+                        outcomeController: widget.outcomeController,
+                        wordTargetController: widget.wordTargetController,
+                        selectedSceneStatus: widget.selectedSceneStatus,
+                        selectedSceneChapterId: widget.selectedSceneChapterId,
+                        saveState: widget.sceneSaveState,
+                        lastSavedAt: widget.lastSceneSavedAt,
+                        focusMode: _focusMode,
+                        onFocusModeChanged: (value) =>
+                            setState(() => _focusMode = value),
+                        onSceneChapterChanged: widget.onSceneChapterChanged,
+                        onToggleSceneCatalogLink:
+                            widget.onToggleSceneCatalogLink,
+                        onSceneStatusChanged: widget.onSceneStatusChanged,
+                        onSaveScene: widget.onSaveScene,
                       ),
               ),
             ],
@@ -505,6 +531,8 @@ final class _SceneEditor extends StatefulWidget {
     required this.selectedSceneChapterId,
     required this.saveState,
     required this.lastSavedAt,
+    required this.focusMode,
+    required this.onFocusModeChanged,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
     required this.onSceneStatusChanged,
@@ -526,6 +554,8 @@ final class _SceneEditor extends StatefulWidget {
   final String? selectedSceneChapterId;
   final _SceneSaveState saveState;
   final DateTime? lastSavedAt;
+  final bool focusMode;
+  final ValueChanged<bool> onFocusModeChanged;
   final ValueChanged<String?> onSceneChapterChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
@@ -538,7 +568,6 @@ final class _SceneEditor extends StatefulWidget {
 final class _SceneEditorState extends State<_SceneEditor> {
   late final TextEditingController _searchController = TextEditingController();
   late final TextEditingController _replaceController = TextEditingController();
-  bool _focusMode = false;
   bool _showSearch = false;
 
   @override
@@ -556,7 +585,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
     final manuscriptField = _ManuscriptField(
       copy: copy,
       controller: widget.controller,
-      focusMode: _focusMode,
+      focusMode: widget.focusMode,
     );
     final inspector = _SceneInspector(
       copy: copy,
@@ -579,69 +608,95 @@ final class _SceneEditorState extends State<_SceneEditor> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
-      padding: EdgeInsets.all(_focusMode ? 32 : 24),
+      padding: EdgeInsets.all(widget.focusMode ? 32 : 24),
       color: color.surfaceContainerLowest,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  scene.title,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compactHeader = constraints.maxWidth < 760;
+              final titleRow = Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      scene.title,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _SaveStatePill(
+                        copy: copy,
+                        state: widget.saveState,
+                        savedAt: widget.lastSavedAt,
                       ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              _SaveStatePill(
-                copy: copy,
-                state: widget.saveState,
-                savedAt: widget.lastSavedAt,
-              ),
-              const SizedBox(width: 8),
-              Tooltip(
-                message: copy.t('searchReplace'),
-                child: IconButton.outlined(
-                  isSelected: _showSearch,
-                  onPressed: () => setState(() => _showSearch = !_showSearch),
-                  icon: const Icon(Icons.find_replace_outlined),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Tooltip(
-                message:
-                    _focusMode ? copy.t('exitFocusMode') : copy.t('focusMode'),
-                child: IconButton.outlined(
-                  isSelected: _focusMode,
-                  onPressed: () => setState(() => _focusMode = !_focusMode),
-                  icon: Icon(
-                      _focusMode ? Icons.fullscreen_exit : Icons.fullscreen),
-                ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: widget.onSaveScene,
-                icon: const Icon(Icons.save_outlined),
-                label: Text(copy.t('saveScene')),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: widget.controller,
-            builder: (context, value, child) {
-              return _ManuscriptToolbar(
-                copy: copy,
-                text: value.text,
-                targetText: widget.wordTargetController.text,
+                    ),
+                  ),
+                ],
+              );
+              final actions = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Tooltip(
+                    message: copy.t('searchReplace'),
+                    child: IconButton.outlined(
+                      isSelected: _showSearch,
+                      onPressed: () =>
+                          setState(() => _showSearch = !_showSearch),
+                      icon: const Icon(Icons.find_replace_outlined),
+                    ),
+                  ),
+                  Tooltip(
+                    message: widget.focusMode
+                        ? copy.t('exitFocusMode')
+                        : copy.t('focusMode'),
+                    child: IconButton.outlined(
+                      isSelected: widget.focusMode,
+                      onPressed: () =>
+                          widget.onFocusModeChanged(!widget.focusMode),
+                      icon: Icon(
+                        widget.focusMode
+                            ? Icons.fullscreen_exit
+                            : Icons.fullscreen,
+                      ),
+                    ),
+                  ),
+                  FilledButton.icon(
+                    onPressed: widget.onSaveScene,
+                    icon: const Icon(Icons.save_outlined),
+                    label: Text(copy.t('saveScene')),
+                  ),
+                ],
+              );
+              if (compactHeader) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    titleRow,
+                    const SizedBox(height: 8),
+                    Align(alignment: Alignment.centerLeft, child: actions),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: titleRow),
+                  const SizedBox(width: 12),
+                  actions,
+                ],
               );
             },
           ),
+          const SizedBox(height: 16),
           if (_showSearch) ...[
-            const SizedBox(height: 12),
             _ManuscriptSearchBar(
               copy: copy,
               manuscriptController: widget.controller,
@@ -655,7 +710,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final compact = constraints.maxWidth < 980;
-                if (_focusMode) {
+                if (widget.focusMode) {
                   return manuscriptField;
                 }
                 if (compact) {
@@ -678,6 +733,17 @@ final class _SceneEditorState extends State<_SceneEditor> {
               },
             ),
           ),
+          const SizedBox(height: 10),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: widget.controller,
+            builder: (context, value, child) {
+              return _ManuscriptToolbar(
+                copy: copy,
+                text: value.text,
+                targetText: widget.wordTargetController.text,
+              );
+            },
+          ),
         ],
       ),
     );
@@ -698,42 +764,50 @@ final class _ManuscriptField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return ColoredBox(
-      color: color.surfaceContainerLowest,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 680),
-          child: TextField(
-            controller: controller,
-            expands: true,
-            maxLines: null,
-            minLines: null,
-            textAlignVertical: TextAlignVertical.top,
-            cursorColor: color.primary,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontFamily: 'Literata',
-                  fontFamilyFallback: const [
-                    'Iowan Old Style',
-                    'Source Serif Pro',
-                    'Georgia',
-                    'Times New Roman',
-                    'serif',
-                  ],
-                  fontSize: focusMode ? 20 : 18,
-                  height: 1.75,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width =
+            constraints.maxWidth < 680.0 ? constraints.maxWidth : 680.0;
+        return ColoredBox(
+          color: color.surfaceContainerLowest,
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: width,
+              height: constraints.maxHeight,
+              child: TextField(
+                controller: controller,
+                expands: true,
+                maxLines: null,
+                minLines: null,
+                textAlignVertical: TextAlignVertical.top,
+                cursorColor: color.primary,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontFamily: 'Literata',
+                      fontFamilyFallback: const [
+                        'Iowan Old Style',
+                        'Source Serif Pro',
+                        'Georgia',
+                        'Times New Roman',
+                        'serif',
+                      ],
+                      fontSize: focusMode ? 20 : 18,
+                      height: 1.75,
+                    ),
+                decoration: InputDecoration(
+                  hintText: copy.t('manuscript'),
+                  alignLabelWithHint: true,
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 28),
                 ),
-            decoration: InputDecoration(
-              hintText: copy.t('manuscript'),
-              alignLabelWithHint: true,
-              filled: false,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 28),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -752,55 +826,25 @@ final class _SaveStatePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final (icon, label, tone) = switch (state) {
-      _SceneSaveState.saved => (
-          Icons.cloud_done_outlined,
-          _savedLabel(copy, savedAt),
-          color.primary,
-        ),
-      _SceneSaveState.unsaved => (
-          Icons.edit_outlined,
-          copy.t('autosavePending'),
-          color.tertiary,
-        ),
-      _SceneSaveState.saving => (
-          Icons.sync_outlined,
-          copy.t('autosaveSaving'),
-          color.primary,
-        ),
-      _SceneSaveState.error => (
-          Icons.error_outline,
-          copy.t('autosaveError'),
-          color.error,
-        ),
+    final label = switch (state) {
+      _SceneSaveState.saved => _savedLabel(copy, savedAt),
+      _SceneSaveState.unsaved => copy.t('autosavePending'),
+      _SceneSaveState.saving => copy.t('autosaveSaving'),
+      _SceneSaveState.error => copy.t('autosaveError'),
     };
 
     return Semantics(
       label: label,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: tone.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: tone.withValues(alpha: 0.34)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 17, color: tone),
-            const SizedBox(width: 7),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: tone,
-                    fontWeight: FontWeight.w800,
-                  ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: state == _SceneSaveState.error
+                  ? color.error
+                  : color.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        ),
       ),
     );
   }
@@ -923,31 +967,40 @@ final class _ManuscriptToolbar extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: color.surfaceContainerLow,
-        border: Border.all(color: color.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
+        border: Border(top: BorderSide(color: color.outlineVariant)),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.only(top: 8),
         child: Row(
           children: [
             _EditorStat(label: copy.t('words'), value: '$words'),
-            const SizedBox(width: 16),
+            const SizedBox(width: 18),
             _EditorStat(label: copy.t('characterCount'), value: '$characters'),
             if (target != null && target > 0) ...[
-              const SizedBox(width: 16),
+              const SizedBox(width: 18),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${copy.t('targetProgress')}: $words / $target',
-                      style: Theme.of(context).textTheme.bodySmall,
+                child: SizedBox(
+                  height: 34,
+                  child: CustomPaint(
+                    painter: _ThreadProgressPainter(
+                      color: color.primary,
+                      trackColor: color.outlineVariant,
+                      progress: progress ?? 0,
                     ),
-                    const SizedBox(height: 6),
-                    LinearProgressIndicator(value: progress),
-                  ],
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          '${copy.t('targetProgress')}: $words / $target',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: color.onSurfaceVariant,
+                                  ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ] else
@@ -956,6 +1009,46 @@ final class _ManuscriptToolbar extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+final class _ThreadProgressPainter extends CustomPainter {
+  const _ThreadProgressPainter({
+    required this.color,
+    required this.trackColor,
+    required this.progress,
+  });
+
+  final Color color;
+  final Color trackColor;
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height * 0.28;
+    final track = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+    final active = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset.zero.translate(0, y), Offset(size.width, y), track);
+    canvas.drawLine(
+      Offset.zero.translate(0, y),
+      Offset(size.width * progress.clamp(0, 1), y),
+      active,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ThreadProgressPainter oldDelegate) {
+    return color != oldDelegate.color ||
+        trackColor != oldDelegate.trackColor ||
+        progress != oldDelegate.progress;
   }
 }
 
