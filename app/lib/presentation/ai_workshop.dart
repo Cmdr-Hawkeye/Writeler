@@ -581,6 +581,7 @@ final class _AIContextPicker extends StatelessWidget {
             child: DropdownButtonFormField<String>(
               initialValue: selectedSceneId,
               isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded),
               decoration: InputDecoration(
                 labelText: copy.t('selectAiScene'),
                 prefixIcon: const Icon(Icons.view_agenda_outlined),

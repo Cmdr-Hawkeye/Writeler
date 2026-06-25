@@ -312,6 +312,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<DraftStatus>(
                   initialValue: draftStatus,
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
                   decoration: InputDecoration(
                     labelText: copy.t('status'),
                     border: const OutlineInputBorder(),
@@ -456,6 +457,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
                     children: [
                       DropdownButtonFormField<String>(
                         initialValue: sourceKey,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
                         decoration: InputDecoration(
                           labelText: copy.t('relationshipSource'),
                           border: const OutlineInputBorder(),
@@ -475,6 +477,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: targetKey,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
                         decoration: InputDecoration(
                           labelText: copy.t('relationshipTarget'),
                           border: const OutlineInputBorder(),
@@ -494,6 +497,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: selectedType,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
                         decoration: InputDecoration(
                           labelText: copy.t('relationshipType'),
                           border: const OutlineInputBorder(),

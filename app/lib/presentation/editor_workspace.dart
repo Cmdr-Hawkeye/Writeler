@@ -812,33 +812,51 @@ final class _ManuscriptField extends StatelessWidget {
             child: SizedBox(
               width: width,
               height: constraints.maxHeight,
-              child: TextField(
-                controller: controller,
-                expands: true,
-                maxLines: null,
-                minLines: null,
-                textAlignVertical: TextAlignVertical.top,
-                cursorColor: color.primary,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontFamily: 'Literata',
-                      fontFamilyFallback: const [
-                        'Iowan Old Style',
-                        'Source Serif Pro',
-                        'Georgia',
-                        'Times New Roman',
-                        'serif',
-                      ],
-                      fontSize: fontSize,
-                      height: 1.75,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: color.outlineVariant.withValues(alpha: 0.92),
                     ),
-                decoration: InputDecoration(
-                  hintText: copy.t('manuscript'),
-                  alignLabelWithHint: true,
-                  filled: false,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 28),
+                    right: BorderSide(
+                      color: color.outlineVariant.withValues(alpha: 0.92),
+                    ),
+                    top: BorderSide(
+                      color: color.outlineVariant.withValues(alpha: 0.48),
+                    ),
+                    bottom: BorderSide(
+                      color: color.outlineVariant.withValues(alpha: 0.48),
+                    ),
+                  ),
+                ),
+                child: TextField(
+                  controller: controller,
+                  expands: true,
+                  maxLines: null,
+                  minLines: null,
+                  textAlignVertical: TextAlignVertical.top,
+                  cursorColor: color.primary,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontFamily: 'Literata',
+                        fontFamilyFallback: const [
+                          'Iowan Old Style',
+                          'Source Serif Pro',
+                          'Georgia',
+                          'Times New Roman',
+                          'serif',
+                        ],
+                        fontSize: fontSize,
+                        height: 1.75,
+                      ),
+                  decoration: InputDecoration(
+                    hintText: copy.t('manuscript'),
+                    alignLabelWithHint: true,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.fromLTRB(28, 30, 28, 30),
+                  ),
                 ),
               ),
             ),
@@ -1314,6 +1332,7 @@ final class _ScenePlanningFields extends StatelessWidget {
           first: DropdownButtonFormField<DraftStatus>(
             key: ValueKey(selectedSceneStatus),
             initialValue: selectedSceneStatus,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
             decoration: InputDecoration(
               labelText: copy.t('status'),
               border: const OutlineInputBorder(),
@@ -1361,6 +1380,7 @@ final class _ScenePlanningFields extends StatelessWidget {
             DropdownButtonFormField<String?>(
               key: ValueKey(selectedSceneChapterId ?? 'no-chapter'),
               initialValue: selectedSceneChapterId,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded),
               decoration: InputDecoration(
                 labelText: copy.t('chapter'),
                 border: const OutlineInputBorder(),

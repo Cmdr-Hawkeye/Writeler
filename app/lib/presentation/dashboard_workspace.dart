@@ -574,24 +574,34 @@ final class _DashboardPulse extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 820;
             final summary = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(copy.t('projectPulse'),
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 10),
+                Text(
+                  copy.t('projectPulse'),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+                const SizedBox(height: 8),
                 Text(
                   wordTarget == null || wordTarget! <= 0
                       ? '$words ${copy.t('words')}'
                       : '$words / $wordTarget ${copy.t('words')}',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: 10),
-                LinearProgressIndicator(value: wordProgress),
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: wordProgress,
+                  minHeight: 3,
+                  color: color.primary.withValues(alpha: 0.58),
+                  backgroundColor: color.outlineVariant.withValues(alpha: 0.42),
+                  borderRadius: BorderRadius.circular(99),
+                ),
               ],
             );
             final metrics = Wrap(

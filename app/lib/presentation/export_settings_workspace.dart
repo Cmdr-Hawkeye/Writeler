@@ -287,6 +287,7 @@ final class _SelfPublishingCenter extends StatelessWidget {
                     DropdownButtonFormField<ExportFormat>(
                       initialValue: format,
                       isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
                       decoration: InputDecoration(
                         labelText: copy.t('publishingFormat'),
                         suffixIcon: Padding(
@@ -750,6 +751,7 @@ final class _SettingsWorkspace extends StatelessWidget {
             children: [
               DropdownButtonFormField<AIProviderKind>(
                 initialValue: providerKind,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
                 decoration: InputDecoration(
                   labelText: copy.t('providerKind'),
                   suffixIcon: Padding(

@@ -719,6 +719,7 @@ final class _NoteEditorPane extends StatelessWidget {
             initialValue: targetOptions.any((item) => item.value == targetValue)
                 ? targetValue
                 : 'project',
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
             items: targetOptions,
             onChanged: onTargetChanged,
             decoration: InputDecoration(
