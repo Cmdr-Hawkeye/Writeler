@@ -26,6 +26,7 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.onDeleteScene,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
+    required this.onAddExistingSceneCatalogItems,
     required this.onCreateSceneCatalogItem,
     required this.onSceneStatusChanged,
     required this.onCreateChapter,
@@ -56,7 +57,10 @@ final class _ProjectWorkspace extends StatefulWidget {
   final ValueChanged<Scene> onSelectScene;
   final ValueChanged<Scene> onDeleteScene;
   final ValueChanged<String?> onSceneChapterChanged;
-  final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
+  final Future<void> Function(CatalogItem item, bool selected)
+      onToggleSceneCatalogLink;
+  final Future<void> Function(List<CatalogItem> items)
+      onAddExistingSceneCatalogItems;
   final ValueChanged<EntityType> onCreateSceneCatalogItem;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final VoidCallback onCreateChapter;
@@ -183,6 +187,8 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                         onSceneChapterChanged: widget.onSceneChapterChanged,
                         onToggleSceneCatalogLink:
                             widget.onToggleSceneCatalogLink,
+                        onAddExistingSceneCatalogItems:
+                            widget.onAddExistingSceneCatalogItems,
                         onCreateSceneCatalogItem:
                             widget.onCreateSceneCatalogItem,
                         onSceneStatusChanged: widget.onSceneStatusChanged,
@@ -555,6 +561,7 @@ final class _SceneEditor extends StatefulWidget {
     required this.onFocusModeChanged,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
+    required this.onAddExistingSceneCatalogItems,
     required this.onCreateSceneCatalogItem,
     required this.onSceneStatusChanged,
     required this.isRequestingAi,
@@ -583,7 +590,10 @@ final class _SceneEditor extends StatefulWidget {
   final ValueChanged<double> onEditorFontSizeChanged;
   final ValueChanged<bool> onFocusModeChanged;
   final ValueChanged<String?> onSceneChapterChanged;
-  final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
+  final Future<void> Function(CatalogItem item, bool selected)
+      onToggleSceneCatalogLink;
+  final Future<void> Function(List<CatalogItem> items)
+      onAddExistingSceneCatalogItems;
   final ValueChanged<EntityType> onCreateSceneCatalogItem;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final bool isRequestingAi;
@@ -634,6 +644,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
       onSceneChapterChanged: widget.onSceneChapterChanged,
       onSceneStatusChanged: widget.onSceneStatusChanged,
       onToggleSceneCatalogLink: widget.onToggleSceneCatalogLink,
+      onAddExistingSceneCatalogItems: widget.onAddExistingSceneCatalogItems,
       onCreateSceneCatalogItem: widget.onCreateSceneCatalogItem,
       isRequestingAi: widget.isRequestingAi,
       onRequestSceneAiHelp: widget.onRequestSceneAiHelp,
@@ -958,6 +969,7 @@ final class _SceneInspector extends StatelessWidget {
     required this.onSceneChapterChanged,
     required this.onSceneStatusChanged,
     required this.onToggleSceneCatalogLink,
+    required this.onAddExistingSceneCatalogItems,
     required this.onCreateSceneCatalogItem,
     required this.isRequestingAi,
     required this.onRequestSceneAiHelp,
@@ -978,7 +990,10 @@ final class _SceneInspector extends StatelessWidget {
   final String? selectedSceneChapterId;
   final ValueChanged<String?> onSceneChapterChanged;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
-  final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
+  final Future<void> Function(CatalogItem item, bool selected)
+      onToggleSceneCatalogLink;
+  final Future<void> Function(List<CatalogItem> items)
+      onAddExistingSceneCatalogItems;
   final ValueChanged<EntityType> onCreateSceneCatalogItem;
   final bool isRequestingAi;
   final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
@@ -1039,6 +1054,7 @@ final class _SceneInspector extends StatelessWidget {
             catalogItems: catalogItems,
             relationships: relationships,
             onToggleLink: onToggleSceneCatalogLink,
+            onAddExistingItems: onAddExistingSceneCatalogItems,
             onCreateItem: onCreateSceneCatalogItem,
           ),
           const SizedBox(height: 16),
@@ -1880,6 +1896,7 @@ final class _SceneContextLinks extends StatelessWidget {
     required this.catalogItems,
     required this.relationships,
     required this.onToggleLink,
+    required this.onAddExistingItems,
     required this.onCreateItem,
   });
 
@@ -1887,7 +1904,8 @@ final class _SceneContextLinks extends StatelessWidget {
   final Scene scene;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
-  final void Function(CatalogItem item, bool selected) onToggleLink;
+  final Future<void> Function(CatalogItem item, bool selected) onToggleLink;
+  final Future<void> Function(List<CatalogItem> items) onAddExistingItems;
   final ValueChanged<EntityType> onCreateItem;
 
   @override
@@ -1978,7 +1996,7 @@ final class _SceneContextLinks extends StatelessWidget {
                   label: Text(item.name),
                   tooltip: copy.t('removeSceneContext'),
                   deleteButtonTooltipMessage: copy.t('removeSceneContext'),
-                  onDeleted: () => onToggleLink(item, false),
+                  onDeleted: () async => onToggleLink(item, false),
                 ),
             ],
           ),
@@ -1998,9 +2016,7 @@ final class _SceneContextLinks extends StatelessWidget {
       ),
     );
     if (selectedItems == null || selectedItems.isEmpty) return;
-    for (final item in selectedItems) {
-      onToggleLink(item, true);
-    }
+    await onAddExistingItems(selectedItems);
   }
 
   bool _isLinked(CatalogItem item) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:writeler/core/domain/draft_status.dart';
+import 'package:writeler/core/domain/entity_type.dart';
 import 'package:writeler/features/ai_harness/infrastructure/in_memory_ai_suggestion_repository.dart';
 import 'package:writeler/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
 import 'package:writeler/features/catalog/infrastructure/in_memory_relationship_repository.dart';
@@ -308,14 +309,19 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final appPreferenceRepository = InMemoryAppPreferenceRepository();
     await appPreferenceRepository.write('app.language', 'en');
+    final projectRepository = InMemoryProjectRepository();
+    final chapterRepository = InMemoryChapterRepository();
+    final sceneRepository = InMemorySceneRepository();
+    final catalogItemRepository = InMemoryCatalogItemRepository();
+    final relationshipRepository = InMemoryRelationshipRepository();
 
     await tester.pumpWidget(
       WritelerApp(
-        projectRepository: InMemoryProjectRepository(),
-        chapterRepository: InMemoryChapterRepository(),
-        sceneRepository: InMemorySceneRepository(),
-        catalogItemRepository: InMemoryCatalogItemRepository(),
-        relationshipRepository: InMemoryRelationshipRepository(),
+        projectRepository: projectRepository,
+        chapterRepository: chapterRepository,
+        sceneRepository: sceneRepository,
+        catalogItemRepository: catalogItemRepository,
+        relationshipRepository: relationshipRepository,
         metricRepository: InMemoryMetricRepository(),
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
         projectNoteRepository: InMemoryProjectNoteRepository(),
@@ -372,16 +378,72 @@ void main() {
 
     await tester.tap(find.byTooltip('Remove from scene').first);
     await tester.pumpAndSettle();
+    final project = (await projectRepository.listActive()).single;
+    expect(
+      (await relationshipRepository.listByProject(project.id)).where(
+        (relationship) => relationship.relationshipType == 'appearsIn',
+      ),
+      isEmpty,
+    );
     expect(find.text('Mara'), findsNothing);
+
+    await tester.tap(find.byTooltip(
+      'Add character, location, or object to this scene',
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('New Character'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find
+          .descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          )
+          .first,
+      'Noah',
+    );
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Noah'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Remove from scene').first);
+    await tester.pumpAndSettle();
+    expect(
+      (await relationshipRepository.listByProject(project.id)).where(
+        (relationship) => relationship.relationshipType == 'appearsIn',
+      ),
+      isEmpty,
+    );
+    expect(find.text('Noah'), findsNothing);
 
     await tester.tap(find.widgetWithText(OutlinedButton, 'Add existing'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Mara'));
+    expect(find.text('Mara'), findsOneWidget);
+    expect(find.text('Noah'), findsOneWidget);
+    await tester.tap(find.byType(Checkbox).at(0));
     await tester.pumpAndSettle();
+    await tester.tap(find.byType(Checkbox).at(1));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Checkbox>(find.byType(Checkbox).at(0)).value, isTrue);
+    expect(tester.widget<Checkbox>(find.byType(Checkbox).at(1)).value, isTrue);
     await tester.tap(find.text('Add selection'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Mara'), findsOneWidget);
+    final relationships =
+        await relationshipRepository.listByProject(project.id);
+    final sceneLinks = relationships
+        .where(
+          (relationship) =>
+              relationship.relationshipType == 'appearsIn' &&
+              relationship.source.type == EntityType.scene,
+        )
+        .toList();
+    expect(sceneLinks, hasLength(2));
+    expect(
+      sceneLinks.map((relationship) => relationship.label),
+      containsAll(['Mara', 'Noah']),
+    );
 
     await tester.ensureVisible(find.text('AI help'));
     expect(find.text('AI help'), findsOneWidget);

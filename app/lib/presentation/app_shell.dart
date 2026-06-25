@@ -877,6 +877,63 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<void> _addExistingSceneCatalogItems(List<CatalogItem> items) async {
+    final project = _selectedProject;
+    final scene = _selectedScene;
+    if (project == null || scene == null || items.isEmpty) return;
+
+    final relationships =
+        await widget.relationshipRepository.listByProject(project.id);
+    final existingKeys = relationships
+        .where(
+          (relationship) =>
+              relationship.source.type == EntityType.scene &&
+              relationship.source.id == scene.id &&
+              relationship.relationshipType == 'appearsIn',
+        )
+        .map(
+          (relationship) =>
+              '${relationship.target.type.wireName}:${relationship.target.id}',
+        )
+        .toSet();
+
+    var createdCount = 0;
+    for (final item in items) {
+      final key = '${item.type.wireName}:${item.id}';
+      if (existingKeys.contains(key)) continue;
+      final now = DateTime.now().toUtc();
+      await widget.relationshipRepository.save(
+        Relationship(
+          id: newLocalId('relationship'),
+          projectId: project.id,
+          source: EntityRef(type: EntityType.scene, id: scene.id),
+          target: EntityRef(type: item.type, id: item.id),
+          relationshipType: 'appearsIn',
+          label: item.name,
+          direction: RelationshipDirection.directed,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      existingKeys.add(key);
+      createdCount += 1;
+    }
+
+    if (createdCount == 0) return;
+    final updatedRelationships =
+        await widget.relationshipRepository.listByProject(project.id);
+    if (!mounted) return;
+    setState(() => _relationships = updatedRelationships);
+    await _recordProjectMetric(
+      eventType: 'relationship.linked.batch',
+      metadata: {
+        'sceneId': scene.id,
+        'count': createdCount,
+        'targetIds': items.map((item) => item.id).join(','),
+      },
+    );
+  }
+
   Future<void> _createSceneCatalogItem(
     WritelerCopy copy,
     EntityType type,
@@ -1929,6 +1986,7 @@ final class _WritelerShellState extends State<WritelerShell> {
             () => _selectedSceneChapterId = chapterId,
           ),
           onToggleSceneCatalogLink: _toggleSceneCatalogLink,
+          onAddExistingSceneCatalogItems: _addExistingSceneCatalogItems,
           onCreateSceneCatalogItem: (type) =>
               _createSceneCatalogItem(copy, type),
           onSceneStatusChanged: (status) => setState(

@@ -29,6 +29,7 @@ final class _WorkspaceView extends StatelessWidget {
     required this.onDeleteScene,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
+    required this.onAddExistingSceneCatalogItems,
     required this.onCreateSceneCatalogItem,
     required this.onSceneStatusChanged,
     required this.onCreateChapter,
@@ -62,7 +63,10 @@ final class _WorkspaceView extends StatelessWidget {
   final ValueChanged<Scene> onSelectScene;
   final ValueChanged<Scene> onDeleteScene;
   final ValueChanged<String?> onSceneChapterChanged;
-  final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
+  final Future<void> Function(CatalogItem item, bool selected)
+      onToggleSceneCatalogLink;
+  final Future<void> Function(List<CatalogItem> items)
+      onAddExistingSceneCatalogItems;
   final ValueChanged<EntityType> onCreateSceneCatalogItem;
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final VoidCallback onCreateChapter;
@@ -103,6 +107,7 @@ final class _WorkspaceView extends StatelessWidget {
       onDeleteScene: onDeleteScene,
       onSceneChapterChanged: onSceneChapterChanged,
       onToggleSceneCatalogLink: onToggleSceneCatalogLink,
+      onAddExistingSceneCatalogItems: onAddExistingSceneCatalogItems,
       onCreateSceneCatalogItem: onCreateSceneCatalogItem,
       onSceneStatusChanged: onSceneStatusChanged,
       onCreateChapter: onCreateChapter,
