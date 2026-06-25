@@ -2,6 +2,123 @@ part of '../main.dart';
 
 // Stateful application shell: orchestration, repositories, commands, and workspace routing.
 
+final class _OpenCommandPaletteIntent extends Intent {
+  const _OpenCommandPaletteIntent();
+}
+
+final class _CommandPaletteEntry {
+  const _CommandPaletteEntry({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.run,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback run;
+}
+
+final class _CommandPaletteDialog extends StatefulWidget {
+  const _CommandPaletteDialog({
+    required this.copy,
+    required this.entries,
+  });
+
+  final WritelerCopy copy;
+  final List<_CommandPaletteEntry> entries;
+
+  @override
+  State<_CommandPaletteDialog> createState() => _CommandPaletteDialogState();
+}
+
+final class _CommandPaletteDialogState extends State<_CommandPaletteDialog> {
+  late final TextEditingController _queryController = TextEditingController();
+
+  @override
+  void dispose() {
+    _queryController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final query = _queryController.text.trim().toLowerCase();
+    final entries = query.isEmpty
+        ? widget.entries
+        : widget.entries
+            .where(
+              (entry) =>
+                  entry.title.toLowerCase().contains(query) ||
+                  entry.subtitle.toLowerCase().contains(query),
+            )
+            .toList();
+
+    return Dialog(
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640, maxHeight: 560),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+              child: TextField(
+                controller: _queryController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: widget.copy.t('searchCommands'),
+                  prefixIcon: const Icon(Icons.manage_search_outlined),
+                  border: const OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.search,
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) {
+                  if (entries.isNotEmpty) {
+                    Navigator.of(context).pop(entries.first);
+                  }
+                },
+              ),
+            ),
+            Flexible(
+              child: entries.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          widget.copy.t('noCommandMatches'),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: color.onSurfaceVariant),
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                      itemCount: entries.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final entry = entries[index];
+                        return ListTile(
+                          leading: Icon(entry.icon),
+                          title: Text(entry.title),
+                          subtitle: Text(entry.subtitle),
+                          onTap: () => Navigator.of(context).pop(entry),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 final class WritelerShell extends StatefulWidget {
   const WritelerShell({
     required this.projectRepository,
@@ -144,6 +261,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.write,
     ),
     _WorkspaceNavItem(
+      index: 13,
+      icon: Icons.view_kanban_outlined,
+      selectedIcon: Icons.view_kanban,
+      labelBuilder: (copy) => copy.t('sceneBoard'),
+      group: _WorkspaceNavGroup.write,
+    ),
+    _WorkspaceNavItem(
       index: 1,
       icon: Icons.edit_note_outlined,
       selectedIcon: Icons.edit_note,
@@ -172,6 +296,20 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.world,
     ),
     _WorkspaceNavItem(
+      index: 14,
+      icon: Icons.timeline_outlined,
+      selectedIcon: Icons.timeline,
+      labelBuilder: (copy) => copy.t('timeline'),
+      group: _WorkspaceNavGroup.world,
+    ),
+    _WorkspaceNavItem(
+      index: 15,
+      icon: Icons.hub_outlined,
+      selectedIcon: Icons.hub,
+      labelBuilder: (copy) => copy.t('relationshipGraph'),
+      group: _WorkspaceNavGroup.world,
+    ),
+    _WorkspaceNavItem(
       index: 6,
       icon: Icons.query_stats_outlined,
       selectedIcon: Icons.query_stats,
@@ -197,7 +335,14 @@ final class _WritelerShellState extends State<WritelerShell> {
       icon: Icons.receipt_long_outlined,
       selectedIcon: Icons.receipt_long,
       labelBuilder: (copy) => copy.t('protocols'),
-      group: _WorkspaceNavGroup.review,
+      group: _WorkspaceNavGroup.output,
+    ),
+    _WorkspaceNavItem(
+      index: 16,
+      icon: Icons.bar_chart_outlined,
+      selectedIcon: Icons.bar_chart,
+      labelBuilder: (copy) => copy.t('statistics'),
+      group: _WorkspaceNavGroup.output,
     ),
     _WorkspaceNavItem(
       index: 9,
@@ -1422,82 +1567,162 @@ final class _WritelerShellState extends State<WritelerShell> {
         0 => copy.t('dashboard'),
         1 => copy.t('manuscript'),
         2 => copy.t('structureCockpit'),
+        13 => copy.t('sceneBoard'),
         3 => copy.t('characters'),
         4 => copy.t('locations'),
         5 => copy.t('objects'),
+        14 => copy.t('timeline'),
+        15 => copy.t('relationshipGraph'),
         6 => copy.t('analysis'),
         7 => copy.t('notesCockpit'),
         8 => copy.t('aiWorkshop'),
         9 => copy.t('exports'),
         11 => copy.t('protocols'),
         12 => copy.t('selfPublishing'),
+        16 => copy.t('statistics'),
         _ => copy.t('settings'),
       };
 
   IconData _workspaceIcon() => switch (_selectedRailIndex) {
         0 => Icons.dashboard_outlined,
         1 => Icons.edit_note_outlined,
-        2 => Icons.auto_awesome_motion_outlined,
+        2 => Icons.account_tree_outlined,
+        13 => Icons.view_kanban_outlined,
         3 => Icons.person_outline,
         4 => Icons.place_outlined,
         5 => Icons.category_outlined,
+        14 => Icons.timeline_outlined,
+        15 => Icons.hub_outlined,
         6 => Icons.query_stats_outlined,
         7 => Icons.sticky_note_2_outlined,
         8 => Icons.psychology_alt_outlined,
         9 => Icons.ios_share_outlined,
         11 => Icons.receipt_long_outlined,
         12 => Icons.auto_stories_outlined,
+        16 => Icons.bar_chart_outlined,
         _ => Icons.tune_outlined,
       };
+
+  Future<void> _openCommandPalette(WritelerCopy copy) async {
+    final entries = _commandPaletteEntries(copy);
+    final selected = await showDialog<_CommandPaletteEntry>(
+      context: context,
+      builder: (context) => _CommandPaletteDialog(
+        copy: copy,
+        entries: entries,
+      ),
+    );
+    selected?.run();
+  }
+
+  List<_CommandPaletteEntry> _commandPaletteEntries(WritelerCopy copy) {
+    final workspaceEntries = [
+      for (final item in _navItems)
+        _CommandPaletteEntry(
+          title: item.labelBuilder(copy),
+          subtitle: copy.t('workspace'),
+          icon: item.icon,
+          run: () => setState(() => _selectedRailIndex = item.index),
+        ),
+    ];
+    final sceneEntries = [
+      for (final scene in _scenes)
+        _CommandPaletteEntry(
+          title: scene.title,
+          subtitle: copy.t('scene'),
+          icon: Icons.notes_outlined,
+          run: () {
+            _selectScene(scene);
+            setState(() => _selectedRailIndex = 1);
+          },
+        ),
+    ];
+    final catalogEntries = [
+      for (final item in _catalogItems)
+        _CommandPaletteEntry(
+          title: item.name,
+          subtitle: copy.t(_catalogTitleKey(item.type)),
+          icon: _catalogIcon(item.type),
+          run: () => setState(
+            () => _selectedRailIndex = switch (item.type) {
+              EntityType.character => 3,
+              EntityType.location => 4,
+              EntityType.object => 5,
+              _ => 2,
+            },
+          ),
+        ),
+    ];
+    return [...workspaceEntries, ...sceneEntries, ...catalogEntries];
+  }
 
   @override
   Widget build(BuildContext context) {
     final copy = WritelerCopy(Localizations.localeOf(context).languageCode);
     final color = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: color.surface,
-      body: Material(
-        color: color.surface,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: color.outlineVariant.withValues(alpha: 0.7),
-              ),
-            ),
+    return Shortcuts(
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.keyK, control: true):
+            _OpenCommandPaletteIntent(),
+        SingleActivator(LogicalKeyboardKey.keyK, meta: true):
+            _OpenCommandPaletteIntent(),
+      },
+      child: Actions(
+        actions: {
+          _OpenCommandPaletteIntent: CallbackAction<_OpenCommandPaletteIntent>(
+            onInvoke: (intent) {
+              unawaited(_openCommandPalette(copy));
+              return null;
+            },
           ),
-          child: Row(
-            children: [
-              _WorkspaceNavigation(
-                copy: copy,
-                items: _navItems,
-                selectedIndex: _selectedRailIndex,
-                onSelected: (index) =>
-                    setState(() => _selectedRailIndex = index),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    _StudioTopBar(
-                      copy: copy,
-                      workspaceTitle: _workspaceTitle(copy),
-                      workspaceIcon: _workspaceIcon(),
-                      project: _selectedProject,
-                      languageCode: widget.languageCode,
-                      onLanguageChanged: widget.onLanguageChanged,
-                      showCreateProject:
-                          _selectedRailIndex == 0 || _projects.isEmpty,
-                      onCreateProject: () => _showCreateProjectDialog(copy),
-                    ),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: _buildSelectedWorkspace(copy),
-                    ),
-                  ],
+        },
+        child: Scaffold(
+          backgroundColor: color.surface,
+          body: Material(
+            color: color.surface,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: color.outlineVariant.withValues(alpha: 0.7),
+                  ),
                 ),
               ),
-            ],
+              child: Row(
+                children: [
+                  _WorkspaceNavigation(
+                    copy: copy,
+                    items: _navItems,
+                    selectedIndex: _selectedRailIndex,
+                    onSelected: (index) =>
+                        setState(() => _selectedRailIndex = index),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _StudioTopBar(
+                          copy: copy,
+                          workspaceTitle: _workspaceTitle(copy),
+                          workspaceIcon: _workspaceIcon(),
+                          project: _selectedProject,
+                          languageCode: widget.languageCode,
+                          onLanguageChanged: widget.onLanguageChanged,
+                          showCreateProject:
+                              _selectedRailIndex == 0 || _projects.isEmpty,
+                          onCreateProject: () => _showCreateProjectDialog(copy),
+                          onOpenCommandPalette: () => _openCommandPalette(copy),
+                        ),
+                        const Divider(height: 1),
+                        Expanded(
+                          child: _buildSelectedWorkspace(copy),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -1595,6 +1820,16 @@ final class _WritelerShellState extends State<WritelerShell> {
           onDeleteRelationship: (relationship) =>
               _deleteRelationship(relationship, copy),
         ),
+      13 => _SceneStatusBoard(
+          copy: copy,
+          scenes: _scenes,
+          onOpenScene: (scene) {
+            _selectScene(scene);
+            setState(() => _selectedRailIndex = 1);
+          },
+          onCreateScene: () => _showCreateSceneDialog(copy),
+          onDeleteScene: (scene) => _deleteScene(scene, copy),
+        ),
       3 => _CatalogWorkspace(
           copy: copy,
           type: EntityType.character,
@@ -1627,6 +1862,30 @@ final class _WritelerShellState extends State<WritelerShell> {
               _showCreateCatalogItemDialog(copy, EntityType.object),
           onEditItem: (item) => _showEditCatalogItemDialog(copy, item),
           onDeleteItem: (item) => _deleteCatalogItem(item, copy),
+        ),
+      14 => _TimelineWorkspace(
+          copy: copy,
+          scenes: _scenes,
+          onOpenScene: (scene) {
+            _selectScene(scene);
+            setState(() => _selectedRailIndex = 1);
+          },
+        ),
+      15 => _RelationshipGraphWorkspace(
+          copy: copy,
+          relationships: _relationships,
+          scenes: _scenes,
+          catalogItems: _catalogItems,
+          onCreateRelationship: (source) => _showRelationshipDialog(
+            copy,
+            initialSource: source,
+          ),
+          onEditRelationship: (relationship) => _showRelationshipDialog(
+            copy,
+            existing: relationship,
+          ),
+          onDeleteRelationship: (relationship) =>
+              _deleteRelationship(relationship, copy),
         ),
       6 => _AnalysisWorkspace(
           copy: copy,
@@ -1746,6 +2005,15 @@ final class _WritelerShellState extends State<WritelerShell> {
           onIncludeMetadataChanged: (value) =>
               setState(() => _includePublishingMetadata = value),
           onDownload: () => _downloadPublishing(copy),
+        ),
+      16 => _StatisticsWorkspace(
+          copy: copy,
+          project: _selectedProject,
+          chapters: _chapters,
+          scenes: _scenes,
+          catalogItems: _catalogItems,
+          relationships: _relationships,
+          metrics: _metrics,
         ),
       _ => _SettingsWorkspace(
           copy: copy,

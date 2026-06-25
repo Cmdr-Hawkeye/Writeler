@@ -255,6 +255,392 @@ final class _SceneBoard extends StatelessWidget {
   }
 }
 
+final class _SceneStatusBoard extends StatelessWidget {
+  const _SceneStatusBoard({
+    required this.copy,
+    required this.scenes,
+    required this.onOpenScene,
+    required this.onCreateScene,
+    required this.onDeleteScene,
+  });
+
+  final WritelerCopy copy;
+  final List<Scene> scenes;
+  final ValueChanged<Scene> onOpenScene;
+  final VoidCallback onCreateScene;
+  final ValueChanged<Scene> onDeleteScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final columns = [
+      _StatusBoardColumn(
+        title: _draftStatusLabel(DraftStatus.planned, copy.languageCode),
+        statuses: const [DraftStatus.idea, DraftStatus.planned],
+      ),
+      _StatusBoardColumn(
+        title: copy.t('inProgress'),
+        statuses: const [
+          DraftStatus.outlined,
+          DraftStatus.drafting,
+          DraftStatus.needsRevision,
+        ],
+      ),
+      _StatusBoardColumn(
+        title: copy.t('done'),
+        statuses: const [DraftStatus.revised, DraftStatus.reviewed],
+      ),
+      _StatusBoardColumn(
+        title: copy.t('lockedOrArchived'),
+        statuses: const [DraftStatus.locked, DraftStatus.archived],
+      ),
+    ];
+    return Column(
+      children: [
+        _WorkspaceHeader(
+          title: copy.t('sceneBoard'),
+          actionLabel: copy.t('newScene'),
+          actionIcon: Icons.add,
+          actionHelp: copy.t('helpNewScene'),
+          onAction: onCreateScene,
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.all(20),
+            scrollDirection: Axis.horizontal,
+            itemCount: columns.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              final column = columns[index];
+              final columnScenes = scenes
+                  .where((scene) => column.statuses.contains(scene.status))
+                  .toList()
+                ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+              return SizedBox(
+                width: 320,
+                child: _SceneStatusColumn(
+                  copy: copy,
+                  title: column.title,
+                  scenes: columnScenes,
+                  onOpenScene: onOpenScene,
+                  onDeleteScene: onDeleteScene,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _StatusBoardColumn {
+  const _StatusBoardColumn({
+    required this.title,
+    required this.statuses,
+  });
+
+  final String title;
+  final List<DraftStatus> statuses;
+}
+
+final class _SceneStatusColumn extends StatelessWidget {
+  const _SceneStatusColumn({
+    required this.copy,
+    required this.title,
+    required this.scenes,
+    required this.onOpenScene,
+    required this.onDeleteScene,
+  });
+
+  final WritelerCopy copy;
+  final String title;
+  final List<Scene> scenes;
+  final ValueChanged<Scene> onOpenScene;
+  final ValueChanged<Scene> onDeleteScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: color.outlineVariant)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(title,
+                      style: Theme.of(context).textTheme.titleSmall),
+                ),
+                Text(
+                  '${scenes.length}',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: scenes.isEmpty
+                  ? _EmptyInlineMessage(message: copy.t('noScenesInStatus'))
+                  : ListView.separated(
+                      itemCount: scenes.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final scene = scenes[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            scene.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            '${scene.actualWordCount} ${copy.t('words')}',
+                          ),
+                          trailing: Wrap(
+                            spacing: 4,
+                            children: [
+                              IconButton(
+                                tooltip: copy.t('openEditor'),
+                                onPressed: () => onOpenScene(scene),
+                                icon: const Icon(Icons.open_in_new),
+                              ),
+                              IconButton(
+                                tooltip: copy.t('deleteScene'),
+                                onPressed: () => onDeleteScene(scene),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ],
+                          ),
+                          onTap: () => onOpenScene(scene),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _TimelineWorkspace extends StatelessWidget {
+  const _TimelineWorkspace({
+    required this.copy,
+    required this.scenes,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final List<Scene> scenes;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final dated = scenes.where((scene) => scene.storyDateStart != null).toList()
+      ..sort((a, b) => a.storyDateStart!.compareTo(b.storyDateStart!));
+    final undated = scenes
+        .where((scene) => scene.storyDateStart == null)
+        .toList()
+      ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    return _SimpleWorkspace(
+      title: copy.t('timeline'),
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          Text(copy.t('timelineBody'),
+              style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 18),
+          if (dated.isEmpty)
+            _EmptyInlineMessage(message: copy.t('noDatedScenes')),
+          for (final scene in dated)
+            _TimelineRow(copy: copy, scene: scene, onOpenScene: onOpenScene),
+          const SizedBox(height: 24),
+          Text(copy.t('undatedScenes'),
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          if (undated.isEmpty)
+            _EmptyInlineMessage(message: copy.t('noUndatedScenes')),
+          for (final scene in undated)
+            _TimelineRow(copy: copy, scene: scene, onOpenScene: onOpenScene),
+        ],
+      ),
+    );
+  }
+}
+
+final class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.copy,
+    required this.scene,
+    required this.onOpenScene,
+  });
+
+  final WritelerCopy copy;
+  final Scene scene;
+  final ValueChanged<Scene> onOpenScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final date = scene.storyDateStart == null
+        ? copy.t('withoutDate')
+        : _formatLocalDate(scene.storyDateStart!);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: color.primary, width: 2)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.only(left: 14),
+        title: Text(scene.title),
+        subtitle: Text('$date · ${scene.actualWordCount} ${copy.t('words')}'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => onOpenScene(scene),
+      ),
+    );
+  }
+}
+
+final class _RelationshipGraphWorkspace extends StatelessWidget {
+  const _RelationshipGraphWorkspace({
+    required this.copy,
+    required this.relationships,
+    required this.scenes,
+    required this.catalogItems,
+    required this.onCreateRelationship,
+    required this.onEditRelationship,
+    required this.onDeleteRelationship,
+  });
+
+  final WritelerCopy copy;
+  final List<Relationship> relationships;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final ValueChanged<EntityRef?> onCreateRelationship;
+  final ValueChanged<Relationship> onEditRelationship;
+  final ValueChanged<Relationship> onDeleteRelationship;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _WorkspaceHeader(
+          title: copy.t('relationshipGraph'),
+          actionLabel: copy.t('newRelationship'),
+          actionIcon: Icons.add,
+          actionHelp: copy.t('helpNewRelationship'),
+          onAction: () => onCreateRelationship(null),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: relationships.isEmpty
+              ? _EmptyPanel(
+                  icon: Icons.hub_outlined,
+                  title: copy.t('noRelationshipsTitle'),
+                  body: copy.t('noRelationshipsBody'),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(24),
+                  itemCount: relationships.length,
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final relationship = relationships[index];
+                    return _RelationshipGraphRow(
+                      copy: copy,
+                      relationship: relationship,
+                      sourceLabel: _entityLabel(
+                        relationship.source,
+                        scenes,
+                        catalogItems,
+                        copy,
+                      ),
+                      targetLabel: _entityLabel(
+                        relationship.target,
+                        scenes,
+                        catalogItems,
+                        copy,
+                      ),
+                      onEdit: () => onEditRelationship(relationship),
+                      onDelete: () => onDeleteRelationship(relationship),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _RelationshipGraphRow extends StatelessWidget {
+  const _RelationshipGraphRow({
+    required this.copy,
+    required this.relationship,
+    required this.sourceLabel,
+    required this.targetLabel,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final WritelerCopy copy;
+  final Relationship relationship;
+  final String sourceLabel;
+  final String targetLabel;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(Icons.hub_outlined, color: color.primary),
+      title: Text('$sourceLabel -> $targetLabel'),
+      subtitle: Text(
+        '${relationship.relationshipType} · ${copy.t('strength')}: '
+        '${((relationship.strength ?? 0) * 100).round()}%',
+      ),
+      trailing: Wrap(
+        spacing: 4,
+        children: [
+          IconButton(
+            tooltip: copy.t('editRelationship'),
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_outlined),
+          ),
+          IconButton(
+            tooltip: copy.t('delete'),
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _entityLabel(
+  EntityRef ref,
+  List<Scene> scenes,
+  List<CatalogItem> catalogItems,
+  WritelerCopy copy,
+) {
+  if (ref.type == EntityType.scene) {
+    return scenes.where((scene) => scene.id == ref.id).firstOrNull?.title ??
+        copy.t('scene');
+  }
+  return catalogItems.where((item) => item.id == ref.id).firstOrNull?.name ??
+      ref.type.wireName;
+}
+
 final class _StructureCockpitSummary extends StatelessWidget {
   const _StructureCockpitSummary({
     required this.copy,

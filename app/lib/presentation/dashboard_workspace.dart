@@ -634,6 +634,117 @@ final class _DashboardPulse extends StatelessWidget {
   }
 }
 
+final class _StatisticsWorkspace extends StatelessWidget {
+  const _StatisticsWorkspace({
+    required this.copy,
+    required this.project,
+    required this.chapters,
+    required this.scenes,
+    required this.catalogItems,
+    required this.relationships,
+    required this.metrics,
+  });
+
+  final WritelerCopy copy;
+  final Project? project;
+  final List<Chapter> chapters;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final List<MetricEvent> metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    final words =
+        scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
+    final target = project?.wordTarget;
+    final progress = target == null || target <= 0 ? null : words / target;
+    final today = DateTime.now().toLocal();
+    final todaySaves = metrics
+        .where((event) =>
+            event.eventType == 'scene.saved' &&
+            event.occurredAt.toLocal().year == today.year &&
+            event.occurredAt.toLocal().month == today.month &&
+            event.occurredAt.toLocal().day == today.day)
+        .length;
+    return _SimpleWorkspace(
+      title: copy.t('statistics'),
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          Text(copy.t('statisticsBody'),
+              style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 24,
+            runSpacing: 18,
+            children: [
+              _StatisticValue(label: copy.t('words'), value: '$words'),
+              _StatisticValue(
+                  label: copy.t('chapters'), value: '${chapters.length}'),
+              _StatisticValue(
+                  label: copy.t('scenes'), value: '${scenes.length}'),
+              _StatisticValue(
+                  label: copy.t('catalog'), value: '${catalogItems.length}'),
+              _StatisticValue(
+                  label: copy.t('relationships'),
+                  value: '${relationships.length}'),
+              _StatisticValue(
+                  label: copy.t('todaySaves'), value: '$todaySaves'),
+            ],
+          ),
+          if (progress != null) ...[
+            const SizedBox(height: 24),
+            Text(
+              '${copy.t('targetProgress')}: $words / $target',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            LinearProgressIndicator(value: progress.clamp(0, 1)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+final class _StatisticValue extends StatelessWidget {
+  const _StatisticValue({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 150,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: color.outlineVariant)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.onSurfaceVariant,
+                      )),
+              const SizedBox(height: 4),
+              Text(value, style: Theme.of(context).textTheme.headlineSmall),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 final class _DashboardPulseMetric extends StatelessWidget {
   const _DashboardPulseMetric({
     required this.label,

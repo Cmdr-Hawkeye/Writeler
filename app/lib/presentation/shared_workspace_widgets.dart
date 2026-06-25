@@ -379,6 +379,27 @@ final class _EmptyPanel extends StatelessWidget {
   }
 }
 
+final class _SimpleWorkspace extends StatelessWidget {
+  const _SimpleWorkspace({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _WorkspaceHeader(title: title),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
+    );
+  }
+}
+
 final class _ProjectLibrary extends StatelessWidget {
   const _ProjectLibrary({
     required this.copy,

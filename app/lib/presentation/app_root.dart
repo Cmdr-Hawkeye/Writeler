@@ -156,6 +156,7 @@ final class _WritelerAppState extends State<WritelerApp> {
 
   @override
   Widget build(BuildContext context) {
+    final followsSystem = _designTheme == WritelerDesignTheme.system;
     return MaterialApp(
       title: 'Writeler',
       debugShowCheckedModeBanner: false,
@@ -169,8 +170,13 @@ final class _WritelerAppState extends State<WritelerApp> {
         Locale('de'),
         Locale('en'),
       ],
-      theme: _buildWritelerTheme(_designTheme),
-      themeMode: ThemeMode.light,
+      theme: _buildWritelerTheme(
+        followsSystem ? WritelerDesignTheme.paper : _designTheme,
+      ),
+      darkTheme: _buildWritelerTheme(
+        followsSystem ? WritelerDesignTheme.dusk : _designTheme,
+      ),
+      themeMode: followsSystem ? ThemeMode.system : ThemeMode.light,
       home: WritelerShell(
         projectRepository: widget.projectRepository,
         sceneRepository: widget.sceneRepository,
@@ -196,6 +202,7 @@ final class _WritelerAppState extends State<WritelerApp> {
 }
 
 enum WritelerDesignTheme {
+  system,
   paper,
   dusk,
   sapphire,
@@ -208,6 +215,7 @@ extension WritelerDesignThemeWire on WritelerDesignTheme {
   String get wireName {
     return switch (this) {
       WritelerDesignTheme.paper => 'paper',
+      WritelerDesignTheme.system => 'system',
       WritelerDesignTheme.dusk => 'dusk',
       WritelerDesignTheme.sapphire => 'sapphire',
       WritelerDesignTheme.sage => 'sage',
@@ -219,6 +227,7 @@ extension WritelerDesignThemeWire on WritelerDesignTheme {
   static WritelerDesignTheme? tryParse(String value) {
     return switch (value) {
       'paper' => WritelerDesignTheme.paper,
+      'system' => WritelerDesignTheme.system,
       'dusk' => WritelerDesignTheme.dusk,
       'sapphire' => WritelerDesignTheme.sapphire,
       'sage' => WritelerDesignTheme.sage,
@@ -407,6 +416,7 @@ WritelerDesignTokens _semanticTokensFor(_WritelerThemeTokens tokens) {
 
 _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
   return switch (theme) {
+    WritelerDesignTheme.system => _tokensFor(WritelerDesignTheme.paper),
     WritelerDesignTheme.paper => const _WritelerThemeTokens(
         brightness: Brightness.light,
         seed: Color(0xFF1F7F78),

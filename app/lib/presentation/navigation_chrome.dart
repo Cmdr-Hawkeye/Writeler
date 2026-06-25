@@ -277,6 +277,7 @@ final class _StudioTopBar extends StatelessWidget {
     required this.onLanguageChanged,
     required this.showCreateProject,
     required this.onCreateProject,
+    required this.onOpenCommandPalette,
   });
 
   final WritelerCopy copy;
@@ -287,6 +288,7 @@ final class _StudioTopBar extends StatelessWidget {
   final ValueChanged<String> onLanguageChanged;
   final bool showCreateProject;
   final VoidCallback onCreateProject;
+  final VoidCallback onOpenCommandPalette;
 
   @override
   Widget build(BuildContext context) {
@@ -363,6 +365,12 @@ final class _StudioTopBar extends StatelessWidget {
               copy: copy,
               languageCode: languageCode,
             ),
+          ),
+          const SizedBox(width: 10),
+          IconButton.outlined(
+            tooltip: copy.t('commandPalette'),
+            onPressed: onOpenCommandPalette,
+            icon: const Icon(Icons.manage_search_outlined),
           ),
           const SizedBox(width: 10),
           if (showCreateProject)

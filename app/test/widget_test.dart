@@ -13,6 +13,14 @@ import 'package:writeler/features/structure/application/in_memory_chapter_reposi
 import 'package:writeler/features/structure/application/in_memory_scene_repository.dart';
 import 'package:writeler/main.dart';
 
+Future<void> tapNavigationItem(WidgetTester tester, String label) async {
+  final finder = find.text(label).first;
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('Writeler shell shows core workspace navigation', (tester) async {
     final appPreferenceRepository = InMemoryAppPreferenceRepository();
@@ -249,14 +257,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Settings').first);
-    await tester.pumpAndSettle();
+    await tapNavigationItem(tester, 'Settings');
 
     expect(find.text('Work profile'), findsOneWidget);
     expect(find.text('Provider configuration'), findsOneWidget);
 
-    await tester.tap(find.text('Export/Import').first);
-    await tester.pumpAndSettle();
+    await tapNavigationItem(tester, 'Export/Import');
 
     expect(find.text('Drop file here'), findsOneWidget);
     expect(find.text('Choose import file'), findsOneWidget);
@@ -290,9 +296,10 @@ void main() {
     await tester.enterText(find.byType(EditableText), 'Profile Test');
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Settings').first);
+    await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Settings');
 
     expect(find.text('Work profile'), findsOneWidget);
     expect(find.text('Select a project'), findsNothing);

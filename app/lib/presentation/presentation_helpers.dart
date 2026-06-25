@@ -91,6 +91,7 @@ String _providerKindLabel(AIProviderKind kind, String languageCode) {
 
 String _designThemeLabel(WritelerDesignTheme theme, WritelerCopy copy) {
   return switch (theme) {
+    WritelerDesignTheme.system => copy.t('designThemeSystem'),
     WritelerDesignTheme.paper => copy.t('designThemePaper'),
     WritelerDesignTheme.dusk => copy.t('designThemeDusk'),
     WritelerDesignTheme.sapphire => copy.t('designThemeSapphire'),

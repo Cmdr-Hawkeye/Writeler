@@ -63,6 +63,7 @@ final class _ProjectWorkspace extends StatefulWidget {
 
 final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
   bool _focusMode = false;
+  double _editorFontSize = 18;
 
   @override
   void didUpdateWidget(covariant _ProjectWorkspace oldWidget) {
@@ -165,6 +166,9 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                         saveState: widget.sceneSaveState,
                         lastSavedAt: widget.lastSceneSavedAt,
                         focusMode: _focusMode,
+                        editorFontSize: _editorFontSize,
+                        onEditorFontSizeChanged: (value) =>
+                            setState(() => _editorFontSize = value),
                         onFocusModeChanged: (value) =>
                             setState(() => _focusMode = value),
                         onSceneChapterChanged: widget.onSceneChapterChanged,
@@ -532,6 +536,8 @@ final class _SceneEditor extends StatefulWidget {
     required this.saveState,
     required this.lastSavedAt,
     required this.focusMode,
+    required this.editorFontSize,
+    required this.onEditorFontSizeChanged,
     required this.onFocusModeChanged,
     required this.onSceneChapterChanged,
     required this.onToggleSceneCatalogLink,
@@ -555,6 +561,8 @@ final class _SceneEditor extends StatefulWidget {
   final _SceneSaveState saveState;
   final DateTime? lastSavedAt;
   final bool focusMode;
+  final double editorFontSize;
+  final ValueChanged<double> onEditorFontSizeChanged;
   final ValueChanged<bool> onFocusModeChanged;
   final ValueChanged<String?> onSceneChapterChanged;
   final void Function(CatalogItem item, bool selected) onToggleSceneCatalogLink;
@@ -586,6 +594,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
       copy: copy,
       controller: widget.controller,
       focusMode: widget.focusMode,
+      fontSize: widget.editorFontSize,
     );
     final inspector = _SceneInspector(
       copy: copy,
@@ -652,6 +661,32 @@ final class _SceneEditorState extends State<_SceneEditor> {
                       onPressed: () =>
                           setState(() => _showSearch = !_showSearch),
                       icon: const Icon(Icons.find_replace_outlined),
+                    ),
+                  ),
+                  Tooltip(
+                    message: copy.t('editorFontSize'),
+                    child: PopupMenuButton<double>(
+                      tooltip: copy.t('editorFontSize'),
+                      icon: const Icon(Icons.format_size),
+                      onSelected: widget.onEditorFontSizeChanged,
+                      itemBuilder: (context) => [
+                        for (final size in const [16.0, 18.0, 20.0, 22.0])
+                          PopupMenuItem(
+                            value: size,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  widget.editorFontSize == size
+                                      ? Icons.check
+                                      : Icons.text_fields,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 10),
+                                Text('${size.round()} px'),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   Tooltip(
@@ -755,11 +790,13 @@ final class _ManuscriptField extends StatelessWidget {
     required this.copy,
     required this.controller,
     required this.focusMode,
+    required this.fontSize,
   });
 
   final WritelerCopy copy;
   final TextEditingController controller;
   final bool focusMode;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -791,7 +828,7 @@ final class _ManuscriptField extends StatelessWidget {
                         'Times New Roman',
                         'serif',
                       ],
-                      fontSize: focusMode ? 20 : 18,
+                      fontSize: fontSize,
                       height: 1.75,
                     ),
                 decoration: InputDecoration(
