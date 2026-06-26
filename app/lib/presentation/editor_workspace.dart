@@ -893,11 +893,18 @@ final class _SceneEditorState extends State<_SceneEditor> {
                   return manuscriptField;
                 }
                 if (compact) {
-                  final desiredInspectorHeight =
-                      (constraints.maxHeight * 0.48).clamp(280.0, 440.0);
+                  final hideInspector = constraints.maxHeight < 300;
+                  if (hideInspector) {
+                    return manuscriptField;
+                  }
+                  final minimumManuscriptHeight =
+                      constraints.maxHeight < 620 ? 160.0 : 360.0;
                   final inspectorHeight = math.min(
-                    desiredInspectorHeight,
-                    math.max(220.0, constraints.maxHeight - 180.0),
+                    (constraints.maxHeight * 0.34).clamp(160.0, 300.0),
+                    math.max(
+                      160.0,
+                      constraints.maxHeight - minimumManuscriptHeight,
+                    ),
                   );
                   return Column(
                     children: [

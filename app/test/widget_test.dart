@@ -305,7 +305,7 @@ void main() {
 
   testWidgets('editor opens a scene and focus mode keeps manuscript usable',
       (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    await tester.binding.setSurfaceSize(const Size(1280, 1100));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final appPreferenceRepository = InMemoryAppPreferenceRepository();
     await appPreferenceRepository.write('app.language', 'en');
@@ -460,7 +460,11 @@ void main() {
 
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('AI help'));
+    await tester.drag(
+      find.byKey(const ValueKey('scene-inspector-scroll')),
+      const Offset(0, -1400),
+    );
+    await tester.pumpAndSettle();
     expect(find.text('AI help'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.fullscreen).first);
