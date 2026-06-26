@@ -228,6 +228,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   bool _includeSceneTitles = true;
   bool _includePublishingMetadata = false;
   bool _isRequestingAi = false;
+  bool _navigationCollapsed = false;
   String? _lastAiError;
   ProjectArchivePreview? _importPreview;
   String? _importPreviewError;
@@ -1890,38 +1891,50 @@ final class _WritelerShellState extends State<WritelerShell> {
                   ),
                 ),
               ),
-              child: Row(
-                children: [
-                  _WorkspaceNavigation(
-                    copy: copy,
-                    items: _navItems,
-                    selectedIndex: _selectedRailIndex,
-                    onSelected: (index) =>
-                        setState(() => _selectedRailIndex = index),
-                  ),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        _StudioTopBar(
-                          copy: copy,
-                          workspaceTitle: _workspaceTitle(copy),
-                          workspaceIcon: _workspaceIcon(),
-                          project: _selectedProject,
-                          languageCode: widget.languageCode,
-                          onLanguageChanged: widget.onLanguageChanged,
-                          showCreateProject:
-                              _selectedRailIndex == 0 || _projects.isEmpty,
-                          onCreateProject: () => _showCreateProjectDialog(copy),
-                          onOpenCommandPalette: () => _openCommandPalette(copy),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compactNavigation =
+                      _navigationCollapsed || constraints.maxWidth < 560;
+                  return Row(
+                    children: [
+                      _WorkspaceNavigation(
+                        copy: copy,
+                        items: _navItems,
+                        selectedIndex: _selectedRailIndex,
+                        collapsed: compactNavigation,
+                        onToggleCollapsed: () => setState(
+                          () => _navigationCollapsed = !_navigationCollapsed,
                         ),
-                        const Divider(height: 1),
-                        Expanded(
-                          child: _buildSelectedWorkspace(copy),
+                        onSelected: (index) =>
+                            setState(() => _selectedRailIndex = index),
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            _StudioTopBar(
+                              copy: copy,
+                              workspaceTitle: _workspaceTitle(copy),
+                              workspaceIcon: _workspaceIcon(),
+                              project: _selectedProject,
+                              languageCode: widget.languageCode,
+                              onLanguageChanged: widget.onLanguageChanged,
+                              showCreateProject:
+                                  _selectedRailIndex == 0 || _projects.isEmpty,
+                              onCreateProject: () =>
+                                  _showCreateProjectDialog(copy),
+                              onOpenCommandPalette: () =>
+                                  _openCommandPalette(copy),
+                            ),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: _buildSelectedWorkspace(copy),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),

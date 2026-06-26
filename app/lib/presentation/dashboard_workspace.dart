@@ -119,14 +119,8 @@ final class _WorkspaceView extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 760) {
-          return Column(
-            children: [
-              SizedBox(height: 150, child: library),
-              const Divider(height: 1),
-              Expanded(child: workspace),
-            ],
-          );
+        if (constraints.maxWidth < 980) {
+          return workspace;
         }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -335,225 +329,223 @@ final class _ProjectOverview extends StatelessWidget {
         ),
     ];
 
-    return Row(
-      children: [
-        SizedBox(
-          width: 320,
-          child: _ProjectLibrary(
-            copy: copy,
-            projects: projects,
-            selectedProject: selectedProject,
-            onSelect: onSelectProject,
-            onDelete: onDeleteProject,
-          ),
+    final dashboard = DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(-0.92, -1.12),
+          radius: 0.9,
+          colors: [
+            color.primary.withValues(alpha: 0.10),
+            Colors.transparent,
+          ],
         ),
-        const VerticalDivider(width: 1),
-        Expanded(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(-0.92, -1.12),
-                radius: 0.9,
-                colors: [
-                  color.primary.withValues(alpha: 0.10),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
-              children: [
-                Row(
+      ),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            project?.title ?? copy.t('projects'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            copy.t('dashboardBody'),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: color.onSurfaceVariant,
-                                ),
-                          ),
-                        ],
-                      ),
+                    Text(
+                      project?.title ?? copy.t('projects'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    const SizedBox(width: 16),
-                    FilledButton.icon(
-                      onPressed: onOpenEditor,
-                      icon: const Icon(Icons.edit_note_outlined),
-                      label: Text(copy.t('openEditor')),
+                    const SizedBox(height: 6),
+                    Text(
+                      copy.t('dashboardBody'),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                _DashboardPulse(
-                  copy: copy,
-                  words: words,
-                  wordTarget: wordTarget,
-                  wordProgress: wordProgress,
-                  scenes: scenes.length,
-                  chapters: chapters.length,
-                  catalogItems: catalogItems.length,
-                  todaySaves: todaySaves,
-                ),
-                const SizedBox(height: 24),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final compact = constraints.maxWidth < 960;
-                    final actions = _DashboardSection(
-                      title: copy.t('nextActions'),
-                      body: copy.t('nextActionsBody'),
-                      child: nextActions.isEmpty
-                          ? _EmptyInlineMessage(
-                              message: copy.t('noDashboardActions'),
-                            )
-                          : Column(
-                              children: [
-                                for (final action in nextActions)
-                                  _DashboardActionRow(action: action),
-                              ],
-                            ),
-                    );
-                    final health = _DashboardSection(
-                      title: copy.t('structureFocus'),
-                      body: copy.t('structureFocusBody'),
-                      child: Column(
+              ),
+              const SizedBox(width: 16),
+              FilledButton.icon(
+                onPressed: onOpenEditor,
+                icon: const Icon(Icons.edit_note_outlined),
+                label: Text(copy.t('openEditor')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _DashboardPulse(
+            copy: copy,
+            words: words,
+            wordTarget: wordTarget,
+            wordProgress: wordProgress,
+            scenes: scenes.length,
+            chapters: chapters.length,
+            catalogItems: catalogItems.length,
+            todaySaves: todaySaves,
+          ),
+          const SizedBox(height: 24),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 960;
+              final actions = _DashboardSection(
+                title: copy.t('nextActions'),
+                body: copy.t('nextActionsBody'),
+                child: nextActions.isEmpty
+                    ? _EmptyInlineMessage(
+                        message: copy.t('noDashboardActions'),
+                      )
+                    : Column(
                         children: [
-                          _DashboardHealthRow(
-                            icon: Icons.account_tree_outlined,
-                            label: copy.t('planningGaps'),
-                            value: '${planningGaps.length}',
-                            tone: planningGaps.isEmpty
-                                ? color.primary
-                                : color.error,
-                            onTap:
-                                planningGaps.isEmpty ? null : onOpenStructure,
-                          ),
-                          _DashboardHealthRow(
-                            icon: Icons.edit_off_outlined,
-                            label: copy.t('emptyDraftScenes'),
-                            value: '${scenesWithoutText.length}',
-                            tone: scenesWithoutText.isEmpty
-                                ? color.primary
-                                : color.tertiary,
-                            onTap: scenesWithoutText.isEmpty
-                                ? null
-                                : () => onOpenScene(scenesWithoutText.first),
-                          ),
-                          _DashboardHealthRow(
-                            icon: Icons.folder_off_outlined,
-                            label: copy.t('unassignedScenes'),
-                            value: '${unassignedScenes.length}',
-                            tone: unassignedScenes.isEmpty
-                                ? color.primary
-                                : color.tertiary,
-                            onTap: unassignedScenes.isEmpty
-                                ? null
-                                : onOpenStructure,
-                          ),
-                          _DashboardHealthRow(
-                            icon: Icons.category_outlined,
-                            label: copy.t('detachedCatalogItems'),
-                            value: '${detachedCatalogItems.length}',
-                            tone: detachedCatalogItems.isEmpty
-                                ? color.primary
-                                : color.tertiary,
-                            onTap: detachedCatalogItems.isEmpty
-                                ? null
-                                : onOpenStructure,
-                          ),
+                          for (final action in nextActions)
+                            _DashboardActionRow(action: action),
                         ],
                       ),
-                    );
+              );
+              final health = _DashboardSection(
+                title: copy.t('structureFocus'),
+                body: copy.t('structureFocusBody'),
+                child: Column(
+                  children: [
+                    _DashboardHealthRow(
+                      icon: Icons.account_tree_outlined,
+                      label: copy.t('planningGaps'),
+                      value: '${planningGaps.length}',
+                      tone: planningGaps.isEmpty ? color.primary : color.error,
+                      onTap: planningGaps.isEmpty ? null : onOpenStructure,
+                    ),
+                    _DashboardHealthRow(
+                      icon: Icons.edit_off_outlined,
+                      label: copy.t('emptyDraftScenes'),
+                      value: '${scenesWithoutText.length}',
+                      tone: scenesWithoutText.isEmpty
+                          ? color.primary
+                          : color.tertiary,
+                      onTap: scenesWithoutText.isEmpty
+                          ? null
+                          : () => onOpenScene(scenesWithoutText.first),
+                    ),
+                    _DashboardHealthRow(
+                      icon: Icons.folder_off_outlined,
+                      label: copy.t('unassignedScenes'),
+                      value: '${unassignedScenes.length}',
+                      tone: unassignedScenes.isEmpty
+                          ? color.primary
+                          : color.tertiary,
+                      onTap: unassignedScenes.isEmpty ? null : onOpenStructure,
+                    ),
+                    _DashboardHealthRow(
+                      icon: Icons.category_outlined,
+                      label: copy.t('detachedCatalogItems'),
+                      value: '${detachedCatalogItems.length}',
+                      tone: detachedCatalogItems.isEmpty
+                          ? color.primary
+                          : color.tertiary,
+                      onTap:
+                          detachedCatalogItems.isEmpty ? null : onOpenStructure,
+                    ),
+                  ],
+                ),
+              );
 
-                    if (compact) {
-                      return Column(
-                        children: [
-                          actions,
-                          const SizedBox(height: 22),
-                          health,
-                        ],
-                      );
-                    }
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: actions),
-                        const SizedBox(width: 24),
-                        Expanded(child: health),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-                _DashboardSection(
-                  title: copy.t('recentScenes'),
-                  body: copy.t('recentScenesBody'),
-                  child: recentScenes.isEmpty
-                      ? _EmptyInlineMessage(message: copy.t('noRecentScenes'))
-                      : Column(
-                          children: [
-                            for (final scene in recentScenes.take(5))
-                              _DashboardSceneRow(
-                                copy: copy,
-                                scene: scene,
-                                onTap: () => onOpenScene(scene),
-                              ),
-                          ],
-                        ),
-                ),
-                const SizedBox(height: 24),
-                _DashboardSection(
-                  title: copy.t('dashboardSignals'),
-                  body: copy.t('dashboardSignalsBody'),
-                  child: Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
+              if (compact) {
+                return Column(
+                  children: [
+                    actions,
+                    const SizedBox(height: 22),
+                    health,
+                  ],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: actions),
+                  const SizedBox(width: 24),
+                  Expanded(child: health),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          _DashboardSection(
+            title: copy.t('recentScenes'),
+            body: copy.t('recentScenesBody'),
+            child: recentScenes.isEmpty
+                ? _EmptyInlineMessage(message: copy.t('noRecentScenes'))
+                : Column(
                     children: [
-                      _DashboardSignalChip(
-                        icon: Icons.psychology_alt_outlined,
-                        label: copy.t('aiQueue'),
-                        value: '$pendingSuggestions',
-                        onTap: pendingSuggestions > 0 ? onOpenAiWorkshop : null,
-                      ),
-                      _DashboardSignalChip(
-                        icon: Icons.sticky_note_2_outlined,
-                        label: copy.t('notesQueue'),
-                        value: '${notes.length}',
-                        onTap: notes.isNotEmpty ? onOpenNotes : null,
-                      ),
-                      _DashboardSignalChip(
-                        icon: Icons.auto_awesome_outlined,
-                        label: copy.t('aiUses'),
-                        value: '$aiEvents',
-                        onTap: onOpenAiWorkshop,
-                      ),
-                      _DashboardSignalChip(
-                        icon: Icons.event_available_outlined,
-                        label: copy.t('todaySaves'),
-                        value: '$todaySaves',
-                        onTap: onOpenEditor,
-                      ),
+                      for (final scene in recentScenes.take(5))
+                        _DashboardSceneRow(
+                          copy: copy,
+                          scene: scene,
+                          onTap: () => onOpenScene(scene),
+                        ),
                     ],
                   ),
+          ),
+          const SizedBox(height: 24),
+          _DashboardSection(
+            title: copy.t('dashboardSignals'),
+            body: copy.t('dashboardSignalsBody'),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _DashboardSignalChip(
+                  icon: Icons.psychology_alt_outlined,
+                  label: copy.t('aiQueue'),
+                  value: '$pendingSuggestions',
+                  onTap: pendingSuggestions > 0 ? onOpenAiWorkshop : null,
+                ),
+                _DashboardSignalChip(
+                  icon: Icons.sticky_note_2_outlined,
+                  label: copy.t('notesQueue'),
+                  value: '${notes.length}',
+                  onTap: notes.isNotEmpty ? onOpenNotes : null,
+                ),
+                _DashboardSignalChip(
+                  icon: Icons.auto_awesome_outlined,
+                  label: copy.t('aiUses'),
+                  value: '$aiEvents',
+                  onTap: onOpenAiWorkshop,
+                ),
+                _DashboardSignalChip(
+                  icon: Icons.event_available_outlined,
+                  label: copy.t('todaySaves'),
+                  value: '$todaySaves',
+                  onTap: onOpenEditor,
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 980) {
+          return dashboard;
+        }
+        return Row(
+          children: [
+            SizedBox(
+              width: 320,
+              child: _ProjectLibrary(
+                copy: copy,
+                projects: projects,
+                selectedProject: selectedProject,
+                onSelect: onSelectProject,
+                onDelete: onDeleteProject,
+              ),
+            ),
+            const VerticalDivider(width: 1),
+            Expanded(child: dashboard),
+          ],
+        );
+      },
     );
   }
 }

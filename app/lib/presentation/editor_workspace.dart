@@ -93,114 +93,143 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
       return _EmptyWorkspace(copy: widget.copy);
     }
 
-    return Column(
-      children: [
-        if (!_focusMode) ...[
-          SizedBox(
-            height: 64,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final hideSceneNavigator = constraints.maxWidth < 640;
+        final compactActions = constraints.maxWidth < 620;
+
+        return Column(
+          children: [
+            if (!_focusMode) ...[
+              SizedBox(
+                height: 64,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compactActions ? 14 : 24,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          project.title,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                        ),
+                      ),
+                      if (hideSceneNavigator && widget.scenes.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        _CompactSceneSelector(
+                          copy: widget.copy,
+                          scenes: widget.scenes,
+                          selectedScene: widget.selectedScene,
+                          onSelectScene: widget.onSelectScene,
+                        ),
+                      ],
+                      const SizedBox(width: 8),
+                      compactActions
+                          ? IconButton.filled(
+                              tooltip: widget.copy.t('newScene'),
+                              onPressed: widget.onCreateScene,
+                              icon: const Icon(Icons.add),
+                            )
+                          : FilledButton.icon(
+                              onPressed: widget.onCreateScene,
+                              icon: const Icon(Icons.add),
+                              label: Text(widget.copy.t('newScene')),
+                            ),
+                      const SizedBox(width: 8),
+                      IconButton.outlined(
+                        tooltip: widget.copy.t('newChapter'),
+                        onPressed: widget.onCreateChapter,
+                        icon: const Icon(Icons.create_new_folder_outlined),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+            ],
+            Expanded(
               child: Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      project.title,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                  if (!_focusMode && !hideSceneNavigator) ...[
+                    SizedBox(
+                      width: 320,
+                      child: widget.scenes.isEmpty
+                          ? _NoScenes(
+                              copy: widget.copy,
+                              onCreateScene: widget.onCreateScene,
+                            )
+                          : _SceneNavigator(
+                              copy: widget.copy,
+                              chapters: widget.chapters,
+                              scenes: widget.scenes,
+                              selectedScene: widget.selectedScene,
+                              onSelectScene: widget.onSelectScene,
+                              onDeleteScene: widget.onDeleteScene,
+                            ),
                     ),
-                  ),
-                  FilledButton.icon(
-                    onPressed: widget.onCreateScene,
-                    icon: const Icon(Icons.add),
-                    label: Text(widget.copy.t('newScene')),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.outlined(
-                    tooltip: widget.copy.t('newChapter'),
-                    onPressed: widget.onCreateChapter,
-                    icon: const Icon(Icons.create_new_folder_outlined),
+                    const VerticalDivider(width: 1),
+                  ],
+                  Expanded(
+                    child: widget.selectedScene == null
+                        ? Center(
+                            child: Text(
+                              widget.copy.t('selectScene'),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    color: color.onSurfaceVariant,
+                                  ),
+                            ),
+                          )
+                        : _SceneEditor(
+                            copy: widget.copy,
+                            scene: widget.selectedScene!,
+                            chapters: widget.chapters,
+                            catalogItems: widget.catalogItems,
+                            relationships: widget.relationships,
+                            suggestions: widget.suggestions,
+                            controller: widget.manuscriptController,
+                            summaryController: widget.summaryController,
+                            goalController: widget.goalController,
+                            conflictController: widget.conflictController,
+                            outcomeController: widget.outcomeController,
+                            wordTargetController: widget.wordTargetController,
+                            selectedSceneStatus: widget.selectedSceneStatus,
+                            selectedSceneChapterId:
+                                widget.selectedSceneChapterId,
+                            saveState: widget.sceneSaveState,
+                            lastSavedAt: widget.lastSceneSavedAt,
+                            focusMode: _focusMode,
+                            editorFontSize: _editorFontSize,
+                            onEditorFontSizeChanged: (value) =>
+                                setState(() => _editorFontSize = value),
+                            onFocusModeChanged: (value) =>
+                                setState(() => _focusMode = value),
+                            onSceneChapterChanged: widget.onSceneChapterChanged,
+                            onToggleSceneCatalogLink:
+                                widget.onToggleSceneCatalogLink,
+                            onAddExistingSceneCatalogItems:
+                                widget.onAddExistingSceneCatalogItems,
+                            onCreateSceneCatalogItem:
+                                widget.onCreateSceneCatalogItem,
+                            onSceneStatusChanged: widget.onSceneStatusChanged,
+                            isRequestingAi: widget.isRequestingAi,
+                            onRequestSceneAiHelp: widget.onRequestSceneAiHelp,
+                            onSaveScene: widget.onSaveScene,
+                          ),
                   ),
                 ],
               ),
             ),
-          ),
-          const Divider(height: 1),
-        ],
-        Expanded(
-          child: Row(
-            children: [
-              if (!_focusMode) ...[
-                SizedBox(
-                  width: 320,
-                  child: widget.scenes.isEmpty
-                      ? _NoScenes(
-                          copy: widget.copy,
-                          onCreateScene: widget.onCreateScene,
-                        )
-                      : _SceneNavigator(
-                          copy: widget.copy,
-                          chapters: widget.chapters,
-                          scenes: widget.scenes,
-                          selectedScene: widget.selectedScene,
-                          onSelectScene: widget.onSelectScene,
-                          onDeleteScene: widget.onDeleteScene,
-                        ),
-                ),
-                const VerticalDivider(width: 1),
-              ],
-              Expanded(
-                child: widget.selectedScene == null
-                    ? Center(
-                        child: Text(
-                          widget.copy.t('selectScene'),
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: color.onSurfaceVariant,
-                                  ),
-                        ),
-                      )
-                    : _SceneEditor(
-                        copy: widget.copy,
-                        scene: widget.selectedScene!,
-                        chapters: widget.chapters,
-                        catalogItems: widget.catalogItems,
-                        relationships: widget.relationships,
-                        suggestions: widget.suggestions,
-                        controller: widget.manuscriptController,
-                        summaryController: widget.summaryController,
-                        goalController: widget.goalController,
-                        conflictController: widget.conflictController,
-                        outcomeController: widget.outcomeController,
-                        wordTargetController: widget.wordTargetController,
-                        selectedSceneStatus: widget.selectedSceneStatus,
-                        selectedSceneChapterId: widget.selectedSceneChapterId,
-                        saveState: widget.sceneSaveState,
-                        lastSavedAt: widget.lastSceneSavedAt,
-                        focusMode: _focusMode,
-                        editorFontSize: _editorFontSize,
-                        onEditorFontSizeChanged: (value) =>
-                            setState(() => _editorFontSize = value),
-                        onFocusModeChanged: (value) =>
-                            setState(() => _focusMode = value),
-                        onSceneChapterChanged: widget.onSceneChapterChanged,
-                        onToggleSceneCatalogLink:
-                            widget.onToggleSceneCatalogLink,
-                        onAddExistingSceneCatalogItems:
-                            widget.onAddExistingSceneCatalogItems,
-                        onCreateSceneCatalogItem:
-                            widget.onCreateSceneCatalogItem,
-                        onSceneStatusChanged: widget.onSceneStatusChanged,
-                        isRequestingAi: widget.isRequestingAi,
-                        onRequestSceneAiHelp: widget.onRequestSceneAiHelp,
-                        onSaveScene: widget.onSaveScene,
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -241,6 +270,85 @@ final class _NoScenes extends StatelessWidget {
             label: Text(copy.t('newScene')),
           ),
         ],
+      ),
+    );
+  }
+}
+
+final class _CompactSceneSelector extends StatelessWidget {
+  const _CompactSceneSelector({
+    required this.copy,
+    required this.scenes,
+    required this.selectedScene,
+    required this.onSelectScene,
+  });
+
+  final WritelerCopy copy;
+  final List<Scene> scenes;
+  final Scene? selectedScene;
+  final ValueChanged<Scene> onSelectScene;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return PopupMenuButton<Scene>(
+      tooltip: copy.t('selectScene'),
+      onSelected: onSelectScene,
+      itemBuilder: (context) => [
+        for (final scene in scenes)
+          PopupMenuItem(
+            value: scene,
+            child: Row(
+              children: [
+                Icon(
+                  selectedScene?.id == scene.id
+                      ? Icons.radio_button_checked
+                      : Icons.notes_outlined,
+                  size: 18,
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    scene.title,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: color.outlineVariant),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.notes_outlined, size: 18, color: color.primary),
+              const SizedBox(width: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 150),
+                child: Text(
+                  selectedScene?.title ?? copy.t('scene'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 18,
+                color: color.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
