@@ -716,6 +716,8 @@ final class _SettingsWorkspace extends StatelessWidget {
     required this.onDeleteProviderApiKey,
     required this.onSaveProjectAuthorName,
     required this.onSaveProfileSettings,
+    required this.spellCheckSettings,
+    required this.onSpellCheckSettingsChanged,
     required this.syncAdapterName,
   });
 
@@ -739,6 +741,8 @@ final class _SettingsWorkspace extends StatelessWidget {
   final VoidCallback onSaveProviderConfig;
   final VoidCallback onDeleteProviderApiKey;
   final ValueChanged<String> onSaveProjectAuthorName;
+  final SpellCheckSettings spellCheckSettings;
+  final ValueChanged<SpellCheckSettings> onSpellCheckSettingsChanged;
   final String syncAdapterName;
   final FutureOr<void> Function({
     required bool aiEnabled,
@@ -822,6 +826,17 @@ final class _SettingsWorkspace extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+        _SettingsSection(
+          title: copy.t('spellCheckSettings'),
+          help: copy.t('helpSpellCheckSettings'),
+          body: copy.t('spellCheckSettingsBody'),
+          child: _SpellCheckSettingsPanel(
+            copy: copy,
+            settings: spellCheckSettings,
+            onlineBlocked: noAiNoCloud,
+            onChanged: onSpellCheckSettingsChanged,
           ),
         ),
         _SettingsSection(
@@ -1086,6 +1101,74 @@ final class _ProjectMetadataSettingsState
           onPressed: () => widget.onSaveAuthorName(_authorController.text),
           icon: const Icon(Icons.save_outlined),
           label: Text(widget.copy.t('saveProjectMetadata')),
+        ),
+      ],
+    );
+  }
+}
+
+final class _SpellCheckSettingsPanel extends StatelessWidget {
+  const _SpellCheckSettingsPanel({
+    required this.copy,
+    required this.settings,
+    required this.onlineBlocked,
+    required this.onChanged,
+  });
+
+  final WritelerCopy copy;
+  final SpellCheckSettings settings;
+  final bool onlineBlocked;
+  final ValueChanged<SpellCheckSettings> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SwitchListTile(
+          value: onlineBlocked ? false : settings.enabled,
+          title: _HelpedLabel(
+            label: copy.t('spellCheckEnabled'),
+            help: copy.t('helpSpellCheckEnabled'),
+          ),
+          subtitle: Text(
+            onlineBlocked
+                ? copy.t('spellCheckBlockedByLocalMode')
+                : copy.t('spellCheckPrivacyHint'),
+          ),
+          onChanged: onlineBlocked
+              ? null
+              : (value) => onChanged(settings.copyWith(enabled: value)),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: DropdownButtonFormField<String>(
+            initialValue: settings.languageCode,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            decoration: InputDecoration(
+              labelText: copy.t('spellCheckLanguage'),
+              border: const OutlineInputBorder(),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'de-DE', child: Text('Deutsch')),
+              DropdownMenuItem(value: 'en-US', child: Text('English (US)')),
+              DropdownMenuItem(value: 'en-GB', child: Text('English (UK)')),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              onChanged(settings.copyWith(languageCode: value));
+            },
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.cloud_queue_outlined),
+          title: Text(copy.t('spellCheckProviderLanguageTool')),
+          subtitle: Text(copy.t('spellCheckProviderHint')),
+        ),
+        ListTile(
+          leading: const Icon(Icons.download_for_offline_outlined),
+          title: Text(copy.t('spellCheckOfflineDictionaries')),
+          subtitle: Text(copy.t('spellCheckOfflineDictionariesHint')),
+          enabled: false,
         ),
       ],
     );

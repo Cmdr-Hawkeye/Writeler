@@ -95,6 +95,30 @@ final class WritelerCopy {
         'Bereitet optionale Synchronisation appweit vor. Der aktuelle Adapter bleibt lokal/manuell.',
     'globalNoAiNoCloudHint':
         'Deaktiviert KI und Cloud-Sync appweit für einen strikt lokalen Arbeitsmodus.',
+    'spellCheckSettings': 'Rechtschreibung & Wörterbücher',
+    'spellCheckSettingsBody':
+        'Aktiviere eine Rechtschreibprüfung pro Sprache. Online-Prüfung sendet den geprüften Text an den gewählten Dienst.',
+    'spellCheckEnabled': 'Rechtschreibprüfung aktivieren',
+    'spellCheckLanguage': 'Wörterbuchsprache',
+    'spellCheckPrivacyHint':
+        'Aktuell nutzt Writeler LanguageTool online nur nach manuellem Klick im Editor.',
+    'spellCheckBlockedByLocalMode':
+        'Im Modus „Keine KI/keine Cloud“ bleibt die Online-Rechtschreibprüfung deaktiviert.',
+    'spellCheckProviderLanguageTool': 'LanguageTool Public API',
+    'spellCheckProviderHint':
+        'Offener Dienst für Deutsch und Englisch. Für lange Texte gelten öffentliche Nutzungslimits.',
+    'spellCheckOfflineDictionaries': 'Offline-Wörterbücher',
+    'spellCheckOfflineDictionariesHint':
+        'Vorbereitet für nachladbare Hunspell/LibreOffice-Wörterbücher pro Sprache.',
+    'checkSpelling': 'Rechtschreibung prüfen',
+    'spellCheckDisabledHint':
+        'Aktiviere die Rechtschreibprüfung in den Einstellungen.',
+    'spellCheckResults': 'Rechtschreibprüfung',
+    'spellCheckNoIssues': 'Keine auffälligen Rechtschreibtreffer gefunden.',
+    'helpSpellCheckSettings':
+        'Steuert die globale Rechtschreibprüfung. Online-Dienste werden nur verwendet, wenn diese Option aktiv ist.',
+    'helpSpellCheckEnabled':
+        'Wenn aktiv, kann der Editor den aktuellen Manuskripttext gegen das ausgewählte Wörterbuch prüfen.',
     'privacySettings': 'Projekt & Privatsphäre',
     'privacySettingsBody':
         'Steuert, wie dieses Projekt KI und optionale Synchronisation nutzt.',
@@ -161,6 +185,7 @@ final class WritelerCopy {
     'next': 'Weiter',
     'create': 'Anlegen',
     'cancel': 'Abbrechen',
+    'close': 'Schließen',
     'delete': 'Löschen',
     'deletePermanently': 'Endgültig löschen',
     'deleteProject': 'Projekt löschen',
@@ -740,6 +765,29 @@ final class WritelerCopy {
         'Prepares optional sync app-wide. The current adapter remains local/manual.',
     'globalNoAiNoCloudHint':
         'Disables AI and cloud sync app-wide for a strictly local working mode.',
+    'spellCheckSettings': 'Spelling & dictionaries',
+    'spellCheckSettingsBody':
+        'Enable spell checking per language. Online checking sends the checked text to the selected service.',
+    'spellCheckEnabled': 'Enable spell checking',
+    'spellCheckLanguage': 'Dictionary language',
+    'spellCheckPrivacyHint':
+        'Writeler currently uses LanguageTool online only after a manual editor action.',
+    'spellCheckBlockedByLocalMode':
+        'Online spell checking stays disabled while "No AI/no cloud" mode is active.',
+    'spellCheckProviderLanguageTool': 'LanguageTool Public API',
+    'spellCheckProviderHint':
+        'Open service for German and English. Public usage limits apply to longer texts.',
+    'spellCheckOfflineDictionaries': 'Offline dictionaries',
+    'spellCheckOfflineDictionariesHint':
+        'Prepared for lazy Hunspell/LibreOffice dictionary downloads per language.',
+    'checkSpelling': 'Check spelling',
+    'spellCheckDisabledHint': 'Enable spell checking in settings.',
+    'spellCheckResults': 'Spell check',
+    'spellCheckNoIssues': 'No spelling issues found.',
+    'helpSpellCheckSettings':
+        'Controls global spell checking. Online services are used only when this option is enabled.',
+    'helpSpellCheckEnabled':
+        'When enabled, the editor can check the current manuscript text against the selected dictionary.',
     'privacySettings': 'Project & privacy',
     'privacySettingsBody':
         'Controls how this project uses AI and optional sync.',
@@ -805,6 +853,7 @@ final class WritelerCopy {
     'next': 'Next',
     'create': 'Create',
     'cancel': 'Cancel',
+    'close': 'Close',
     'delete': 'Delete',
     'deletePermanently': 'Delete permanently',
     'deleteProject': 'Delete project',

@@ -22,6 +22,8 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.selectedSceneChapterId,
     required this.sceneSaveState,
     required this.lastSceneSavedAt,
+    required this.spellCheckSettings,
+    required this.spellChecker,
     required this.onSelectScene,
     required this.onDeleteScene,
     required this.onSceneChapterChanged,
@@ -54,6 +56,8 @@ final class _ProjectWorkspace extends StatefulWidget {
   final String? selectedSceneChapterId;
   final _SceneSaveState sceneSaveState;
   final DateTime? lastSceneSavedAt;
+  final SpellCheckSettings spellCheckSettings;
+  final SpellChecker spellChecker;
   final ValueChanged<Scene> onSelectScene;
   final ValueChanged<Scene> onDeleteScene;
   final ValueChanged<String?> onSceneChapterChanged;
@@ -205,6 +209,8 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                                 widget.selectedSceneChapterId,
                             saveState: widget.sceneSaveState,
                             lastSavedAt: widget.lastSceneSavedAt,
+                            spellCheckSettings: widget.spellCheckSettings,
+                            spellChecker: widget.spellChecker,
                             focusMode: _focusMode,
                             editorFontSize: _editorFontSize,
                             onEditorFontSizeChanged: (value) =>
@@ -663,6 +669,8 @@ final class _SceneEditor extends StatefulWidget {
     required this.selectedSceneChapterId,
     required this.saveState,
     required this.lastSavedAt,
+    required this.spellCheckSettings,
+    required this.spellChecker,
     required this.focusMode,
     required this.editorFontSize,
     required this.onEditorFontSizeChanged,
@@ -693,6 +701,8 @@ final class _SceneEditor extends StatefulWidget {
   final String? selectedSceneChapterId;
   final _SceneSaveState saveState;
   final DateTime? lastSavedAt;
+  final SpellCheckSettings spellCheckSettings;
+  final SpellChecker spellChecker;
   final bool focusMode;
   final double editorFontSize;
   final ValueChanged<double> onEditorFontSizeChanged;
@@ -716,12 +726,65 @@ final class _SceneEditorState extends State<_SceneEditor> {
   late final TextEditingController _searchController = TextEditingController();
   late final TextEditingController _replaceController = TextEditingController();
   bool _showSearch = false;
+  bool _isCheckingSpelling = false;
+  bool _spellCheckCompleted = false;
+  String? _spellCheckError;
+  List<SpellCheckIssue> _spellIssues = const [];
 
   @override
   void dispose() {
     _searchController.dispose();
     _replaceController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkSpelling() async {
+    if (!widget.spellCheckSettings.enabled) return;
+    setState(() {
+      _isCheckingSpelling = true;
+      _spellCheckCompleted = false;
+      _spellCheckError = null;
+    });
+    try {
+      final issues = await widget.spellChecker.check(
+        text: widget.controller.text,
+        settings: widget.spellCheckSettings,
+      );
+      if (!mounted) return;
+      setState(() {
+        _spellIssues = issues;
+        _spellCheckCompleted = true;
+        _isCheckingSpelling = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _spellIssues = const [];
+        _spellCheckCompleted = true;
+        _spellCheckError = error.toString();
+        _isCheckingSpelling = false;
+      });
+    }
+  }
+
+  void _applySpellingReplacement(SpellCheckIssue issue, String replacement) {
+    final text = widget.controller.text;
+    if (issue.offset < 0 || issue.offset + issue.length > text.length) return;
+    final updated = text.replaceRange(
+      issue.offset,
+      issue.offset + issue.length,
+      replacement,
+    );
+    widget.controller.value = TextEditingValue(
+      text: updated,
+      selection: TextSelection.collapsed(
+        offset: issue.offset + replacement.length,
+      ),
+    );
+    setState(() {
+      _spellIssues = const [];
+      _spellCheckCompleted = false;
+    });
   }
 
   @override
@@ -807,6 +870,24 @@ final class _SceneEditorState extends State<_SceneEditor> {
                     ),
                   ),
                   Tooltip(
+                    message: widget.spellCheckSettings.enabled
+                        ? copy.t('checkSpelling')
+                        : copy.t('spellCheckDisabledHint'),
+                    child: IconButton.outlined(
+                      onPressed: widget.spellCheckSettings.enabled &&
+                              !_isCheckingSpelling
+                          ? _checkSpelling
+                          : null,
+                      icon: _isCheckingSpelling
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.spellcheck_outlined),
+                    ),
+                  ),
+                  Tooltip(
                     message: copy.t('editorFontSize'),
                     child: PopupMenuButton<double>(
                       tooltip: copy.t('editorFontSize'),
@@ -875,6 +956,23 @@ final class _SceneEditorState extends State<_SceneEditor> {
               searchController: _searchController,
               replaceController: _replaceController,
               onChanged: () => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (!widget.focusMode &&
+              (_spellIssues.isNotEmpty ||
+                  _spellCheckError != null ||
+                  _spellCheckCompleted)) ...[
+            _SpellCheckResultsPanel(
+              copy: copy,
+              issues: _spellIssues,
+              error: _spellCheckError,
+              onApplyReplacement: _applySpellingReplacement,
+              onDismiss: () => setState(() {
+                _spellIssues = const [];
+                _spellCheckError = null;
+                _spellCheckCompleted = false;
+              }),
             ),
             const SizedBox(height: 12),
           ],
@@ -1021,6 +1119,138 @@ final class _ManuscriptField extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+final class _SpellCheckResultsPanel extends StatelessWidget {
+  const _SpellCheckResultsPanel({
+    required this.copy,
+    required this.issues,
+    required this.error,
+    required this.onApplyReplacement,
+    required this.onDismiss,
+  });
+
+  final WritelerCopy copy;
+  final List<SpellCheckIssue> issues;
+  final String? error;
+  final void Function(SpellCheckIssue issue, String replacement)
+      onApplyReplacement;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.spellcheck_outlined, size: 18, color: color.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    copy.t('spellCheckResults'),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: copy.t('close'),
+                  onPressed: onDismiss,
+                  icon: const Icon(Icons.close, size: 18),
+                ),
+              ],
+            ),
+            if (error != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 10, 8),
+                child: Text(
+                  error!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.error,
+                      ),
+                ),
+              )
+            else if (issues.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 10, 8),
+                child: Text(
+                  copy.t('spellCheckNoIssues'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 210),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: issues.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final issue = issues[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            issue.message,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          if (issue.context.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              issue.context,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(color: color.onSurfaceVariant),
+                            ),
+                          ],
+                          if (issue.replacements.isNotEmpty) ...[
+                            const SizedBox(height: 7),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                for (final replacement in issue.replacements)
+                                  ActionChip(
+                                    label: Text(replacement),
+                                    onPressed: () => onApplyReplacement(
+                                      issue,
+                                      replacement,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

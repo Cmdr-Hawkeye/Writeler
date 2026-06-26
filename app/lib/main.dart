@@ -66,6 +66,10 @@ import 'features/settings/infrastructure/drift_ai_provider_config_repository.dar
 import 'features/settings/infrastructure/flutter_secure_secret_vault.dart';
 import 'features/settings/infrastructure/lazy_app_preference_repository.dart';
 import 'features/settings/infrastructure/lazy_ai_provider_config_repository.dart';
+import 'features/spellcheck/application/spell_checker.dart';
+import 'features/spellcheck/domain/spell_check_issue.dart';
+import 'features/spellcheck/domain/spell_check_settings.dart';
+import 'features/spellcheck/infrastructure/language_tool_spell_checker.dart';
 import 'features/sync/application/manual_sync_adapter.dart';
 import 'features/sync/domain/sync_checkpoint.dart';
 import 'core/infrastructure/database/app_database.dart';

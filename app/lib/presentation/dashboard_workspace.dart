@@ -23,6 +23,8 @@ final class _WorkspaceView extends StatelessWidget {
     required this.selectedSceneChapterId,
     required this.sceneSaveState,
     required this.lastSceneSavedAt,
+    required this.spellCheckSettings,
+    required this.spellChecker,
     required this.onSelectProject,
     required this.onDeleteProject,
     required this.onSelectScene,
@@ -58,6 +60,8 @@ final class _WorkspaceView extends StatelessWidget {
   final String? selectedSceneChapterId;
   final _SceneSaveState sceneSaveState;
   final DateTime? lastSceneSavedAt;
+  final SpellCheckSettings spellCheckSettings;
+  final SpellChecker spellChecker;
   final ValueChanged<Project> onSelectProject;
   final ValueChanged<Project> onDeleteProject;
   final ValueChanged<Scene> onSelectScene;
@@ -103,6 +107,8 @@ final class _WorkspaceView extends StatelessWidget {
       selectedSceneChapterId: selectedSceneChapterId,
       sceneSaveState: sceneSaveState,
       lastSceneSavedAt: lastSceneSavedAt,
+      spellCheckSettings: spellCheckSettings,
+      spellChecker: spellChecker,
       onSelectScene: onSelectScene,
       onDeleteScene: onDeleteScene,
       onSceneChapterChanged: onSceneChapterChanged,

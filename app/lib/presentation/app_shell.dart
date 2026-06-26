@@ -139,6 +139,9 @@ final class WritelerShell extends StatefulWidget {
     required this.globalCloudSyncEnabled,
     required this.globalNoAiNoCloud,
     required this.onGlobalProfileSettingsChanged,
+    required this.spellCheckSettings,
+    required this.spellChecker,
+    required this.onSpellCheckSettingsChanged,
     super.key,
   });
 
@@ -159,11 +162,14 @@ final class WritelerShell extends StatefulWidget {
   final bool globalAiEnabled;
   final bool globalCloudSyncEnabled;
   final bool globalNoAiNoCloud;
+  final SpellCheckSettings spellCheckSettings;
+  final SpellChecker spellChecker;
   final FutureOr<void> Function({
     required bool aiEnabled,
     required bool cloudSyncEnabled,
     required bool noAiNoCloud,
   }) onGlobalProfileSettingsChanged;
+  final ValueChanged<SpellCheckSettings> onSpellCheckSettingsChanged;
 
   @override
   State<WritelerShell> createState() => _WritelerShellState();
@@ -2003,6 +2009,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           selectedSceneChapterId: _selectedSceneChapterId,
           sceneSaveState: _sceneSaveState,
           lastSceneSavedAt: _lastSceneSavedAt,
+          spellCheckSettings: widget.spellCheckSettings,
+          spellChecker: widget.spellChecker,
           onSelectProject: _selectProject,
           onDeleteProject: (project) => _deleteProject(project, copy),
           onSelectScene: _selectScene,
@@ -2289,6 +2297,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           onDeleteProviderApiKey: () => _deleteProviderApiKey(copy),
           onSaveProjectAuthorName: _saveProjectAuthorName,
           onSaveProfileSettings: widget.onGlobalProfileSettingsChanged,
+          spellCheckSettings: widget.spellCheckSettings,
+          onSpellCheckSettingsChanged: widget.onSpellCheckSettingsChanged,
           syncAdapterName: _syncAdapter.adapterName,
         ),
     };

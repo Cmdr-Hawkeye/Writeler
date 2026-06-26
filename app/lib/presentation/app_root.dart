@@ -41,12 +41,17 @@ final class _WritelerAppState extends State<WritelerApp> {
   static const _globalCloudSyncEnabledPreferenceKey =
       'profile.cloudSyncEnabled';
   static const _globalNoAiNoCloudPreferenceKey = 'profile.noAiNoCloud';
+  static const _spellCheckEnabledPreferenceKey = 'spellcheck.enabled';
+  static const _spellCheckLanguagePreferenceKey = 'spellcheck.language';
+  static const _spellCheckProviderPreferenceKey = 'spellcheck.provider';
 
   WritelerDesignTheme _designTheme = WritelerDesignTheme.paper;
   String _languageCode = WritelerCopy.fallbackLanguageCode;
   bool _globalAiEnabled = true;
   bool _globalCloudSyncEnabled = false;
   bool _globalNoAiNoCloud = false;
+  SpellCheckSettings _spellCheckSettings = SpellCheckSettings.fallback;
+  late final SpellChecker _spellChecker = LanguageToolSpellChecker();
 
   @override
   void initState() {
@@ -54,6 +59,7 @@ final class _WritelerAppState extends State<WritelerApp> {
     unawaited(_loadDesignTheme());
     unawaited(_loadLanguage());
     unawaited(_loadGlobalProfileSettings());
+    unawaited(_loadSpellCheckSettings());
   }
 
   Future<void> _loadDesignTheme() async {
@@ -128,6 +134,9 @@ final class _WritelerAppState extends State<WritelerApp> {
       _globalAiEnabled = normalizedAiEnabled;
       _globalCloudSyncEnabled = normalizedCloudSyncEnabled;
       _globalNoAiNoCloud = noAiNoCloud;
+      if (noAiNoCloud && _spellCheckSettings.enabled) {
+        _spellCheckSettings = _spellCheckSettings.copyWith(enabled: false);
+      }
     });
     unawaited(
       widget.appPreferenceRepository.write(
@@ -147,11 +156,58 @@ final class _WritelerAppState extends State<WritelerApp> {
         noAiNoCloud.toString(),
       ),
     );
+    if (noAiNoCloud) {
+      unawaited(
+        widget.appPreferenceRepository.write(
+          _spellCheckEnabledPreferenceKey,
+          false.toString(),
+        ),
+      );
+    }
   }
 
   bool _readBoolPreference(String? value, {required bool fallback}) {
     if (value == null) return fallback;
     return value.toLowerCase() == 'true';
+  }
+
+  Future<void> _loadSpellCheckSettings() async {
+    final enabled = await widget.appPreferenceRepository
+        .read(_spellCheckEnabledPreferenceKey);
+    final language = await widget.appPreferenceRepository
+        .read(_spellCheckLanguagePreferenceKey);
+    final provider = await widget.appPreferenceRepository
+        .read(_spellCheckProviderPreferenceKey);
+    if (!mounted) return;
+    setState(() {
+      _spellCheckSettings = SpellCheckSettings(
+        enabled: _readBoolPreference(enabled, fallback: false),
+        languageCode: language ?? SpellCheckSettings.fallback.languageCode,
+        provider: SpellCheckProviderWire.parse(provider),
+      );
+    });
+  }
+
+  void _changeSpellCheckSettings(SpellCheckSettings settings) {
+    setState(() => _spellCheckSettings = settings);
+    unawaited(
+      widget.appPreferenceRepository.write(
+        _spellCheckEnabledPreferenceKey,
+        settings.enabled.toString(),
+      ),
+    );
+    unawaited(
+      widget.appPreferenceRepository.write(
+        _spellCheckLanguagePreferenceKey,
+        settings.languageCode,
+      ),
+    );
+    unawaited(
+      widget.appPreferenceRepository.write(
+        _spellCheckProviderPreferenceKey,
+        settings.provider.wireName,
+      ),
+    );
   }
 
   @override
@@ -196,6 +252,9 @@ final class _WritelerAppState extends State<WritelerApp> {
         globalCloudSyncEnabled: _globalCloudSyncEnabled,
         globalNoAiNoCloud: _globalNoAiNoCloud,
         onGlobalProfileSettingsChanged: _changeGlobalProfileSettings,
+        spellCheckSettings: _spellCheckSettings,
+        spellChecker: _spellChecker,
+        onSpellCheckSettingsChanged: _changeSpellCheckSettings,
       ),
     );
   }

@@ -586,6 +586,9 @@ void main() {
     await tapNavigationItem(tester, 'Settings');
 
     expect(find.text('Work profile'), findsOneWidget);
+    expect(find.text('Spelling & dictionaries'), findsOneWidget);
+    await tester.drag(find.byType(ListView).last, const Offset(0, -520));
+    await tester.pumpAndSettle();
     expect(find.text('Provider configuration'), findsOneWidget);
 
     await tapNavigationItem(tester, 'Export/Import');
