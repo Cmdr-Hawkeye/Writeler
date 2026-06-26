@@ -279,6 +279,18 @@ String _exportFormatLabel(ExportFormat format, String languageCode) {
   };
 }
 
+String _publishingStyleLabel(PublishingStyle style, String languageCode) {
+  final german = languageCode == 'de';
+  return switch (style) {
+    PublishingStyle.manuscript =>
+      german ? 'Manuskript / Lektorat' : 'Manuscript / editing',
+    PublishingStyle.paperback =>
+      german ? 'Taschenbuchsatz' : 'Paperback layout',
+    PublishingStyle.ebook => german ? 'E-Book' : 'E-book',
+    PublishingStyle.largePrint => german ? 'Großdruck' : 'Large print',
+  };
+}
+
 String _metricEventLabel(String eventType, String languageCode) {
   final german = languageCode == 'de';
   return switch (eventType) {

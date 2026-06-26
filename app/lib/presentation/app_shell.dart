@@ -225,6 +225,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   DraftStatus _selectedSceneStatus = DraftStatus.planned;
   int _selectedRailIndex = 1;
   ExportFormat _selectedPublishingFormat = ExportFormat.pdf;
+  PublishingStyle _selectedPublishingStyle = PublishingStyle.manuscript;
   bool _includeSceneTitles = true;
   bool _includePublishingMetadata = false;
   bool _isRequestingAi = false;
@@ -1463,6 +1464,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         projectId: project.id,
         name: copy.t('selfPublishing'),
         format: _selectedPublishingFormat,
+        publishingStyle: _selectedPublishingStyle,
         includeMetadata: _includePublishingMetadata,
         includeSceneTitles: _includeSceneTitles,
       ),
@@ -2221,11 +2223,14 @@ final class _WritelerShellState extends State<WritelerShell> {
           catalogItems: _catalogItems,
           relationships: _relationships,
           format: _selectedPublishingFormat,
+          publishingStyle: _selectedPublishingStyle,
           includeSceneTitles: _includeSceneTitles,
           includeMetadata: _includePublishingMetadata,
           exporter: _projectExporter,
           onFormatChanged: (format) =>
               setState(() => _selectedPublishingFormat = format),
+          onPublishingStyleChanged: (style) =>
+              setState(() => _selectedPublishingStyle = style),
           onIncludeSceneTitlesChanged: (value) =>
               setState(() => _includeSceneTitles = value),
           onIncludeMetadataChanged: (value) =>

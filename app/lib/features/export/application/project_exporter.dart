@@ -137,6 +137,7 @@ final class ProjectExporter {
             notes: notes,
             includeMetadata: profile.includeMetadata,
             includeSceneTitles: profile.includeSceneTitles,
+            style: profile.publishingStyle,
           ),
           previewText: previewText,
         );
@@ -149,6 +150,7 @@ final class ProjectExporter {
             chapters: chapters,
             scenes: scenes,
             includeSceneTitles: profile.includeSceneTitles,
+            style: profile.publishingStyle,
           ),
           previewText: previewText,
         );
@@ -166,6 +168,7 @@ final class ProjectExporter {
             notes: notes,
             includeMetadata: profile.includeMetadata,
             includeSceneTitles: profile.includeSceneTitles,
+            style: profile.publishingStyle,
           ),
           previewText: previewText,
         );
@@ -322,11 +325,11 @@ final class ProjectExporter {
     required ExportProfile profile,
   }) {
     final escape = const HtmlEscape().convert;
+    final style = _htmlPublishingStyle(profile.publishingStyle);
     final buffer = StringBuffer()
       ..write('<!doctype html><html><head><meta charset="utf-8">')
       ..write('<title>${escape(project.title)}</title>')
-      ..write(
-          '<style>body{font-family:serif;max-width:760px;margin:48px auto;line-height:1.65;padding:0 24px;}')
+      ..write('<style>$style')
       ..write(
           'h1,h2,h3{line-height:1.2;} .meta,.notes{font-family:sans-serif;color:#555;border-bottom:1px solid #ddd;padding-bottom:16px;margin-bottom:28px;} .note-target{font-weight:bold;color:#333;}')
       ..write('</style></head><body>')
@@ -377,6 +380,19 @@ final class ProjectExporter {
     return '${buffer.toString()}</body></html>';
   }
 
+  String _htmlPublishingStyle(PublishingStyle style) {
+    return switch (style) {
+      PublishingStyle.manuscript =>
+        'body{font-family:serif;max-width:760px;margin:48px auto;line-height:1.65;padding:0 24px;}p{text-indent:1.2em;margin:0 0 .8em;}',
+      PublishingStyle.paperback =>
+        'body{font-family:Garamond,serif;max-width:680px;margin:44px auto;line-height:1.5;padding:0 20px;}p{text-indent:1.1em;margin:0 0 .35em;}',
+      PublishingStyle.ebook =>
+        'body{font-family:Georgia,serif;max-width:720px;margin:36px auto;line-height:1.55;padding:0 20px;}p{text-indent:1em;margin:0 0 .55em;}',
+      PublishingStyle.largePrint =>
+        'body{font-family:Georgia,serif;max-width:780px;margin:44px auto;line-height:1.7;font-size:1.2rem;padding:0 24px;}p{text-indent:1em;margin:0 0 .9em;}',
+    };
+  }
+
   String _toPackagedPreview({
     required Project project,
     required List<Chapter> chapters,
@@ -404,6 +420,7 @@ final class ProjectExporter {
       ..writeln('Catalog items: ${catalogItems.length}')
       ..writeln('Relationships: ${relationships.length}')
       ..writeln('Notes: ${notes.length}')
+      ..writeln('Style: ${profile.publishingStyle.name}')
       ..writeln()
       ..writeln(
           'Use the download action to save the generated .$extension file.');

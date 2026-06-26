@@ -221,10 +221,12 @@ final class _SelfPublishingCenter extends StatelessWidget {
     required this.catalogItems,
     required this.relationships,
     required this.format,
+    required this.publishingStyle,
     required this.includeSceneTitles,
     required this.includeMetadata,
     required this.exporter,
     required this.onFormatChanged,
+    required this.onPublishingStyleChanged,
     required this.onIncludeSceneTitlesChanged,
     required this.onIncludeMetadataChanged,
     required this.onDownload,
@@ -238,10 +240,12 @@ final class _SelfPublishingCenter extends StatelessWidget {
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
   final ExportFormat format;
+  final PublishingStyle publishingStyle;
   final bool includeSceneTitles;
   final bool includeMetadata;
   final ProjectExporter exporter;
   final ValueChanged<ExportFormat> onFormatChanged;
+  final ValueChanged<PublishingStyle> onPublishingStyleChanged;
   final ValueChanged<bool> onIncludeSceneTitlesChanged;
   final ValueChanged<bool> onIncludeMetadataChanged;
   final VoidCallback onDownload;
@@ -263,6 +267,7 @@ final class _SelfPublishingCenter extends StatelessWidget {
               projectId: project.id,
               name: copy.t('selfPublishing'),
               format: format,
+              publishingStyle: publishingStyle,
               includeMetadata: includeMetadata,
               includeSceneTitles: includeSceneTitles,
             ),
@@ -310,6 +315,35 @@ final class _SelfPublishingCenter extends StatelessWidget {
                       ],
                       onChanged: (value) {
                         if (value != null) onFormatChanged(value);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<PublishingStyle>(
+                      initialValue: publishingStyle,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                      decoration: InputDecoration(
+                        labelText: copy.t('publishingStyle'),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: _HelpTooltip(
+                            message: copy.t('helpPublishingStyle'),
+                          ),
+                        ),
+                        suffixIconConstraints:
+                            const BoxConstraints(minWidth: 42),
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final item in PublishingStyle.values)
+                          DropdownMenuItem(
+                            value: item,
+                            child: Text(
+                                _publishingStyleLabel(item, copy.languageCode)),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) onPublishingStyleChanged(value);
                       },
                     ),
                     const SizedBox(height: 12),

@@ -217,6 +217,24 @@ void main() {
     expect(docxPackageText, contains('w:styleId="BookInfo"'));
     expect(docxPackageText, contains('Manuscript export'));
 
+    final paperbackDocx = exporter.exportArtifact(
+      project: project,
+      chapters: [chapter],
+      scenes: [scene],
+      profile: ExportProfile(
+        id: 'paperback',
+        projectId: project.id,
+        name: 'Paperback',
+        format: ExportFormat.docx,
+        publishingStyle: PublishingStyle.paperback,
+      ),
+    );
+    final paperbackPackageText =
+        utf8.decode(paperbackDocx.bytes, allowMalformed: true);
+    expect(paperbackDocx.previewText, contains('Style: paperback'));
+    expect(paperbackPackageText, contains('Paperback print layout'));
+    expect(paperbackPackageText, contains('w:rFonts w:ascii="Garamond"'));
+
     final json = jsonDecode(jsonText) as Map<String, Object?>;
     expect(json['schema'], 'writeler.project.v3');
 

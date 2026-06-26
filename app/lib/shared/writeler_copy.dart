@@ -508,6 +508,7 @@ final class WritelerCopy {
     'selfPublishingBody':
         'Lesbares Manuskript für Weitergabe, Lektorat oder Veröffentlichung.',
     'publishingFormat': 'Ausgabeformat',
+    'publishingStyle': 'Formatvorlage',
     'downloadManuscript': 'Manuskript herunterladen',
     'includePublishingMetadata': 'Notizen und Projektinfo einschließen',
     'syncCheckpoint': 'Sync-Checkpoint',
@@ -540,6 +541,8 @@ final class WritelerCopy {
         'Der Export ist ein vollständiges Writeler-Archiv mit allen Projektdaten für den späteren Import.',
     'helpPublishingFormat':
         'Legt fest, in welchem lesbaren Manuskriptformat die Veröffentlichung ausgegeben wird.',
+    'helpPublishingStyle':
+        'Wählt Satz, Schriftgröße, Einzüge und Abstände für die Manuskriptausgabe. Die Vorlage verändert nicht den gespeicherten Text.',
     'helpIncludeSceneTitles':
         'Fügt beim Export die Szenentitel vor den jeweiligen Textabschnitten ein.',
     'helpIncludeMetadata':
@@ -1122,6 +1125,7 @@ final class WritelerCopy {
     'selfPublishingBody':
         'Readable manuscript output for sharing, editing, or publishing.',
     'publishingFormat': 'Output format',
+    'publishingStyle': 'Style template',
     'downloadManuscript': 'Download manuscript',
     'includePublishingMetadata': 'Include notes and project info',
     'syncCheckpoint': 'Sync checkpoint',
@@ -1154,6 +1158,8 @@ final class WritelerCopy {
         'Export creates a complete Writeler archive with all project data for later import.',
     'helpPublishingFormat':
         'Controls which readable manuscript format is used for publishing output.',
+    'helpPublishingStyle':
+        'Chooses layout, type size, indents, and spacing for manuscript output. The template does not change saved text.',
     'helpIncludeSceneTitles':
         'Adds scene titles before the matching text sections in the export.',
     'helpIncludeMetadata':
