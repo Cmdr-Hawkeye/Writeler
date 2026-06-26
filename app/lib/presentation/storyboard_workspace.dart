@@ -38,6 +38,7 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
     if (project == null) return _EmptyWorkspace(copy: widget.copy);
 
     final nodes = _buildNodes(project);
+    final nodesById = {for (final node in nodes) node.id: node};
     final timelineNodes =
         nodes.where((node) => node.kind == _StoryboardNodeKind.scene).toList();
     _syncCanvasState(nodes);
@@ -77,9 +78,18 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
                   onTapNode: _tapNode,
                 ),
         ),
+        if (_connections.isNotEmpty) ...[
+          const Divider(height: 1),
+          _StoryboardConnectionStrip(
+            copy: widget.copy,
+            connections: _connections,
+            nodesById: nodesById,
+            onRemoveConnection: _removeConnection,
+          ),
+        ],
         if (timelineNodes.isNotEmpty) ...[
           const Divider(height: 1),
-          _StoryboardTimeline(copy: widget.copy, nodes: timelineNodes),
+          _StoryboardTimeRail(copy: widget.copy, nodes: timelineNodes),
         ],
       ],
     );
@@ -217,6 +227,10 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
       _connections.add(_connectionKey(startId, id));
       _pendingConnectionStartId = null;
     });
+  }
+
+  void _removeConnection(String key) {
+    setState(() => _connections.remove(key));
   }
 }
 
@@ -598,8 +612,120 @@ final class _StoryboardNodeCard extends StatelessWidget {
   }
 }
 
-final class _StoryboardTimeline extends StatelessWidget {
-  const _StoryboardTimeline({
+final class _StoryboardConnectionStrip extends StatelessWidget {
+  const _StoryboardConnectionStrip({
+    required this.copy,
+    required this.connections,
+    required this.nodesById,
+    required this.onRemoveConnection,
+  });
+
+  final WritelerCopy copy;
+  final Set<String> connections;
+  final Map<String, _StoryboardNode> nodesById;
+  final ValueChanged<String> onRemoveConnection;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final sortedConnections = connections.toList()..sort();
+    return ColoredBox(
+      color: color.surface,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+        child: Row(
+          children: [
+            Icon(Icons.link_outlined, size: 17, color: color.primary),
+            const SizedBox(width: 8),
+            Text(
+              copy.t('storyboardConnections'),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final key in sortedConnections) ...[
+                      _StoryboardConnectionChip(
+                        label: _connectionLabel(key, nodesById),
+                        onRemove: () => onRemoveConnection(key),
+                        removeTooltip: copy.t('storyboardRemoveConnection'),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _StoryboardConnectionChip extends StatelessWidget {
+  const _StoryboardConnectionChip({
+    required this.label,
+    required this.onRemove,
+    required this.removeTooltip,
+  });
+
+  final String label;
+  final VoidCallback onRemove;
+  final String removeTooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerHighest.withValues(alpha: 0.56),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 10, right: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 240),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+            Tooltip(
+              message: removeTooltip,
+              child: IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 30,
+                  height: 30,
+                ),
+                onPressed: onRemove,
+                icon: const Icon(Icons.close, size: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _StoryboardTimeRail extends StatelessWidget {
+  const _StoryboardTimeRail({
     required this.copy,
     required this.nodes,
   });
@@ -610,12 +736,14 @@ final class _StoryboardTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final railWidth =
+        math.max(760, 132 + math.max(0, nodes.length - 1) * 184).toDouble();
     return ColoredBox(
       color: color.surface,
       child: SizedBox(
-        height: 118,
+        height: 124,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -640,25 +768,35 @@ final class _StoryboardTimeline extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: ListView.separated(
+                child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  itemCount: nodes.length,
-                  separatorBuilder: (context, index) => SizedBox(
-                    width: 28,
-                    child: Center(
-                      child: Container(
-                        height: 2,
-                        color: color.outlineVariant,
-                      ),
+                  child: SizedBox(
+                    width: railWidth,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _StoryboardTimeRailPainter(
+                              itemCount: nodes.length,
+                              lineColor: color.outlineVariant,
+                              dotColor: color.primary,
+                            ),
+                          ),
+                        ),
+                        for (var index = 0; index < nodes.length; index++)
+                          Positioned(
+                            left:
+                                _timeRailX(index, nodes.length, railWidth) - 78,
+                            top: 8,
+                            width: 156,
+                            child: _StoryboardTimeRailEvent(
+                              index: index + 1,
+                              node: nodes[index],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  itemBuilder: (context, index) {
-                    final node = nodes[index];
-                    return _StoryboardTimelineStep(
-                      index: index + 1,
-                      node: node,
-                    );
-                  },
                 ),
               ),
             ],
@@ -669,8 +807,8 @@ final class _StoryboardTimeline extends StatelessWidget {
   }
 }
 
-final class _StoryboardTimelineStep extends StatelessWidget {
-  const _StoryboardTimelineStep({
+final class _StoryboardTimeRailEvent extends StatelessWidget {
+  const _StoryboardTimeRailEvent({
     required this.index,
     required this.node,
   });
@@ -682,67 +820,114 @@ final class _StoryboardTimelineStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
     final tone = _toneForNode(context, _StoryboardNodeKind.scene);
-    return SizedBox(
-      width: 188,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: color.surfaceContainerHighest.withValues(alpha: 0.48),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            children: [
-              Container(
-                width: 26,
-                height: 26,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: tone.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: tone.withValues(alpha: 0.32)),
-                ),
-                child: Text(
-                  '$index',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: tone,
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      node.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      node.subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: color.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
+    return Column(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: color.surface,
+            shape: BoxShape.circle,
+            border: Border.all(color: tone, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: tone.withValues(alpha: 0.16),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
+          child: Text(
+            '$index',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: tone,
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
         ),
-      ),
+        const SizedBox(height: 9),
+        Text(
+          node.title,
+          maxLines: 1,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          node.subtitle,
+          maxLines: 1,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: color.onSurfaceVariant,
+              ),
+        ),
+      ],
     );
   }
+}
+
+final class _StoryboardTimeRailPainter extends CustomPainter {
+  const _StoryboardTimeRailPainter({
+    required this.itemCount,
+    required this.lineColor,
+    required this.dotColor,
+  });
+
+  final int itemCount;
+  final Color lineColor;
+  final Color dotColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (itemCount == 0) return;
+    const railY = 22.0;
+    final start = Offset(_timeRailX(0, itemCount, size.width), railY);
+    final end = Offset(
+      _timeRailX(itemCount - 1, itemCount, size.width),
+      railY,
+    );
+    final linePaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, linePaint);
+
+    for (var index = 0; index < itemCount; index++) {
+      final x = _timeRailX(index, itemCount, size.width);
+      canvas.drawCircle(
+        Offset(x, railY),
+        5,
+        Paint()
+          ..color = dotColor.withValues(alpha: 0.18)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawCircle(
+        Offset(x, railY),
+        2.6,
+        Paint()
+          ..color = dotColor
+          ..style = PaintingStyle.fill,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _StoryboardTimeRailPainter oldDelegate) {
+    return itemCount != oldDelegate.itemCount ||
+        lineColor != oldDelegate.lineColor ||
+        dotColor != oldDelegate.dotColor;
+  }
+}
+
+double _timeRailX(int index, int itemCount, double width) {
+  if (itemCount <= 1) return width / 2;
+  const inset = 66.0;
+  return inset + index * ((width - inset * 2) / (itemCount - 1));
 }
 
 final class _StoryboardInfoPill extends StatelessWidget {
@@ -1086,6 +1271,14 @@ bool _hasConnection(String id, Set<String> connections) {
 String _connectionKey(String firstId, String secondId) {
   final sorted = [firstId, secondId]..sort();
   return '${sorted.first}|${sorted.last}';
+}
+
+String _connectionLabel(String key, Map<String, _StoryboardNode> nodesById) {
+  final parts = key.split('|');
+  if (parts.length != 2) return key;
+  final first = nodesById[parts.first]?.title ?? parts.first;
+  final second = nodesById[parts.last]?.title ?? parts.last;
+  return '$first - $second';
 }
 
 String _firstFilled(Iterable<String?> values) {

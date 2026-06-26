@@ -297,10 +297,11 @@ final class WritelerCopy {
     'storyboardConnectMode': 'Verbinden',
     'storyboardConnectHint':
         'Im Verbindungsmodus zwei Karten nacheinander anklicken, um eine Linie zu zeichnen.',
-    'storyboardClearConnections': 'Verbindungen löschen',
+    'storyboardClearConnections': 'Alle Verbindungen löschen',
+    'storyboardRemoveConnection': 'Diese Verbindung lösen',
     'storyboardCanvas': 'Freie Storyboard-Fläche',
     'storyboardResetView': 'Storyboard links oben ausrichten',
-    'storyboardTimeline': 'Timeline',
+    'storyboardTimeline': 'Zeitstrahl',
     'storyboardTimelineHint': 'Szenenfolge nach Projektstruktur',
     'storyboardPickSecondNode': 'Zweite Karte auswählen',
     'storyboardNodeConnectTooltip': 'Karte für eine Verbindung auswählen',
@@ -938,6 +939,7 @@ final class WritelerCopy {
     'storyboardConnectHint':
         'In connect mode, select two cards one after another to draw a line.',
     'storyboardClearConnections': 'Clear connections',
+    'storyboardRemoveConnection': 'Remove this connection',
     'storyboardCanvas': 'Free storyboard canvas',
     'storyboardResetView': 'Align storyboard top left',
     'storyboardTimeline': 'Timeline',
