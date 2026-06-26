@@ -38,6 +38,8 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
     if (project == null) return _EmptyWorkspace(copy: widget.copy);
 
     final nodes = _buildNodes(project);
+    final timelineNodes =
+        nodes.where((node) => node.kind == _StoryboardNodeKind.scene).toList();
     _syncCanvasState(nodes);
 
     return Column(
@@ -75,6 +77,10 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
                   onTapNode: _tapNode,
                 ),
         ),
+        if (timelineNodes.isNotEmpty) ...[
+          const Divider(height: 1),
+          _StoryboardTimeline(copy: widget.copy, nodes: timelineNodes),
+        ],
       ],
     );
   }
@@ -302,7 +308,7 @@ final class _StoryboardToolbar extends StatelessWidget {
   }
 }
 
-final class _StoryboardCanvas extends StatelessWidget {
+final class _StoryboardCanvas extends StatefulWidget {
   const _StoryboardCanvas({
     required this.copy,
     required this.nodes,
@@ -324,79 +330,142 @@ final class _StoryboardCanvas extends StatelessWidget {
   final ValueChanged<String> onTapNode;
 
   @override
+  State<_StoryboardCanvas> createState() => _StoryboardCanvasState();
+}
+
+final class _StoryboardCanvasState extends State<_StoryboardCanvas> {
+  late final TransformationController _transformationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _transformationController = TransformationController();
+  }
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  void _resetView() {
+    _transformationController.value = Matrix4.identity();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final nodeById = {for (final node in nodes) node.id: node};
+    final nodeById = {for (final node in widget.nodes) node.id: node};
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color.surfaceContainerLowest,
       ),
       child: ClipRect(
-        child: InteractiveViewer(
-          constrained: false,
-          boundaryMargin: const EdgeInsets.all(360),
-          minScale: 0.45,
-          maxScale: 1.65,
-          child: Semantics(
-            label: copy.t('storyboardCanvas'),
-            child: SizedBox(
-              width: _storyboardCanvasWidth,
-              height: _storyboardCanvasHeight,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _StoryboardBackgroundPainter(
-                        lineColor: color.outlineVariant.withValues(alpha: 0.3),
-                        accentColor: color.primary.withValues(alpha: 0.16),
-                      ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: InteractiveViewer(
+                transformationController: _transformationController,
+                alignment: Alignment.topLeft,
+                constrained: false,
+                boundaryMargin: const EdgeInsets.all(80),
+                minScale: 0.45,
+                maxScale: 1.65,
+                child: Semantics(
+                  label: widget.copy.t('storyboardCanvas'),
+                  child: SizedBox(
+                    width: _storyboardCanvasWidth,
+                    height: _storyboardCanvasHeight,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _StoryboardBackgroundPainter(
+                              lineColor:
+                                  color.outlineVariant.withValues(alpha: 0.3),
+                              accentColor:
+                                  color.primary.withValues(alpha: 0.16),
+                            ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _StoryboardConnectionPainter(
+                              connections: Set.unmodifiable(widget.connections),
+                              positions: Map.unmodifiable(widget.positions),
+                              lineColor: color.primary.withValues(alpha: 0.62),
+                              shadowColor:
+                                  color.primary.withValues(alpha: 0.12),
+                            ),
+                          ),
+                        ),
+                        for (final node in widget.nodes)
+                          Positioned(
+                            left: widget.positions[node.id]?.dx ?? 0,
+                            top: widget.positions[node.id]?.dy ?? 0,
+                            child: _StoryboardNodeCard(
+                              copy: widget.copy,
+                              node: node,
+                              tone: _toneForNode(context, node.kind),
+                              selected:
+                                  widget.pendingConnectionStartId == node.id,
+                              connected: _hasConnection(
+                                node.id,
+                                widget.connections,
+                              ),
+                              connectMode: widget.connectMode,
+                              onTap: () => widget.onTapNode(node.id),
+                              onDrag: (delta) =>
+                                  widget.onMoveNode(node.id, delta),
+                            ),
+                          ),
+                        if (widget.connectMode &&
+                            widget.pendingConnectionStartId != null)
+                          Positioned(
+                            left: (widget
+                                        .positions[
+                                            widget.pendingConnectionStartId!]
+                                        ?.dx ??
+                                    0) +
+                                14,
+                            top: (widget
+                                        .positions[
+                                            widget.pendingConnectionStartId!]
+                                        ?.dy ??
+                                    0) -
+                                34,
+                            child: _StoryboardHintBubble(
+                              text: widget.copy.t('storyboardPickSecondNode'),
+                            ),
+                          ),
+                        Positioned(
+                          right: 28,
+                          bottom: 24,
+                          child: _StoryboardLegend(
+                            copy: widget.copy,
+                            nodeById: nodeById,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _StoryboardConnectionPainter(
-                        connections: Set.unmodifiable(connections),
-                        positions: Map.unmodifiable(positions),
-                        lineColor: color.primary.withValues(alpha: 0.62),
-                        shadowColor: color.primary.withValues(alpha: 0.12),
-                      ),
-                    ),
-                  ),
-                  for (final node in nodes)
-                    Positioned(
-                      left: positions[node.id]?.dx ?? 0,
-                      top: positions[node.id]?.dy ?? 0,
-                      child: _StoryboardNodeCard(
-                        copy: copy,
-                        node: node,
-                        tone: _toneForNode(context, node.kind),
-                        selected: pendingConnectionStartId == node.id,
-                        connected: _hasConnection(node.id, connections),
-                        connectMode: connectMode,
-                        onTap: () => onTapNode(node.id),
-                        onDrag: (delta) => onMoveNode(node.id, delta),
-                      ),
-                    ),
-                  if (connectMode && pendingConnectionStartId != null)
-                    Positioned(
-                      left:
-                          (positions[pendingConnectionStartId!]?.dx ?? 0) + 14,
-                      top: (positions[pendingConnectionStartId!]?.dy ?? 0) - 34,
-                      child: _StoryboardHintBubble(
-                        text: copy.t('storyboardPickSecondNode'),
-                      ),
-                    ),
-                  Positioned(
-                    right: 28,
-                    bottom: 24,
-                    child: _StoryboardLegend(copy: copy, nodeById: nodeById),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+            Positioned(
+              left: 18,
+              bottom: 18,
+              child: Tooltip(
+                message: widget.copy.t('storyboardResetView'),
+                child: IconButton.filledTonal(
+                  onPressed: _resetView,
+                  icon: const Icon(Icons.center_focus_strong_outlined),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -522,6 +591,153 @@ final class _StoryboardNodeCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _StoryboardTimeline extends StatelessWidget {
+  const _StoryboardTimeline({
+    required this.copy,
+    required this.nodes,
+  });
+
+  final WritelerCopy copy;
+  final List<_StoryboardNode> nodes;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return ColoredBox(
+      color: color.surface,
+      child: SizedBox(
+        height: 118,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.timeline_outlined, size: 18, color: color.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    copy.t('storyboardTimeline'),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    copy.t('storyboardTimelineHint'),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: nodes.length,
+                  separatorBuilder: (context, index) => SizedBox(
+                    width: 28,
+                    child: Center(
+                      child: Container(
+                        height: 2,
+                        color: color.outlineVariant,
+                      ),
+                    ),
+                  ),
+                  itemBuilder: (context, index) {
+                    final node = nodes[index];
+                    return _StoryboardTimelineStep(
+                      index: index + 1,
+                      node: node,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _StoryboardTimelineStep extends StatelessWidget {
+  const _StoryboardTimelineStep({
+    required this.index,
+    required this.node,
+  });
+
+  final int index;
+  final _StoryboardNode node;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final tone = _toneForNode(context, _StoryboardNodeKind.scene);
+    return SizedBox(
+      width: 188,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color.surfaceContainerHighest.withValues(alpha: 0.48),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.outlineVariant),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: tone.withValues(alpha: 0.32)),
+                ),
+                child: Text(
+                  '$index',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: tone,
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      node.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      node.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
