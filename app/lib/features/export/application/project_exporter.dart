@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../../core/domain/entity_type.dart';
 import '../../catalog/domain/catalog_item.dart';
 import '../../catalog/domain/relationship.dart';
 import '../../notes/domain/project_note.dart';
@@ -64,6 +65,19 @@ final class ProjectExporter {
             notes: notes,
           ),
         );
+      case ExportFormat.yWriter:
+        return _toYWriterXml(
+          project: project,
+          chapters: chapters,
+          scenes: scenes,
+          catalogItems: catalogItems,
+        );
+      case ExportFormat.scrivener:
+        return _toScrivenerOutline(
+          project: project,
+          chapters: chapters,
+          scenes: scenes,
+        );
       case ExportFormat.html:
         return _toHtml(
           project: project,
@@ -124,6 +138,12 @@ final class ProjectExporter {
       case ExportFormat.json:
         return _textArtifact('$slug.writeler.json',
             'application/json; charset=utf-8', previewText);
+      case ExportFormat.yWriter:
+        return _textArtifact(
+            '$slug.yw7', 'application/xml; charset=utf-8', previewText);
+      case ExportFormat.scrivener:
+        return _textArtifact(
+            '$slug.scrivx', 'application/xml; charset=utf-8', previewText);
       case ExportFormat.pdf:
         return ExportArtifact(
           fileName: '$slug.pdf',
@@ -406,6 +426,8 @@ final class ProjectExporter {
       ExportFormat.pdf => 'PDF',
       ExportFormat.epub => 'EPUB',
       ExportFormat.docx => 'DOCX',
+      ExportFormat.yWriter => 'yWriter',
+      ExportFormat.scrivener => 'Scrivener',
       _ => profile.format.name,
     };
     final words =
@@ -444,6 +466,142 @@ final class ProjectExporter {
       ..writeln('Relationships: ${relationships.length}')
       ..writeln('Notes: ${notes.length}')
       ..writeln();
+  }
+
+  String _toYWriterXml({
+    required Project project,
+    required List<Chapter> chapters,
+    required List<Scene> scenes,
+    required List<CatalogItem> catalogItems,
+  }) {
+    final buffer = StringBuffer()
+      ..writeln('<?xml version="1.0" encoding="UTF-8"?>')
+      ..writeln('<YWriterProject>')
+      ..writeln('  <Title>${_xml(project.title)}</Title>')
+      ..writeln('  <Description>${_xml(project.description)}</Description>')
+      ..writeln('  <Chapters>');
+
+    for (final group in _chapterGroups(chapters, scenes)) {
+      final chapterTitle = group.chapter?.title ?? 'Import';
+      buffer
+        ..writeln('    <Chapter>')
+        ..writeln('      <Title>${_xml(chapterTitle)}</Title>');
+      final summary = group.chapter?.summary.trim();
+      if (summary != null && summary.isNotEmpty) {
+        buffer.writeln('      <Description>${_xml(summary)}</Description>');
+      }
+      buffer.writeln('      <Scenes>');
+      for (final scene in group.scenes) {
+        buffer
+          ..writeln('        <Scene>')
+          ..writeln('          <Title>${_xml(scene.title)}</Title>');
+        if (scene.summary.trim().isNotEmpty) {
+          buffer.writeln(
+              '          <Description>${_xml(scene.summary.trim())}</Description>');
+        }
+        if (scene.goal?.trim().isNotEmpty ?? false) {
+          buffer.writeln('          <Goal>${_xml(scene.goal!.trim())}</Goal>');
+        }
+        if (scene.conflict?.trim().isNotEmpty ?? false) {
+          buffer.writeln(
+              '          <Conflict>${_xml(scene.conflict!.trim())}</Conflict>');
+        }
+        if (scene.outcome?.trim().isNotEmpty ?? false) {
+          buffer.writeln(
+              '          <Outcome>${_xml(scene.outcome!.trim())}</Outcome>');
+        }
+        buffer
+          ..writeln(
+              '          <Text>${_xml(scene.manuscriptText.trim())}</Text>')
+          ..writeln('        </Scene>');
+      }
+      buffer
+        ..writeln('      </Scenes>')
+        ..writeln('    </Chapter>');
+    }
+    buffer.writeln('  </Chapters>');
+
+    void writeCatalog(
+        String container, String itemTag, Iterable<CatalogItem> items) {
+      buffer.writeln('  <$container>');
+      for (final item in items) {
+        buffer
+          ..writeln('    <$itemTag>')
+          ..writeln('      <Name>${_xml(item.name)}</Name>');
+        if (item.summary.trim().isNotEmpty) {
+          buffer.writeln(
+              '      <Description>${_xml(item.summary.trim())}</Description>');
+        }
+        for (final entry in item.fields.entries) {
+          final value = entry.value?.toString().trim();
+          if (value == null || value.isEmpty) continue;
+          buffer.writeln(
+              '      <${_safeXmlName(entry.key)}>${_xml(value)}</${_safeXmlName(entry.key)}>');
+        }
+        buffer.writeln('    </$itemTag>');
+      }
+      buffer.writeln('  </$container>');
+    }
+
+    writeCatalog(
+      'Characters',
+      'Character',
+      catalogItems.where((item) => item.type == EntityType.character),
+    );
+    writeCatalog(
+      'Locations',
+      'Location',
+      catalogItems.where((item) => item.type == EntityType.location),
+    );
+    writeCatalog(
+      'Items',
+      'Item',
+      catalogItems.where((item) => item.type == EntityType.object),
+    );
+
+    buffer.writeln('</YWriterProject>');
+    return buffer.toString();
+  }
+
+  String _toScrivenerOutline({
+    required Project project,
+    required List<Chapter> chapters,
+    required List<Scene> scenes,
+  }) {
+    final buffer = StringBuffer()
+      ..writeln('<?xml version="1.0" encoding="UTF-8"?>')
+      ..writeln('<ScrivenerProject>')
+      ..writeln('  <Title>${_xml(project.title)}</Title>')
+      ..writeln('  <Binder>');
+
+    for (final group in _chapterGroups(chapters, scenes)) {
+      final chapterTitle = group.chapter?.title ?? 'Import';
+      buffer
+        ..writeln('    <BinderItem Type="Folder">')
+        ..writeln('      <Title>${_xml(chapterTitle)}</Title>');
+      final summary = group.chapter?.summary.trim();
+      if (summary != null && summary.isNotEmpty) {
+        buffer.writeln('      <Synopsis>${_xml(summary)}</Synopsis>');
+      }
+      for (final scene in group.scenes) {
+        buffer
+          ..writeln('      <BinderItem Type="Text">')
+          ..writeln('        <Title>${_xml(scene.title)}</Title>');
+        if (scene.summary.trim().isNotEmpty) {
+          buffer.writeln(
+              '        <Synopsis>${_xml(scene.summary.trim())}</Synopsis>');
+        }
+        buffer
+          ..writeln('        <Text>${_xml(scene.manuscriptText.trim())}</Text>')
+          ..writeln('      </BinderItem>');
+      }
+      buffer.writeln('    </BinderItem>');
+    }
+
+    buffer
+      ..writeln('  </Binder>')
+      ..writeln('</ScrivenerProject>');
+    return buffer.toString();
   }
 
   void _writeMarkdownNotes(
@@ -529,6 +687,19 @@ final class ProjectExporter {
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
     return slug.isEmpty ? 'writeler-export' : slug;
+  }
+
+  String _xml(String value) {
+    return const HtmlEscape(HtmlEscapeMode.element).convert(value);
+  }
+
+  String _safeXmlName(String value) {
+    final cleaned =
+        value.replaceAll(RegExp(r'[^A-Za-z0-9_.-]+'), '_').replaceFirstMapped(
+              RegExp(r'^([^A-Za-z_])'),
+              (match) => '_${match.group(1)}',
+            );
+    return cleaned.isEmpty ? 'Field' : cleaned;
   }
 }
 

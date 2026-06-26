@@ -12,6 +12,7 @@ final class _ExportCenter extends StatelessWidget {
     required this.catalogItems,
     required this.relationships,
     required this.exporter,
+    required this.format,
     required this.importController,
     required this.importPreview,
     required this.importPreviewError,
@@ -19,6 +20,7 @@ final class _ExportCenter extends StatelessWidget {
     required this.isImportDragging,
     required this.lastSyncCheckpoint,
     required this.syncImportPreview,
+    required this.onFormatChanged,
     required this.onDownloadExport,
     required this.onCopySyncCheckpoint,
     required this.onImportSourceChanged,
@@ -36,6 +38,7 @@ final class _ExportCenter extends StatelessWidget {
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
   final ProjectExporter exporter;
+  final ExportFormat format;
   final TextEditingController importController;
   final ProjectArchivePreview? importPreview;
   final String? importPreviewError;
@@ -43,6 +46,7 @@ final class _ExportCenter extends StatelessWidget {
   final bool isImportDragging;
   final SyncCheckpoint? lastSyncCheckpoint;
   final SyncEnvelopePreview? syncImportPreview;
+  final ValueChanged<ExportFormat> onFormatChanged;
   final VoidCallback onDownloadExport;
   final VoidCallback onCopySyncCheckpoint;
   final VoidCallback onImportSourceChanged;
@@ -67,7 +71,7 @@ final class _ExportCenter extends StatelessWidget {
               id: 'preview',
               projectId: project.id,
               name: copy.t('exportPreview'),
-              format: ExportFormat.json,
+              format: format,
               includeMetadata: true,
               includeSceneTitles: true,
             ),
@@ -97,6 +101,36 @@ final class _ExportCenter extends StatelessWidget {
                       Text(
                         copy.t('archiveExportBody'),
                         style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<ExportFormat>(
+                        initialValue: format,
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                        decoration: InputDecoration(
+                          labelText: copy.t('migrationExportFormat'),
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: _HelpTooltip(
+                              message: copy.t('helpMigrationExportFormat'),
+                            ),
+                          ),
+                          suffixIconConstraints:
+                              const BoxConstraints(minWidth: 42),
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          for (final item in _migrationExportFormats)
+                            DropdownMenuItem(
+                              value: item,
+                              child: Text(
+                                _exportFormatLabel(item, copy.languageCode),
+                              ),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) onFormatChanged(value);
+                        },
                       ),
                       const SizedBox(height: 12),
                       _ActionHelp(
@@ -401,6 +435,16 @@ const _publishingFormats = [
   ExportFormat.markdown,
   ExportFormat.html,
   ExportFormat.outline,
+];
+
+const _migrationExportFormats = [
+  ExportFormat.json,
+  ExportFormat.yWriter,
+  ExportFormat.scrivener,
+  ExportFormat.markdown,
+  ExportFormat.plainText,
+  ExportFormat.outline,
+  ExportFormat.html,
 ];
 
 final class _SyncStatusPanel extends StatelessWidget {

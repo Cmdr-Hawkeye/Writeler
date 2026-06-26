@@ -235,6 +235,52 @@ void main() {
     expect(paperbackPackageText, contains('Paperback print layout'));
     expect(paperbackPackageText, contains('w:rFonts w:ascii="Garamond"'));
 
+    final yWriter = exporter.exportArtifact(
+      project: project,
+      chapters: [chapter],
+      scenes: [scene],
+      catalogItems: [character],
+      profile: ExportProfile(
+        id: 'ywriter',
+        projectId: project.id,
+        name: 'yWriter',
+        format: ExportFormat.yWriter,
+      ),
+    );
+    expect(yWriter.fileName, 'exportable-book.yw7');
+    final yWriterText = utf8.decode(yWriter.bytes);
+    expect(yWriterText, contains('<YWriterProject>'));
+    expect(yWriterText, contains('<Character>'));
+    final yWriterInspection = const ProjectImporter().inspect(
+      yWriterText,
+      sourceName: yWriter.fileName,
+    );
+    expect(yWriterInspection.kind, ProjectImportKind.yWriter);
+    expect(yWriterInspection.archive.scenes.single.title, 'Scene One');
+
+    final scrivener = exporter.exportArtifact(
+      project: project,
+      chapters: [chapter],
+      scenes: [scene],
+      profile: ExportProfile(
+        id: 'scrivener',
+        projectId: project.id,
+        name: 'Scrivener',
+        format: ExportFormat.scrivener,
+      ),
+    );
+    expect(scrivener.fileName, 'exportable-book.scrivx');
+    final scrivenerText = utf8.decode(scrivener.bytes);
+    expect(scrivenerText, contains('<ScrivenerProject>'));
+    expect(scrivenerText, contains('<BinderItem Type="Text">'));
+    final scrivenerInspection = const ProjectImporter().inspect(
+      scrivenerText,
+      sourceName: scrivener.fileName,
+    );
+    expect(scrivenerInspection.kind, ProjectImportKind.scrivenerOutline);
+    expect(scrivenerInspection.archive.scenes.single.manuscriptText,
+        contains('A short authored paragraph.'));
+
     final json = jsonDecode(jsonText) as Map<String, Object?>;
     expect(json['schema'], 'writeler.project.v3');
 

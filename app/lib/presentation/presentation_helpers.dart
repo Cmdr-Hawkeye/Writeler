@@ -273,6 +273,8 @@ String _exportFormatLabel(ExportFormat format, String languageCode) {
       german ? 'Outline / Struktur' : 'Outline / structure',
     ExportFormat.json =>
       german ? 'Writeler-Archiv JSON' : 'Writeler archive JSON',
+    ExportFormat.yWriter => 'yWriter (.yw7)',
+    ExportFormat.scrivener => 'Scrivener (.scrivx)',
     ExportFormat.pdf => 'PDF',
     ExportFormat.epub => 'EPUB',
     ExportFormat.docx => 'Word (.docx)',

@@ -1,6 +1,17 @@
 import '../../../core/domain/json_map.dart';
 
-enum ExportFormat { markdown, html, plainText, outline, json, pdf, epub, docx }
+enum ExportFormat {
+  markdown,
+  html,
+  plainText,
+  outline,
+  json,
+  yWriter,
+  scrivener,
+  pdf,
+  epub,
+  docx,
+}
 
 enum PublishingStyle { manuscript, paperback, ebook, largePrint }
 

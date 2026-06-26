@@ -224,6 +224,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   String? _selectedSceneChapterId;
   DraftStatus _selectedSceneStatus = DraftStatus.planned;
   int _selectedRailIndex = 1;
+  ExportFormat _selectedExportFormat = ExportFormat.json;
   ExportFormat _selectedPublishingFormat = ExportFormat.pdf;
   PublishingStyle _selectedPublishingStyle = PublishingStyle.manuscript;
   bool _includeSceneTitles = true;
@@ -1440,7 +1441,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         id: 'ui-download',
         projectId: project.id,
         name: copy.t('exportPreview'),
-        format: ExportFormat.json,
+        format: _selectedExportFormat,
         includeMetadata: true,
         includeSceneTitles: true,
       ),
@@ -2198,6 +2199,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           exporter: _projectExporter,
           catalogItems: _catalogItems,
           relationships: _relationships,
+          format: _selectedExportFormat,
           importController: _importArchiveController,
           importPreview: _importPreview,
           importPreviewError: _importPreviewError,
@@ -2205,6 +2207,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           isImportDragging: _isImportDragging,
           lastSyncCheckpoint: _lastSyncCheckpoint,
           syncImportPreview: _syncImportPreview,
+          onFormatChanged: (format) =>
+              setState(() => _selectedExportFormat = format),
           onDownloadExport: () => _downloadExport(copy),
           onCopySyncCheckpoint: () => _copySyncCheckpoint(copy),
           onImportSourceChanged: _refreshPastedImportPreview,

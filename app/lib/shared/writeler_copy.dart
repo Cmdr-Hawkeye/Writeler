@@ -504,7 +504,8 @@ final class WritelerCopy {
     'exportDownloaded': 'Export heruntergeladen',
     'exportCancelled': 'Export abgebrochen',
     'archiveExportBody':
-        'Vollständiges Writeler-Archiv für Backup, Umzug oder Import in eine andere Writeler-Instanz.',
+        'Archiv- und Migrationsformate für Backup, Umzug oder Wechsel in ein anderes Schreibprogramm.',
+    'migrationExportFormat': 'Exportformat',
     'selfPublishingBody':
         'Lesbares Manuskript für Weitergabe, Lektorat oder Veröffentlichung.',
     'publishingFormat': 'Ausgabeformat',
@@ -539,6 +540,8 @@ final class WritelerCopy {
         'Kopiert die aktuell angezeigte Exportvorschau mit den gewählten Einstellungen in die Zwischenablage.',
     'helpExportFormat':
         'Der Export ist ein vollständiges Writeler-Archiv mit allen Projektdaten für den späteren Import.',
+    'helpMigrationExportFormat':
+        'Wählt das Zielformat. Writeler JSON bewahrt alle Daten; yWriter, Scrivener, Markdown und TXT sind freundliche Wechsel- und Austauschformate.',
     'helpPublishingFormat':
         'Legt fest, in welchem lesbaren Manuskriptformat die Veröffentlichung ausgegeben wird.',
     'helpPublishingStyle':
@@ -550,7 +553,7 @@ final class WritelerCopy {
     'helpIncludePublishingMetadata':
         'Hängt Projektinfo und Notizen an das Manuskript an. Der reine Romantext bleibt ansonsten im Vordergrund.',
     'helpDownloadExport':
-        'Erstellt eine vollständige Writeler-Archivdatei und speichert sie lokal.',
+        'Erstellt eine Datei im gewählten Exportformat und speichert sie lokal.',
     'helpDownloadManuscript':
         'Erstellt eine lesbare Manuskriptdatei im gewählten Format und speichert sie lokal.',
     'helpCopySyncCheckpoint':
@@ -1121,7 +1124,8 @@ final class WritelerCopy {
     'exportDownloaded': 'Export downloaded',
     'exportCancelled': 'Export cancelled',
     'archiveExportBody':
-        'Complete Writeler archive for backup, migration, or import into another Writeler instance.',
+        'Archive and migration formats for backup, moving, or switching to another writing tool.',
+    'migrationExportFormat': 'Export format',
     'selfPublishingBody':
         'Readable manuscript output for sharing, editing, or publishing.',
     'publishingFormat': 'Output format',
@@ -1156,6 +1160,8 @@ final class WritelerCopy {
         'Copies the current export preview with the selected options to the clipboard.',
     'helpExportFormat':
         'Export creates a complete Writeler archive with all project data for later import.',
+    'helpMigrationExportFormat':
+        'Chooses the target format. Writeler JSON preserves all data; yWriter, Scrivener, Markdown, and TXT are friendly exchange formats.',
     'helpPublishingFormat':
         'Controls which readable manuscript format is used for publishing output.',
     'helpPublishingStyle':
@@ -1167,7 +1173,7 @@ final class WritelerCopy {
     'helpIncludePublishingMetadata':
         'Appends project info and notes to the manuscript while keeping the readable text primary.',
     'helpDownloadExport':
-        'Creates a complete Writeler archive file and saves it locally.',
+        'Creates a file in the selected export format and saves it locally.',
     'helpDownloadManuscript':
         'Creates a readable manuscript file in the selected format and saves it locally.',
     'helpCopySyncCheckpoint':
