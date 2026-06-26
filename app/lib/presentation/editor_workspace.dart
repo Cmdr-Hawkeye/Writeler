@@ -672,17 +672,6 @@ final class _SceneEditorState extends State<_SceneEditor> {
                           ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Flexible(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: _SaveStatePill(
-                        copy: copy,
-                        state: widget.saveState,
-                        savedAt: widget.lastSavedAt,
-                      ),
-                    ),
-                  ),
                 ],
               );
               final focusButton = _FocusModeButton(
@@ -695,6 +684,11 @@ final class _SceneEditorState extends State<_SceneEditor> {
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
+                  _SaveStatePill(
+                    copy: copy,
+                    state: widget.saveState,
+                    savedAt: widget.lastSavedAt,
+                  ),
                   Tooltip(
                     message: copy.t('searchReplace'),
                     child: IconButton.outlined(
@@ -745,7 +739,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
                     const SizedBox(height: 10),
                     Center(child: focusButton),
                     const SizedBox(height: 10),
-                    Align(alignment: Alignment.centerLeft, child: actions),
+                    Align(alignment: Alignment.centerRight, child: actions),
                   ],
                 );
               }
@@ -931,9 +925,32 @@ final class _FocusModeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
     final label = focusMode ? copy.t('exitFocusMode') : copy.t('focusMode');
-    final caption =
-        focusMode ? copy.t('exitFocusModeCaption') : copy.t('focusModeCaption');
+    final caption = copy.t('focusModeCaption');
     final icon = focusMode ? Icons.fullscreen_exit : Icons.fullscreen;
+
+    if (focusMode) {
+      return Tooltip(
+        message: label,
+        child: Semantics(
+          button: true,
+          label: label,
+          child: OutlinedButton.icon(
+            onPressed: onPressed,
+            icon: Icon(icon, size: 18),
+            label: Text(label),
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              foregroundColor: color.onSurfaceVariant,
+              side: BorderSide(color: color.outlineVariant),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Tooltip(
       message: label,
