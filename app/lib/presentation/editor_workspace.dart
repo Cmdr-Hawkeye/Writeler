@@ -918,12 +918,10 @@ final class _ManuscriptField extends StatelessWidget {
 }
 
 enum _ManuscriptBlockFormat {
-  heading1,
-  heading2,
+  normal,
+  heading,
+  subheading,
   quote,
-  bulletList,
-  numberedList,
-  sceneBreak,
 }
 
 final class _ManuscriptFormatToolbar extends StatelessWidget {
@@ -938,6 +936,10 @@ final class _ManuscriptFormatToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: color.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+        );
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color.surfaceContainerLow,
@@ -945,89 +947,121 @@ final class _ManuscriptFormatToolbar extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            _FormatIconButton(
-              tooltip: copy.t('formatBold'),
-              icon: Icons.format_bold,
-              onPressed: () => _wrapSelection(
-                prefix: '**',
-                suffix: '**',
-                placeholder: copy.t('formatPlaceholder'),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              Text(copy.t('formatToolbarLabel'), style: textStyle),
+              const SizedBox(width: 10),
+              PopupMenuButton<_ManuscriptBlockFormat>(
+                tooltip: copy.t('formatParagraphMenu'),
+                onSelected: _applyBlockFormat,
+                itemBuilder: (context) => [
+                  _formatMenuItem(
+                    _ManuscriptBlockFormat.normal,
+                    Icons.notes,
+                    copy.t('formatNormalText'),
+                  ),
+                  _formatMenuItem(
+                    _ManuscriptBlockFormat.heading,
+                    Icons.title,
+                    copy.t('formatHeading'),
+                  ),
+                  _formatMenuItem(
+                    _ManuscriptBlockFormat.subheading,
+                    Icons.short_text,
+                    copy.t('formatSubheading'),
+                  ),
+                  _formatMenuItem(
+                    _ManuscriptBlockFormat.quote,
+                    Icons.format_quote,
+                    copy.t('formatQuote'),
+                  ),
+                ],
+                child: _FormatMenuButton(
+                  icon: Icons.text_fields,
+                  label: copy.t('formatParagraphMenu'),
+                ),
               ),
-            ),
-            _FormatIconButton(
-              tooltip: copy.t('formatItalic'),
-              icon: Icons.format_italic,
-              onPressed: () => _wrapSelection(
-                prefix: '*',
-                suffix: '*',
-                placeholder: copy.t('formatPlaceholder'),
+              _ToolbarDivider(color: color.outlineVariant),
+              _FormatIconButton(
+                tooltip: copy.t('formatBold'),
+                icon: Icons.format_bold,
+                onPressed: () => _wrapSelection(
+                  prefix: '**',
+                  suffix: '**',
+                  placeholder: copy.t('formatPlaceholder'),
+                ),
               ),
-            ),
-            _FormatIconButton(
-              tooltip: copy.t('formatEmphasis'),
-              icon: Icons.format_underlined,
-              onPressed: () => _wrapSelection(
-                prefix: '_',
-                suffix: '_',
-                placeholder: copy.t('formatPlaceholder'),
+              _FormatIconButton(
+                tooltip: copy.t('formatItalic'),
+                icon: Icons.format_italic,
+                onPressed: () => _wrapSelection(
+                  prefix: '*',
+                  suffix: '*',
+                  placeholder: copy.t('formatPlaceholder'),
+                ),
               ),
-            ),
-            _ToolbarDivider(color: color.outlineVariant),
-            PopupMenuButton<_ManuscriptBlockFormat>(
-              tooltip: copy.t('formatParagraphMenu'),
-              icon: const Icon(Icons.text_fields),
-              onSelected: _applyBlockFormat,
-              itemBuilder: (context) => [
-                _formatMenuItem(
-                  _ManuscriptBlockFormat.heading1,
-                  Icons.title,
-                  copy.t('formatHeading1'),
+              _FormatIconButton(
+                tooltip: copy.t('formatUnderline'),
+                icon: Icons.format_underlined,
+                onPressed: () => _wrapSelection(
+                  prefix: '<u>',
+                  suffix: '</u>',
+                  placeholder: copy.t('formatPlaceholder'),
                 ),
-                _formatMenuItem(
-                  _ManuscriptBlockFormat.heading2,
-                  Icons.short_text,
-                  copy.t('formatHeading2'),
+              ),
+              _FormatIconButton(
+                tooltip: copy.t('formatStrikethrough'),
+                icon: Icons.format_strikethrough,
+                onPressed: () => _wrapSelection(
+                  prefix: '~~',
+                  suffix: '~~',
+                  placeholder: copy.t('formatPlaceholder'),
                 ),
-                _formatMenuItem(
-                  _ManuscriptBlockFormat.quote,
-                  Icons.format_quote,
-                  copy.t('formatQuote'),
+              ),
+              _ToolbarDivider(color: color.outlineVariant),
+              _FormatIconButton(
+                tooltip: copy.t('formatQuote'),
+                icon: Icons.format_quote,
+                onPressed: () => _prefixSelectedLines(
+                  (_, line) => '> ${_stripLinePrefix(line)}',
                 ),
-                _formatMenuItem(
-                  _ManuscriptBlockFormat.bulletList,
-                  Icons.format_list_bulleted,
-                  copy.t('formatBulletedList'),
+              ),
+              _FormatIconButton(
+                tooltip: copy.t('formatBulletedList'),
+                icon: Icons.format_list_bulleted,
+                onPressed: () => _prefixSelectedLines(
+                  (_, line) => '- ${_stripLinePrefix(line)}',
                 ),
-                _formatMenuItem(
-                  _ManuscriptBlockFormat.numberedList,
-                  Icons.format_list_numbered,
-                  copy.t('formatNumberedList'),
+              ),
+              _FormatIconButton(
+                tooltip: copy.t('formatNumberedList'),
+                icon: Icons.format_list_numbered,
+                onPressed: () => _prefixSelectedLines(
+                  (index, line) => '${index + 1}. ${_stripLinePrefix(line)}',
                 ),
-                _formatMenuItem(
-                  _ManuscriptBlockFormat.sceneBreak,
-                  Icons.horizontal_rule,
-                  copy.t('formatSceneBreak'),
-                ),
-              ],
-            ),
-            _ToolbarDivider(color: color.outlineVariant),
-            _FormatIconButton(
-              tooltip: copy.t('formatSceneBreak'),
-              icon: Icons.horizontal_rule,
-              onPressed: () => _insertBlock('***'),
-            ),
-            _FormatIconButton(
-              tooltip: copy.t('formatDialogueDash'),
-              icon: Icons.keyboard_return,
-              onPressed: () => _insertAtCursor('- '),
-            ),
-          ],
+              ),
+              _ToolbarDivider(color: color.outlineVariant),
+              _FormatIconButton(
+                tooltip: copy.t('formatOutdent'),
+                icon: Icons.format_indent_decrease,
+                onPressed: _outdentSelection,
+              ),
+              _FormatIconButton(
+                tooltip: copy.t('formatIndent'),
+                icon: Icons.format_indent_increase,
+                onPressed: _indentSelection,
+              ),
+              _ToolbarDivider(color: color.outlineVariant),
+              _FormatIconButton(
+                tooltip: copy.t('formatClear'),
+                icon: Icons.format_clear,
+                onPressed: _clearSelectionFormatting,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1052,20 +1086,15 @@ final class _ManuscriptFormatToolbar extends StatelessWidget {
 
   void _applyBlockFormat(_ManuscriptBlockFormat format) {
     switch (format) {
-      case _ManuscriptBlockFormat.heading1:
+      case _ManuscriptBlockFormat.normal:
+        _prefixSelectedLines(
+            (_, line) => _stripLinePrefix(_stripHeading(line)));
+      case _ManuscriptBlockFormat.heading:
         _prefixSelectedLines((_, line) => '# ${_stripHeading(line)}');
-      case _ManuscriptBlockFormat.heading2:
+      case _ManuscriptBlockFormat.subheading:
         _prefixSelectedLines((_, line) => '## ${_stripHeading(line)}');
       case _ManuscriptBlockFormat.quote:
         _prefixSelectedLines((_, line) => '> ${_stripLinePrefix(line)}');
-      case _ManuscriptBlockFormat.bulletList:
-        _prefixSelectedLines((_, line) => '- ${_stripLinePrefix(line)}');
-      case _ManuscriptBlockFormat.numberedList:
-        _prefixSelectedLines(
-          (index, line) => '${index + 1}. ${_stripLinePrefix(line)}',
-        );
-      case _ManuscriptBlockFormat.sceneBreak:
-        _insertBlock('***');
     }
   }
 
@@ -1080,11 +1109,20 @@ final class _ManuscriptFormatToolbar extends StatelessWidget {
     final selectedText = selection.isCollapsed
         ? placeholder
         : text.substring(selection.start, selection.end);
-    final replacement = '$prefix$selectedText$suffix';
+    final alreadyWrapped =
+        !selection.isCollapsed && _hasWrapping(selectedText, prefix, suffix);
+    final replacement = alreadyWrapped
+        ? selectedText.substring(
+            prefix.length,
+            selectedText.length - suffix.length,
+          )
+        : '$prefix$selectedText$suffix';
     final updated =
         text.replaceRange(selection.start, selection.end, replacement);
-    final selectionStart = selection.start + prefix.length;
-    final selectionEnd = selectionStart + selectedText.length;
+    final selectionStart =
+        selection.start + (alreadyWrapped ? 0 : prefix.length);
+    final selectionEnd = selectionStart +
+        (alreadyWrapped ? replacement.length : selectedText.length);
     controller.value = value.copyWith(
       text: updated,
       selection: selection.isCollapsed
@@ -1094,6 +1132,12 @@ final class _ManuscriptFormatToolbar extends StatelessWidget {
               offset: selection.start + replacement.length),
       composing: TextRange.empty,
     );
+  }
+
+  bool _hasWrapping(String selectedText, String prefix, String suffix) {
+    return selectedText.length >= prefix.length + suffix.length &&
+        selectedText.startsWith(prefix) &&
+        selectedText.endsWith(suffix);
   }
 
   void _prefixSelectedLines(String Function(int index, String line) transform) {
@@ -1120,36 +1164,51 @@ final class _ManuscriptFormatToolbar extends StatelessWidget {
     );
   }
 
-  void _insertBlock(String block) {
+  void _indentSelection() {
+    _prefixSelectedLines((_, line) => line.isEmpty ? line : '  $line');
+  }
+
+  void _outdentSelection() {
+    _prefixSelectedLines(
+      (_, line) => line.replaceFirst(RegExp(r'^\s{1,2}'), ''),
+    );
+  }
+
+  void _clearSelectionFormatting() {
     final value = controller.value;
     final text = value.text;
     final selection = _safeSelection(value);
-    final before = selection.start == 0 ||
-            text.substring(0, selection.start).endsWith('\n\n')
-        ? ''
-        : '\n\n';
-    final after = selection.end >= text.length ||
-            text.substring(selection.end).startsWith('\n\n')
-        ? ''
-        : '\n\n';
-    _replaceRange(selection, '$before$block$after');
-  }
+    final selectedText = selection.isCollapsed
+        ? _currentLine(text, selection)
+        : text.substring(selection.start, selection.end);
+    final replacement = _clearInlineFormatting(selectedText)
+        .split('\n')
+        .map((line) => _stripLinePrefix(_stripHeading(line)))
+        .join('\n');
 
-  void _insertAtCursor(String insert) {
-    final value = controller.value;
-    final selection = _safeSelection(value);
-    _replaceRange(selection, insert);
-  }
+    if (selection.isCollapsed) {
+      final lineStart =
+          text.lastIndexOf('\n', math.max(0, selection.start - 1)) + 1;
+      final lineEnd = _selectedLineEnd(text, selection);
+      final updated = text.replaceRange(lineStart, lineEnd, replacement);
+      controller.value = value.copyWith(
+        text: updated,
+        selection: TextSelection.collapsed(
+          offset: math.min(lineStart + replacement.length, updated.length),
+        ),
+        composing: TextRange.empty,
+      );
+      return;
+    }
 
-  void _replaceRange(TextSelection selection, String replacement) {
-    final value = controller.value;
-    final text = value.text;
     final updated =
         text.replaceRange(selection.start, selection.end, replacement);
-    final offset = selection.start + replacement.length;
     controller.value = value.copyWith(
       text: updated,
-      selection: TextSelection.collapsed(offset: offset),
+      selection: TextSelection(
+        baseOffset: selection.start,
+        extentOffset: selection.start + replacement.length,
+      ),
       composing: TextRange.empty,
     );
   }
@@ -1185,6 +1244,76 @@ final class _ManuscriptFormatToolbar extends StatelessWidget {
     return line
         .replaceFirst(RegExp(r'^\s{0,3}([>*-]|\d+\.)\s+'), '')
         .trimLeft();
+  }
+
+  String _currentLine(String text, TextSelection selection) {
+    final lineStart =
+        text.lastIndexOf('\n', math.max(0, selection.start - 1)) + 1;
+    final lineEnd = _selectedLineEnd(text, selection);
+    return text.substring(lineStart, lineEnd);
+  }
+
+  String _clearInlineFormatting(String text) {
+    return text
+        .replaceAllMapped(
+          RegExp(r'\*\*(.*?)\*\*', dotAll: true),
+          (match) => match.group(1) ?? '',
+        )
+        .replaceAllMapped(
+          RegExp(r'~~(.*?)~~', dotAll: true),
+          (match) => match.group(1) ?? '',
+        )
+        .replaceAllMapped(
+          RegExp(r'<u>(.*?)</u>', caseSensitive: false, dotAll: true),
+          (match) => match.group(1) ?? '',
+        )
+        .replaceAllMapped(
+          RegExp(r'\*(.*?)\*', dotAll: true),
+          (match) => match.group(1) ?? '',
+        );
+  }
+}
+
+final class _FormatMenuButton extends StatelessWidget {
+  const _FormatMenuButton({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: color.onSurfaceVariant),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 18,
+              color: color.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
