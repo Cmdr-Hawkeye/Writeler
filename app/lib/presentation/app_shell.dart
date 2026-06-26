@@ -271,6 +271,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.write,
     ),
     _WorkspaceNavItem(
+      index: 17,
+      icon: Icons.polyline_outlined,
+      selectedIcon: Icons.polyline,
+      labelBuilder: (copy) => copy.t('storyboard'),
+      group: _WorkspaceNavGroup.write,
+    ),
+    _WorkspaceNavItem(
       index: 1,
       icon: Icons.edit_note_outlined,
       selectedIcon: Icons.edit_note,
@@ -1773,6 +1780,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         1 => copy.t('manuscript'),
         2 => copy.t('structureCockpit'),
         13 => copy.t('sceneBoard'),
+        17 => copy.t('storyboard'),
         3 => copy.t('characters'),
         4 => copy.t('locations'),
         5 => copy.t('objects'),
@@ -1793,6 +1801,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         1 => Icons.edit_note_outlined,
         2 => Icons.account_tree_outlined,
         13 => Icons.view_kanban_outlined,
+        17 => Icons.polyline_outlined,
         3 => Icons.person_outline,
         4 => Icons.place_outlined,
         5 => Icons.category_outlined,
@@ -2058,6 +2067,13 @@ final class _WritelerShellState extends State<WritelerShell> {
           onCreateScene: () => _showCreateSceneDialog(copy),
           onDeleteScene: (scene) => _deleteScene(scene, copy),
           onChangeSceneStatus: _changeSceneStatus,
+        ),
+      17 => _StoryboardWorkspace(
+          copy: copy,
+          project: _selectedProject,
+          scenes: _scenes,
+          catalogItems: _catalogItems,
+          notes: _notes,
         ),
       3 => _CatalogWorkspace(
           copy: copy,
