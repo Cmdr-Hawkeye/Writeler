@@ -660,7 +660,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final compactHeader = constraints.maxWidth < 760;
+              final compactHeader = constraints.maxWidth < 900;
               final titleRow = Row(
                 children: [
                   Expanded(
@@ -684,6 +684,11 @@ final class _SceneEditorState extends State<_SceneEditor> {
                     ),
                   ),
                 ],
+              );
+              final focusButton = _FocusModeButton(
+                copy: copy,
+                focusMode: widget.focusMode,
+                onPressed: () => widget.onFocusModeChanged(!widget.focusMode),
               );
               final actions = Wrap(
                 spacing: 8,
@@ -725,21 +730,6 @@ final class _SceneEditorState extends State<_SceneEditor> {
                       ],
                     ),
                   ),
-                  Tooltip(
-                    message: widget.focusMode
-                        ? copy.t('exitFocusMode')
-                        : copy.t('focusMode'),
-                    child: IconButton.outlined(
-                      isSelected: widget.focusMode,
-                      onPressed: () =>
-                          widget.onFocusModeChanged(!widget.focusMode),
-                      icon: Icon(
-                        widget.focusMode
-                            ? Icons.fullscreen_exit
-                            : Icons.fullscreen,
-                      ),
-                    ),
-                  ),
                   FilledButton.icon(
                     onPressed: widget.onSaveScene,
                     icon: const Icon(Icons.save_outlined),
@@ -752,7 +742,9 @@ final class _SceneEditorState extends State<_SceneEditor> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     titleRow,
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
+                    Center(child: focusButton),
+                    const SizedBox(height: 10),
                     Align(alignment: Alignment.centerLeft, child: actions),
                   ],
                 );
@@ -761,7 +753,14 @@ final class _SceneEditorState extends State<_SceneEditor> {
                 children: [
                   Expanded(child: titleRow),
                   const SizedBox(width: 12),
-                  actions,
+                  focusButton,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: actions,
+                    ),
+                  ),
                 ],
               );
             },
@@ -913,6 +912,80 @@ final class _ManuscriptField extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+final class _FocusModeButton extends StatelessWidget {
+  const _FocusModeButton({
+    required this.copy,
+    required this.focusMode,
+    required this.onPressed,
+  });
+
+  final WritelerCopy copy;
+  final bool focusMode;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final label = focusMode ? copy.t('exitFocusMode') : copy.t('focusMode');
+    final caption =
+        focusMode ? copy.t('exitFocusModeCaption') : copy.t('focusModeCaption');
+    final icon = focusMode ? Icons.fullscreen_exit : Icons.fullscreen;
+
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        label: '$label. $caption',
+        child: FilledButton.tonal(
+          onPressed: onPressed,
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            backgroundColor:
+                focusMode ? color.primaryContainer : color.secondaryContainer,
+            foregroundColor: focusMode
+                ? color.onPrimaryContainer
+                : color.onSecondaryContainer,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 21),
+              const SizedBox(width: 10),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: focusMode
+                              ? color.onPrimaryContainer
+                              : color.onSecondaryContainer,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  Text(
+                    caption,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: (focusMode
+                                  ? color.onPrimaryContainer
+                                  : color.onSecondaryContainer)
+                              .withValues(alpha: 0.78),
+                        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
