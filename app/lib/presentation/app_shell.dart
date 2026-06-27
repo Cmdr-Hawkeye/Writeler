@@ -336,6 +336,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.review,
     ),
     _WorkspaceNavItem(
+      index: 18,
+      icon: Icons.auto_graph_outlined,
+      selectedIcon: Icons.auto_graph,
+      labelBuilder: (copy) => copy.t('styleCockpit'),
+      group: _WorkspaceNavGroup.review,
+    ),
+    _WorkspaceNavItem(
       index: 7,
       icon: Icons.sticky_note_2_outlined,
       selectedIcon: Icons.sticky_note_2,
@@ -1942,6 +1949,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         14 => copy.t('timeline'),
         15 => copy.t('relationshipGraph'),
         6 => copy.t('analysis'),
+        18 => copy.t('styleCockpit'),
         7 => copy.t('notesCockpit'),
         8 => copy.t('aiWorkshop'),
         9 => copy.t('exports'),
@@ -1963,6 +1971,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         14 => Icons.timeline_outlined,
         15 => Icons.hub_outlined,
         6 => Icons.query_stats_outlined,
+        18 => Icons.auto_graph_outlined,
         7 => Icons.sticky_note_2_outlined,
         8 => Icons.psychology_alt_outlined,
         9 => Icons.ios_share_outlined,
@@ -2301,6 +2310,16 @@ final class _WritelerShellState extends State<WritelerShell> {
           scenes: _scenes,
           catalogItems: _catalogItems,
           relationships: _relationships,
+          onOpenScene: (scene) {
+            _selectScene(scene);
+            setState(() => _selectedRailIndex = 1);
+          },
+        ),
+      18 => _StyleCockpit(
+          copy: copy,
+          chapters: _chapters,
+          scenes: _scenes,
+          selectedScene: _selectedScene,
           onOpenScene: (scene) {
             _selectScene(scene);
             setState(() => _selectedRailIndex = 1);
