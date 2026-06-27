@@ -221,6 +221,14 @@ final class WritelerCopy {
     'noScenesBody':
         'Lege eine Szene an, um Manuskript, Ziel, Konflikt und Ausgang zu planen.',
     'manuscript': 'Manuskript',
+    'manuscriptMode': 'Manuskriptmodus',
+    'sceneMode': 'Szene',
+    'fullManuscriptMode': 'Gesamtmanuskript',
+    'fullManuscriptEmptyTitle': 'Noch keine Szenen im Manuskript',
+    'fullManuscriptEmptyBody':
+        'Lege Szenen an, um das Manuskript fortlaufend zu bearbeiten.',
+    'changedScenes': 'geänderte Szenen',
+    'saveChangedScenes': 'Änderungen speichern',
     'saveScene': 'Szene speichern',
     'sceneSaved': 'Szene gespeichert',
     'selectScene': 'Wähle eine Szene aus',
@@ -933,6 +941,14 @@ final class WritelerCopy {
     'noScenesBody':
         'Create a scene to plan manuscript, goal, conflict, and outcome.',
     'manuscript': 'Manuscript',
+    'manuscriptMode': 'Manuscript mode',
+    'sceneMode': 'Scene',
+    'fullManuscriptMode': 'Full manuscript',
+    'fullManuscriptEmptyTitle': 'No scenes in the manuscript yet',
+    'fullManuscriptEmptyBody':
+        'Create scenes to edit the manuscript as one continuous flow.',
+    'changedScenes': 'changed scenes',
+    'saveChangedScenes': 'Save changes',
     'saveScene': 'Save Scene',
     'sceneSaved': 'Scene saved',
     'selectScene': 'Select a scene',

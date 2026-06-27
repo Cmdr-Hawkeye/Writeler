@@ -485,6 +485,94 @@ void main() {
     expect(find.byTooltip('Bold'), findsNothing);
   });
 
+  testWidgets('full manuscript mode edits scenes without flattening structure',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final chapterRepository = InMemoryChapterRepository();
+    final sceneRepository = InMemorySceneRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Continuous Book'),
+    );
+    final chapter = await CreateChapter(chapterRepository)(
+      CreateChapterCommand(
+        projectId: project.id,
+        title: 'Chapter Flow',
+        orderIndex: 1,
+      ),
+    );
+    final firstScene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(
+        projectId: project.id,
+        chapterId: chapter.id,
+        title: 'First Beat',
+      ),
+    );
+    final secondScene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(
+        projectId: project.id,
+        chapterId: chapter.id,
+        title: 'Second Beat',
+        orderIndex: 2,
+      ),
+    );
+    await sceneRepository.save(
+      firstScene.copyWith(manuscriptText: 'Alpha opening.'),
+    );
+    await sceneRepository.save(
+      secondScene.copyWith(manuscriptText: 'Beta turn.'),
+    );
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: chapterRepository,
+        sceneRepository: sceneRepository,
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Editor').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Full manuscript'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chapter Flow'), findsWidgets);
+    expect(find.text('First Beat'), findsOneWidget);
+    expect(find.text('Second Beat'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(ValueKey('full-manuscript-field-${firstScene.id}')),
+      'Alpha opening.\nA new line in the same scene.',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    final updatedFirst = await sceneRepository.findById(firstScene.id);
+    final updatedSecond = await sceneRepository.findById(secondScene.id);
+    expect(
+      updatedFirst?.manuscriptText,
+      'Alpha opening.\nA new line in the same scene.',
+    );
+    expect(updatedFirst?.chapterId, chapter.id);
+    expect(updatedSecond?.manuscriptText, 'Beta turn.');
+    expect(updatedSecond?.chapterId, chapter.id);
+  });
+
   testWidgets('relationship graph explains required endpoints', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

@@ -673,6 +673,61 @@ final class _WritelerShellState extends State<WritelerShell> {
     }
   }
 
+  Future<void> _saveSceneManuscriptText(
+    Scene scene,
+    String manuscriptText,
+    WritelerCopy copy,
+  ) async {
+    final project = _selectedProject;
+    if (project == null) return;
+
+    final current = _scenes.firstWhere(
+      (item) => item.id == scene.id,
+      orElse: () => scene,
+    );
+    if (current.manuscriptText == manuscriptText) return;
+
+    final updated = current.copyWith(manuscriptText: manuscriptText);
+    if (_shouldCreateAutomaticSnapshot(current, updated)) {
+      await _createSceneSnapshot(
+        current,
+        reason: SceneSnapshotReason.majorEdit,
+      );
+    }
+    await widget.sceneRepository.save(updated);
+    final scenes = await widget.sceneRepository.listByProject(project.id);
+
+    if (!mounted) return;
+    final stillSelected = _selectedScene?.id == updated.id;
+    setState(() {
+      _scenes = scenes;
+      if (stillSelected) {
+        _selectedScene = updated;
+        _syncingSceneControllers = true;
+        try {
+          _manuscriptController.text = manuscriptText;
+        } finally {
+          _syncingSceneControllers = false;
+        }
+        _sceneSaveState = _SceneSaveState.saved;
+        _lastSceneSavedAt = updated.updatedAt;
+      }
+    });
+    await _recordProjectMetric(
+      eventType: 'scene.saved',
+      value: updated.actualWordCount,
+      metadata: {
+        'sceneId': updated.id,
+        'title': updated.title,
+        'source': 'fullManuscript',
+      },
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('sceneSaved'))),
+    );
+  }
+
   Scene _sceneDraftFromControllers(Scene scene) {
     final wordTargetText = _wordTargetController.text.trim();
     final wordTarget = int.tryParse(wordTargetText);
@@ -2195,6 +2250,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           onDeleteSceneSnapshot: (snapshot) =>
               _deleteSceneSnapshot(snapshot, copy),
           onSaveScene: () => _saveSelectedScene(copy),
+          onSaveSceneManuscript: (scene, manuscriptText) =>
+              _saveSceneManuscriptText(scene, manuscriptText, copy),
         ),
       2 => _SceneBoard(
           copy: copy,

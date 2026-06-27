@@ -43,6 +43,7 @@ final class _WorkspaceView extends StatelessWidget {
     required this.onRestoreSceneSnapshot,
     required this.onDeleteSceneSnapshot,
     required this.onSaveScene,
+    required this.onSaveSceneManuscript,
   });
 
   final WritelerCopy copy;
@@ -86,6 +87,8 @@ final class _WorkspaceView extends StatelessWidget {
   final ValueChanged<SceneSnapshot> onRestoreSceneSnapshot;
   final ValueChanged<SceneSnapshot> onDeleteSceneSnapshot;
   final VoidCallback onSaveScene;
+  final Future<void> Function(Scene scene, String manuscriptText)
+      onSaveSceneManuscript;
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +136,7 @@ final class _WorkspaceView extends StatelessWidget {
       onRestoreSceneSnapshot: onRestoreSceneSnapshot,
       onDeleteSceneSnapshot: onDeleteSceneSnapshot,
       onSaveScene: onSaveScene,
+      onSaveSceneManuscript: onSaveSceneManuscript,
     );
 
     return LayoutBuilder(
