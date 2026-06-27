@@ -445,7 +445,8 @@ final class _ProjectLibrary extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(
-              '${copy.t('localOnly')} - ${project.projectType}',
+              '${copy.t('localOnly')} - '
+              '${_projectTypeLabel(project.projectType, copy)}',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),

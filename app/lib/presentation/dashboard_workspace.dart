@@ -265,6 +265,8 @@ final class _ProjectOverview extends StatelessWidget {
     final wordProgress = wordTarget == null || wordTarget <= 0
         ? null
         : (words / wordTarget).clamp(0.0, 1.0);
+    final targetProgressLabel =
+        _projectTargetProgressLabel(project, words, copy);
     final pendingSuggestionItems = suggestions
         .where((suggestion) =>
             suggestion.userDecision == SuggestionDecision.pending)
@@ -402,8 +404,7 @@ final class _ProjectOverview extends StatelessWidget {
           const SizedBox(height: 24),
           _DashboardPulse(
             copy: copy,
-            words: words,
-            wordTarget: wordTarget,
+            targetProgressLabel: targetProgressLabel,
             wordProgress: wordProgress,
             scenes: scenes.length,
             chapters: chapters.length,
@@ -578,8 +579,7 @@ final class _ProjectOverview extends StatelessWidget {
 final class _DashboardPulse extends StatelessWidget {
   const _DashboardPulse({
     required this.copy,
-    required this.words,
-    required this.wordTarget,
+    required this.targetProgressLabel,
     required this.wordProgress,
     required this.scenes,
     required this.chapters,
@@ -588,8 +588,7 @@ final class _DashboardPulse extends StatelessWidget {
   });
 
   final WritelerCopy copy;
-  final int words;
-  final int? wordTarget;
+  final String targetProgressLabel;
   final double? wordProgress;
   final int scenes;
   final int chapters;
@@ -623,9 +622,7 @@ final class _DashboardPulse extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  wordTarget == null || wordTarget! <= 0
-                      ? '$words ${copy.t('words')}'
-                      : '$words / $wordTarget ${copy.t('words')}',
+                  targetProgressLabel,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
@@ -740,7 +737,8 @@ final class _StatisticsWorkspace extends StatelessWidget {
           if (progress != null) ...[
             const SizedBox(height: 24),
             Text(
-              '${copy.t('targetProgress')}: $words / $target',
+              '${copy.t('projectTargetProgress')}: '
+              '${_projectTargetProgressLabel(project, words, copy)}',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 10),

@@ -166,8 +166,8 @@ final class AIProjectPromptBuilder {
           ? 'Projektstatus: ${project.status.wireName}'
           : 'Project status: ${project.status.wireName}',
       german
-          ? 'Zielwortzahl: ${project.wordTarget ?? 'nicht gesetzt'}'
-          : 'Word target: ${project.wordTarget ?? 'not set'}',
+          ? 'Projektumfang: ${_projectTargetDescription(project, german: true)}'
+          : 'Project scope: ${_projectTargetDescription(project, german: false)}',
       german
           ? 'Kapitel (${orderedChapters.length}): ${_chapterSummary(orderedChapters, german: true)}'
           : 'Chapters (${orderedChapters.length}): ${_chapterSummary(orderedChapters, german: false)}',
@@ -186,6 +186,35 @@ final class AIProjectPromptBuilder {
   static String _fallback(String? value, String fallback) {
     final trimmed = value?.trim();
     return trimmed == null || trimmed.isEmpty ? fallback : trimmed;
+  }
+
+  static String _projectTargetDescription(
+    Project project, {
+    required bool german,
+  }) {
+    final wordTarget = project.wordTarget;
+    if (wordTarget == null || wordTarget <= 0) {
+      return german ? 'nicht gesetzt' : 'not set';
+    }
+    if (project.metadata['targetUnit'] == 'pages') {
+      final wordsPerPage =
+          _metadataInt(project.metadata['wordsPerPageEstimate']) ?? 250;
+      final pageTarget = _metadataInt(project.metadata['pageTarget']) ??
+          (wordTarget / wordsPerPage).round();
+      return german
+          ? '$pageTarget Seiten (geschätzt $wordTarget Wörter)'
+          : '$pageTarget pages (estimated $wordTarget words)';
+    }
+    return german ? '$wordTarget Wörter' : '$wordTarget words';
+  }
+
+  static int? _metadataInt(Object? value) {
+    return switch (value) {
+      int() => value,
+      double() => value.round(),
+      String() => int.tryParse(value),
+      _ => null,
+    };
   }
 
   static String _chapterSummary(

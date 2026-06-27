@@ -11,6 +11,7 @@ final class _ProjectWizardResult {
     required this.languageCode,
     required this.description,
     required this.wordTarget,
+    required this.metadata,
   });
 
   final String title;
@@ -19,7 +20,10 @@ final class _ProjectWizardResult {
   final String languageCode;
   final String description;
   final int? wordTarget;
+  final Map<String, Object?> metadata;
 }
+
+enum _ProjectTargetUnit { words, pages }
 
 final class _ProjectWizardDialog extends StatefulWidget {
   const _ProjectWizardDialog({required this.copy});
@@ -39,6 +43,7 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
       TextEditingController();
   var _step = 0;
   var _projectType = 'novel';
+  var _targetUnit = _ProjectTargetUnit.words;
   late var _languageCode = WritelerCopy.normalizeLanguageCode(
     Localizations.localeOf(context).languageCode,
   );
@@ -84,18 +89,11 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
                 border: const OutlineInputBorder(),
               ),
               items: [
-                DropdownMenuItem(
-                  value: 'novel',
-                  child: Text(copy.t('projectTypeNovel')),
-                ),
-                DropdownMenuItem(
-                  value: 'shortStory',
-                  child: Text(copy.t('projectTypeShortStory')),
-                ),
-                DropdownMenuItem(
-                  value: 'nonfiction',
-                  child: Text(copy.t('projectTypeNonfiction')),
-                ),
+                for (final option in _projectTypeOptions)
+                  DropdownMenuItem(
+                    value: option.value,
+                    child: Text(copy.t(option.labelKey)),
+                  ),
               ],
               onChanged: (value) {
                 if (value != null) setState(() => _projectType = value);
@@ -126,10 +124,37 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
       _ProjectWizardStep(
         title: copy.t('projectWizardScope'),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SegmentedButton<_ProjectTargetUnit>(
+              segments: [
+                ButtonSegment(
+                  value: _ProjectTargetUnit.words,
+                  icon: const Icon(Icons.notes_outlined),
+                  label: Text(copy.t('targetUnitWords')),
+                ),
+                ButtonSegment(
+                  value: _ProjectTargetUnit.pages,
+                  icon: const Icon(Icons.description_outlined),
+                  label: Text(copy.t('targetUnitPages')),
+                ),
+              ],
+              selected: {_targetUnit},
+              onSelectionChanged: (selection) {
+                setState(() => _targetUnit = selection.single);
+              },
+            ),
+            const SizedBox(height: 12),
             TextField(
               controller: _wordTargetController,
-              decoration: InputDecoration(labelText: copy.t('wordTarget')),
+              decoration: InputDecoration(
+                labelText: _targetUnit == _ProjectTargetUnit.pages
+                    ? copy.t('pageTarget')
+                    : copy.t('wordTarget'),
+                helperText: _targetUnit == _ProjectTargetUnit.pages
+                    ? copy.t('pageTargetHelper')
+                    : null,
+              ),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
@@ -195,14 +220,27 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
   }
 
   _ProjectWizardResult _result() {
-    final wordTargetText = _wordTargetController.text.trim();
+    final targetText = _wordTargetController.text.trim();
+    final targetValue = int.tryParse(targetText);
+    final wordTarget = switch (_targetUnit) {
+      _ProjectTargetUnit.words => targetValue,
+      _ProjectTargetUnit.pages =>
+        targetValue == null ? null : targetValue * _estimatedWordsPerPage,
+    };
     return _ProjectWizardResult(
       title: _titleController.text.trim(),
       authorName: _authorController.text.trim(),
       projectType: _projectType,
       languageCode: _languageCode,
       description: _descriptionController.text.trim(),
-      wordTarget: wordTargetText.isEmpty ? null : int.tryParse(wordTargetText),
+      wordTarget: wordTarget,
+      metadata: {
+        'targetUnit': _targetUnit.name,
+        if (_targetUnit == _ProjectTargetUnit.pages && targetValue != null)
+          'pageTarget': targetValue,
+        if (_targetUnit == _ProjectTargetUnit.pages)
+          'wordsPerPageEstimate': _estimatedWordsPerPage,
+      },
     );
   }
 }
@@ -270,6 +308,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
         languageCode: result.languageCode,
         wordTarget: result.wordTarget,
         metadata: {
+          ...result.metadata,
           if (result.authorName.isNotEmpty) 'authorName': result.authorName,
         },
       ),

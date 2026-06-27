@@ -1294,17 +1294,42 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _saveProjectAuthorName(String authorName) async {
+  Future<void> _saveProjectMetadata(_ProjectMetadataUpdate update) async {
     final project = _selectedProject;
     if (project == null) return;
-    final trimmed = authorName.trim();
+    final authorName = update.authorName.trim();
     final metadata = Map<String, Object?>.from(project.metadata);
-    if (trimmed.isEmpty) {
+    if (authorName.isEmpty) {
       metadata.remove('authorName');
     } else {
-      metadata['authorName'] = trimmed;
+      metadata['authorName'] = authorName;
     }
-    final updated = project.copyWith(metadata: metadata);
+    final targetValue = update.targetValue;
+    final int? wordTarget = switch (update.targetUnit) {
+      _ProjectTargetUnit.words => targetValue,
+      _ProjectTargetUnit.pages =>
+        targetValue == null ? null : targetValue * _estimatedWordsPerPage,
+    };
+    if (targetValue == null) {
+      metadata.remove('targetUnit');
+      metadata.remove('pageTarget');
+      metadata.remove('wordsPerPageEstimate');
+    } else {
+      metadata['targetUnit'] = update.targetUnit.name;
+      if (update.targetUnit == _ProjectTargetUnit.pages) {
+        metadata['pageTarget'] = targetValue;
+        metadata['wordsPerPageEstimate'] = _estimatedWordsPerPage;
+      } else {
+        metadata.remove('pageTarget');
+        metadata.remove('wordsPerPageEstimate');
+      }
+    }
+    final updated = project.copyWith(
+      projectType: update.projectType,
+      wordTarget: wordTarget,
+      clearWordTarget: targetValue == null,
+      metadata: metadata,
+    );
     await widget.projectRepository.save(updated);
     final projects = await widget.projectRepository.listActive();
     if (!mounted) return;
@@ -1313,8 +1338,12 @@ final class _WritelerShellState extends State<WritelerShell> {
       _selectedProject = updated;
     });
     await _recordProjectMetric(
-      eventType: 'project.author.updated',
-      metadata: {'authorNameSet': trimmed.isNotEmpty},
+      eventType: 'project.metadata.updated',
+      metadata: {
+        'authorNameSet': authorName.isNotEmpty,
+        'projectType': update.projectType,
+        'targetUnit': targetValue == null ? null : update.targetUnit.name,
+      },
     );
   }
 
@@ -2666,7 +2695,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               setState(() => _providerEnabled = enabled),
           onSaveProviderConfig: () => _saveProviderConfig(copy),
           onDeleteProviderApiKey: () => _deleteProviderApiKey(copy),
-          onSaveProjectAuthorName: _saveProjectAuthorName,
+          onSaveProjectMetadata: _saveProjectMetadata,
           onSaveProfileSettings: widget.onGlobalProfileSettingsChanged,
           spellCheckSettings: widget.spellCheckSettings,
           onSpellCheckSettingsChanged: widget.onSpellCheckSettingsChanged,

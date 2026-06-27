@@ -94,7 +94,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Draft Atlas'), findsWidgets);
-    expect(find.text('Local - novel'), findsOneWidget);
+    expect(find.text('Local - Novel'), findsOneWidget);
     expect(find.text('Project created'), findsOneWidget);
     expect(find.text('Activity'), findsNothing);
 
@@ -205,6 +205,57 @@ void main() {
     final projects = await projectRepository.listActive();
     expect(projects.single.title, 'Wizard Book');
     expect(projects.single.metadata['authorName'], 'Ada Author');
+  });
+
+  testWidgets('project wizard supports research projects with page targets',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('New Project'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText), 'Research Atlas');
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Research project').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pages'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText).first, '120');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    final project = (await projectRepository.listActive()).single;
+    expect(project.projectType, 'research');
+    expect(project.wordTarget, 30000);
+    expect(project.metadata['targetUnit'], 'pages');
+    expect(project.metadata['pageTarget'], 120);
+    expect(project.metadata['wordsPerPageEstimate'], 250);
   });
 
   testWidgets('desktop drag moves a scene to another chapter', (tester) async {

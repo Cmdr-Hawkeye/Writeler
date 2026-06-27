@@ -2,6 +2,77 @@ part of '../main.dart';
 
 // Presentation labels, formatting helpers, counters, and small UI-domain adapters.
 
+const _estimatedWordsPerPage = 250;
+
+final class _ProjectTypeOption {
+  const _ProjectTypeOption({
+    required this.value,
+    required this.labelKey,
+  });
+
+  final String value;
+  final String labelKey;
+}
+
+const _projectTypeOptions = [
+  _ProjectTypeOption(value: 'novel', labelKey: 'projectTypeNovel'),
+  _ProjectTypeOption(value: 'shortStory', labelKey: 'projectTypeShortStory'),
+  _ProjectTypeOption(value: 'novella', labelKey: 'projectTypeNovella'),
+  _ProjectTypeOption(value: 'series', labelKey: 'projectTypeSeries'),
+  _ProjectTypeOption(value: 'nonfiction', labelKey: 'projectTypeNonfiction'),
+  _ProjectTypeOption(value: 'research', labelKey: 'projectTypeResearch'),
+  _ProjectTypeOption(value: 'article', labelKey: 'projectTypeArticle'),
+  _ProjectTypeOption(value: 'essay', labelKey: 'projectTypeEssay'),
+  _ProjectTypeOption(value: 'thesis', labelKey: 'projectTypeThesis'),
+  _ProjectTypeOption(value: 'screenplay', labelKey: 'projectTypeScreenplay'),
+  _ProjectTypeOption(value: 'stagePlay', labelKey: 'projectTypeStagePlay'),
+  _ProjectTypeOption(value: 'poetry', labelKey: 'projectTypePoetry'),
+  _ProjectTypeOption(value: 'memoir', labelKey: 'projectTypeMemoir'),
+  _ProjectTypeOption(
+    value: 'worldbuilding',
+    labelKey: 'projectTypeWorldbuilding',
+  ),
+  _ProjectTypeOption(value: 'other', labelKey: 'projectTypeOther'),
+];
+
+String _projectTypeLabel(String projectType, WritelerCopy copy) {
+  final option = _projectTypeOptions
+      .where((candidate) => candidate.value == projectType)
+      .firstOrNull;
+  return option == null ? projectType : copy.t(option.labelKey);
+}
+
+String _projectTargetProgressLabel(
+  Project? project,
+  int words,
+  WritelerCopy copy,
+) {
+  final wordTarget = project?.wordTarget;
+  if (project == null || wordTarget == null || wordTarget <= 0) {
+    return '$words ${copy.t('words')}';
+  }
+  if (project.metadata['targetUnit'] == 'pages') {
+    final wordsPerPage = _metadataInt(project.metadata['wordsPerPageEstimate'])
+            ?.clamp(1, 1000) ??
+        _estimatedWordsPerPage;
+    final targetPages = _metadataInt(project.metadata['pageTarget']) ??
+        (wordTarget / wordsPerPage).round();
+    final currentPages = words <= 0 ? 0 : (words / wordsPerPage).ceil();
+    return '$currentPages / $targetPages ${copy.t('pages')} '
+        '($wordTarget ${copy.t('words')})';
+  }
+  return '$words / $wordTarget ${copy.t('words')}';
+}
+
+int? _metadataInt(Object? value) {
+  return switch (value) {
+    int() => value,
+    double() => value.round(),
+    String() => int.tryParse(value),
+    _ => null,
+  };
+}
+
 String _catalogTitleKey(EntityType type) {
   return switch (type) {
     EntityType.character => 'characters',

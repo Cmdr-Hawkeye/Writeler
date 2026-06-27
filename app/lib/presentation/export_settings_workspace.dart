@@ -717,7 +717,7 @@ final class _SettingsWorkspace extends StatelessWidget {
     required this.onProviderEnabledChanged,
     required this.onSaveProviderConfig,
     required this.onDeleteProviderApiKey,
-    required this.onSaveProjectAuthorName,
+    required this.onSaveProjectMetadata,
     required this.onSaveProfileSettings,
     required this.spellCheckSettings,
     required this.onSpellCheckSettingsChanged,
@@ -743,7 +743,7 @@ final class _SettingsWorkspace extends StatelessWidget {
   final ValueChanged<bool> onProviderEnabledChanged;
   final VoidCallback onSaveProviderConfig;
   final VoidCallback onDeleteProviderApiKey;
-  final ValueChanged<String> onSaveProjectAuthorName;
+  final ValueChanged<_ProjectMetadataUpdate> onSaveProjectMetadata;
   final SpellCheckSettings spellCheckSettings;
   final ValueChanged<SpellCheckSettings> onSpellCheckSettingsChanged;
   final String syncAdapterName;
@@ -849,7 +849,7 @@ final class _SettingsWorkspace extends StatelessWidget {
           child: _ProjectMetadataSettings(
             copy: copy,
             project: project,
-            onSaveAuthorName: onSaveProjectAuthorName,
+            onSave: onSaveProjectMetadata,
           ),
         ),
         _SettingsSection(
@@ -1041,16 +1041,30 @@ final class _SettingsSection extends StatelessWidget {
   }
 }
 
+final class _ProjectMetadataUpdate {
+  const _ProjectMetadataUpdate({
+    required this.authorName,
+    required this.projectType,
+    required this.targetUnit,
+    required this.targetValue,
+  });
+
+  final String authorName;
+  final String projectType;
+  final _ProjectTargetUnit targetUnit;
+  final int? targetValue;
+}
+
 final class _ProjectMetadataSettings extends StatefulWidget {
   const _ProjectMetadataSettings({
     required this.copy,
     required this.project,
-    required this.onSaveAuthorName,
+    required this.onSave,
   });
 
   final WritelerCopy copy;
   final Project? project;
-  final ValueChanged<String> onSaveAuthorName;
+  final ValueChanged<_ProjectMetadataUpdate> onSave;
 
   @override
   State<_ProjectMetadataSettings> createState() =>
@@ -1062,21 +1076,47 @@ final class _ProjectMetadataSettingsState
   late final TextEditingController _authorController = TextEditingController(
     text: _authorName,
   );
+  late final TextEditingController _targetController = TextEditingController(
+    text: _targetText,
+  );
+  late var _projectType = widget.project?.projectType ?? 'novel';
+  late var _targetUnit = _initialTargetUnit;
 
   String get _authorName =>
       widget.project?.metadata['authorName'] as String? ?? '';
+
+  _ProjectTargetUnit get _initialTargetUnit {
+    return widget.project?.metadata['targetUnit'] == 'pages'
+        ? _ProjectTargetUnit.pages
+        : _ProjectTargetUnit.words;
+  }
+
+  String get _targetText {
+    final project = widget.project;
+    if (project == null || project.wordTarget == null) return '';
+    if (_initialTargetUnit == _ProjectTargetUnit.pages) {
+      final pageTarget = _metadataInt(project.metadata['pageTarget']) ??
+          (project.wordTarget! / _estimatedWordsPerPage).round();
+      return '$pageTarget';
+    }
+    return '${project.wordTarget}';
+  }
 
   @override
   void didUpdateWidget(covariant _ProjectMetadataSettings oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.project?.id != widget.project?.id) {
       _authorController.text = _authorName;
+      _targetController.text = _targetText;
+      _projectType = widget.project?.projectType ?? 'novel';
+      _targetUnit = _initialTargetUnit;
     }
   }
 
   @override
   void dispose() {
     _authorController.dispose();
+    _targetController.dispose();
     super.dispose();
   }
 
@@ -1097,15 +1137,83 @@ final class _ProjectMetadataSettingsState
             border: const OutlineInputBorder(),
           ),
           textInputAction: TextInputAction.done,
-          onSubmitted: widget.onSaveAuthorName,
+          onSubmitted: (_) => _save(),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _projectType,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          decoration: InputDecoration(
+            labelText: widget.copy.t('projectType'),
+            border: const OutlineInputBorder(),
+          ),
+          items: [
+            for (final option in _projectTypeOptions)
+              DropdownMenuItem(
+                value: option.value,
+                child: Text(widget.copy.t(option.labelKey)),
+              ),
+          ],
+          onChanged: (value) {
+            if (value != null) setState(() => _projectType = value);
+          },
+        ),
+        const SizedBox(height: 12),
+        SegmentedButton<_ProjectTargetUnit>(
+          segments: [
+            ButtonSegment(
+              value: _ProjectTargetUnit.words,
+              icon: const Icon(Icons.notes_outlined),
+              label: Text(widget.copy.t('targetUnitWords')),
+            ),
+            ButtonSegment(
+              value: _ProjectTargetUnit.pages,
+              icon: const Icon(Icons.description_outlined),
+              label: Text(widget.copy.t('targetUnitPages')),
+            ),
+          ],
+          selected: {_targetUnit},
+          onSelectionChanged: (selection) {
+            setState(() => _targetUnit = selection.single);
+          },
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _targetController,
+          decoration: InputDecoration(
+            labelText: _targetUnit == _ProjectTargetUnit.pages
+                ? widget.copy.t('pageTarget')
+                : widget.copy.t('wordTarget'),
+            helperText: _targetUnit == _ProjectTargetUnit.pages
+                ? widget.copy.t('pageTargetHelper')
+                : null,
+            border: const OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _save(),
         ),
         const SizedBox(height: 12),
         FilledButton.icon(
-          onPressed: () => widget.onSaveAuthorName(_authorController.text),
+          onPressed: _save,
           icon: const Icon(Icons.save_outlined),
           label: Text(widget.copy.t('saveProjectMetadata')),
         ),
       ],
+    );
+  }
+
+  void _save() {
+    final targetText = _targetController.text.trim();
+    widget.onSave(
+      _ProjectMetadataUpdate(
+        authorName: _authorController.text,
+        projectType: _projectType,
+        targetUnit: _targetUnit,
+        targetValue: targetText.isEmpty ? null : int.tryParse(targetText),
+      ),
     );
   }
 }
