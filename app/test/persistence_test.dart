@@ -12,6 +12,8 @@ import 'package:writeler/features/notes/domain/project_note.dart';
 import 'package:writeler/features/notes/infrastructure/drift_project_note_repository.dart';
 import 'package:writeler/features/projects/application/create_project.dart';
 import 'package:writeler/features/projects/infrastructure/drift_project_repository.dart';
+import 'package:writeler/features/research/domain/research_item.dart';
+import 'package:writeler/features/research/infrastructure/drift_research_item_repository.dart';
 import 'package:writeler/features/settings/domain/ai_provider_config.dart';
 import 'package:writeler/features/settings/infrastructure/drift_ai_provider_config_repository.dart';
 import 'package:writeler/features/settings/infrastructure/drift_app_preference_repository.dart';
@@ -31,6 +33,7 @@ void main() {
   late DriftRelationshipRepository relationshipRepository;
   late DriftMetricRepository metricRepository;
   late DriftProjectNoteRepository noteRepository;
+  late DriftResearchItemRepository researchRepository;
   late DriftAIProviderConfigRepository providerConfigRepository;
   late DriftAppPreferenceRepository appPreferenceRepository;
 
@@ -43,6 +46,7 @@ void main() {
     relationshipRepository = DriftRelationshipRepository(database);
     metricRepository = DriftMetricRepository(database);
     noteRepository = DriftProjectNoteRepository(database);
+    researchRepository = DriftResearchItemRepository(database);
     providerConfigRepository = DriftAIProviderConfigRepository(database);
     appPreferenceRepository = DriftAppPreferenceRepository(database);
   });
@@ -52,11 +56,11 @@ void main() {
   });
 
   test('database schema creates core local-first tables', () async {
-    expect(database.schemaVersion, 9);
+    expect(database.schemaVersion, 10);
 
     final rows = await database
         .customSelect(
-          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'app_preferences', 'catalog_items', 'chapters', 'metric_events', 'project_notes', 'projects', 'relationships', 'scene_snapshots', 'scenes') order by name",
+          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'app_preferences', 'catalog_items', 'chapters', 'metric_events', 'project_notes', 'projects', 'relationships', 'research_items', 'scene_snapshots', 'scenes') order by name",
         )
         .get();
 
@@ -70,6 +74,7 @@ void main() {
       'project_notes',
       'projects',
       'relationships',
+      'research_items',
       'scene_snapshots',
       'scenes',
     ]);
@@ -308,6 +313,57 @@ void main() {
           .map((note) => note.id)
           .toList(),
       ['note-2'],
+    );
+  });
+
+  test('research item repository persists linked sources', () async {
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Sourced Book'),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(projectId: project.id, title: 'Source Scene'),
+    );
+    final earlier = DateTime.utc(2026);
+    final later = DateTime.utc(2026, 1, 2);
+
+    await researchRepository.save(
+      ResearchItem(
+        id: 'research-1',
+        projectId: project.id,
+        kind: ResearchItemKind.link,
+        target: EntityRef(type: EntityType.scene, id: scene.id),
+        title: 'Orbital gym reference',
+        uri: 'https://example.test/orbit',
+        body: 'Useful spatial details.',
+        source: 'Example Archive',
+        tags: const ['space', 'architecture'],
+        createdAt: earlier,
+        updatedAt: earlier,
+      ),
+    );
+    await researchRepository.save(
+      ResearchItem(
+        id: 'research-2',
+        projectId: project.id,
+        kind: ResearchItemKind.pdf,
+        title: 'Station manual',
+        uri: r'C:\research\station.pdf',
+        createdAt: later,
+        updatedAt: later,
+      ),
+    );
+
+    final items = await researchRepository.listForProject(project.id);
+    expect(items.map((item) => item.id).toList(), ['research-2', 'research-1']);
+    expect(items.last.target?.id, scene.id);
+    expect(items.last.tags, ['space', 'architecture']);
+
+    await researchRepository.delete('research-1');
+    expect(
+      (await researchRepository.listForProject(project.id))
+          .map((item) => item.id)
+          .toList(),
+      ['research-2'],
     );
   });
 }

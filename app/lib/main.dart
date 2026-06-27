@@ -56,6 +56,11 @@ import 'features/projects/domain/project.dart';
 import 'features/projects/domain/project_repository.dart';
 import 'features/projects/infrastructure/drift_project_repository.dart';
 import 'features/projects/infrastructure/lazy_project_repository.dart';
+import 'features/research/domain/research_item.dart';
+import 'features/research/domain/research_item_repository.dart';
+import 'features/research/infrastructure/drift_research_item_repository.dart';
+import 'features/research/infrastructure/in_memory_research_item_repository.dart';
+import 'features/research/infrastructure/lazy_research_item_repository.dart';
 import 'features/settings/domain/ai_provider_config.dart';
 import 'features/settings/domain/ai_provider_config_repository.dart';
 import 'features/settings/domain/ai_provider_preset.dart';
@@ -101,6 +106,7 @@ part 'presentation/protocols_workspace.dart';
 part 'presentation/storyboard_workspace.dart';
 part 'presentation/structure_workspace.dart';
 part 'presentation/catalog_analysis_notes.dart';
+part 'presentation/research_workspace.dart';
 part 'presentation/style_cockpit.dart';
 part 'presentation/ai_workshop.dart';
 part 'presentation/export_settings_workspace.dart';
@@ -140,6 +146,9 @@ void main() {
       ),
       projectNoteRepository: LazyProjectNoteRepository(
         () => DriftProjectNoteRepository(getDatabase()),
+      ),
+      researchItemRepository: LazyResearchItemRepository(
+        () => DriftResearchItemRepository(getDatabase()),
       ),
       aiProviderConfigRepository: LazyAIProviderConfigRepository(
         () => DriftAIProviderConfigRepository(getDatabase()),

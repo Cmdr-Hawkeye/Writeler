@@ -167,6 +167,26 @@ class ProjectNotes extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('ResearchItemRow')
+class ResearchItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get projectId => text().references(Projects, #id)();
+  TextColumn get kind => text()();
+  TextColumn get targetType => text().nullable()();
+  TextColumn get targetId => text().nullable()();
+  TextColumn get title => text()();
+  TextColumn get uri => text().withDefault(const Constant(''))();
+  TextColumn get body => text().withDefault(const Constant(''))();
+  TextColumn get source => text().withDefault(const Constant(''))();
+  TextColumn get tagsJson => text().withDefault(const Constant('[]'))();
+  TextColumn get metadataJson => text().withDefault(const Constant('{}'))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DataClassName('AIProviderConfigRow')
 class AIProviderConfigs extends Table {
   TextColumn get id => text()();
@@ -216,6 +236,7 @@ class MetricEvents extends Table {
     Relationships,
     AISuggestions,
     ProjectNotes,
+    ResearchItems,
     AIProviderConfigs,
     AppPreferences,
     MetricEvents,
@@ -235,7 +256,7 @@ final class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -267,6 +288,9 @@ final class AppDatabase extends _$AppDatabase {
           }
           if (from < 9) {
             await migrator.createTable(sceneSnapshots);
+          }
+          if (from < 10) {
+            await migrator.createTable(researchItems);
           }
         },
         beforeOpen: (details) async {

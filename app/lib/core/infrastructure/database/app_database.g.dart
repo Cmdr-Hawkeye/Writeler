@@ -5389,6 +5389,627 @@ class ProjectNotesCompanion extends UpdateCompanion<ProjectNoteRow> {
   }
 }
 
+class $ResearchItemsTable extends ResearchItems
+    with TableInfo<$ResearchItemsTable, ResearchItemRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ResearchItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES projects (id)'));
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+      'kind', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _targetTypeMeta =
+      const VerificationMeta('targetType');
+  @override
+  late final GeneratedColumn<String> targetType = GeneratedColumn<String>(
+      'target_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _targetIdMeta =
+      const VerificationMeta('targetId');
+  @override
+  late final GeneratedColumn<String> targetId = GeneratedColumn<String>(
+      'target_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _uriMeta = const VerificationMeta('uri');
+  @override
+  late final GeneratedColumn<String> uri = GeneratedColumn<String>(
+      'uri', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+      'body', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+      'source', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _tagsJsonMeta =
+      const VerificationMeta('tagsJson');
+  @override
+  late final GeneratedColumn<String> tagsJson = GeneratedColumn<String>(
+      'tags_json', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  static const VerificationMeta _metadataJsonMeta =
+      const VerificationMeta('metadataJson');
+  @override
+  late final GeneratedColumn<String> metadataJson = GeneratedColumn<String>(
+      'metadata_json', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        projectId,
+        kind,
+        targetType,
+        targetId,
+        title,
+        uri,
+        body,
+        source,
+        tagsJson,
+        metadataJson,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'research_items';
+  @override
+  VerificationContext validateIntegrity(Insertable<ResearchItemRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+          _kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('target_type')) {
+      context.handle(
+          _targetTypeMeta,
+          targetType.isAcceptableOrUnknown(
+              data['target_type']!, _targetTypeMeta));
+    }
+    if (data.containsKey('target_id')) {
+      context.handle(_targetIdMeta,
+          targetId.isAcceptableOrUnknown(data['target_id']!, _targetIdMeta));
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('uri')) {
+      context.handle(
+          _uriMeta, uri.isAcceptableOrUnknown(data['uri']!, _uriMeta));
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+          _bodyMeta, body.isAcceptableOrUnknown(data['body']!, _bodyMeta));
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta,
+          source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    }
+    if (data.containsKey('tags_json')) {
+      context.handle(_tagsJsonMeta,
+          tagsJson.isAcceptableOrUnknown(data['tags_json']!, _tagsJsonMeta));
+    }
+    if (data.containsKey('metadata_json')) {
+      context.handle(
+          _metadataJsonMeta,
+          metadataJson.isAcceptableOrUnknown(
+              data['metadata_json']!, _metadataJsonMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ResearchItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ResearchItemRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}project_id'])!,
+      kind: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      targetType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}target_type']),
+      targetId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}target_id']),
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      uri: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uri'])!,
+      body: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}body'])!,
+      source: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      tagsJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tags_json'])!,
+      metadataJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata_json'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $ResearchItemsTable createAlias(String alias) {
+    return $ResearchItemsTable(attachedDatabase, alias);
+  }
+}
+
+class ResearchItemRow extends DataClass implements Insertable<ResearchItemRow> {
+  final String id;
+  final String projectId;
+  final String kind;
+  final String? targetType;
+  final String? targetId;
+  final String title;
+  final String uri;
+  final String body;
+  final String source;
+  final String tagsJson;
+  final String metadataJson;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const ResearchItemRow(
+      {required this.id,
+      required this.projectId,
+      required this.kind,
+      this.targetType,
+      this.targetId,
+      required this.title,
+      required this.uri,
+      required this.body,
+      required this.source,
+      required this.tagsJson,
+      required this.metadataJson,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['project_id'] = Variable<String>(projectId);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || targetType != null) {
+      map['target_type'] = Variable<String>(targetType);
+    }
+    if (!nullToAbsent || targetId != null) {
+      map['target_id'] = Variable<String>(targetId);
+    }
+    map['title'] = Variable<String>(title);
+    map['uri'] = Variable<String>(uri);
+    map['body'] = Variable<String>(body);
+    map['source'] = Variable<String>(source);
+    map['tags_json'] = Variable<String>(tagsJson);
+    map['metadata_json'] = Variable<String>(metadataJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  ResearchItemsCompanion toCompanion(bool nullToAbsent) {
+    return ResearchItemsCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      kind: Value(kind),
+      targetType: targetType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetType),
+      targetId: targetId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetId),
+      title: Value(title),
+      uri: Value(uri),
+      body: Value(body),
+      source: Value(source),
+      tagsJson: Value(tagsJson),
+      metadataJson: Value(metadataJson),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ResearchItemRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ResearchItemRow(
+      id: serializer.fromJson<String>(json['id']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      targetType: serializer.fromJson<String?>(json['targetType']),
+      targetId: serializer.fromJson<String?>(json['targetId']),
+      title: serializer.fromJson<String>(json['title']),
+      uri: serializer.fromJson<String>(json['uri']),
+      body: serializer.fromJson<String>(json['body']),
+      source: serializer.fromJson<String>(json['source']),
+      tagsJson: serializer.fromJson<String>(json['tagsJson']),
+      metadataJson: serializer.fromJson<String>(json['metadataJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'projectId': serializer.toJson<String>(projectId),
+      'kind': serializer.toJson<String>(kind),
+      'targetType': serializer.toJson<String?>(targetType),
+      'targetId': serializer.toJson<String?>(targetId),
+      'title': serializer.toJson<String>(title),
+      'uri': serializer.toJson<String>(uri),
+      'body': serializer.toJson<String>(body),
+      'source': serializer.toJson<String>(source),
+      'tagsJson': serializer.toJson<String>(tagsJson),
+      'metadataJson': serializer.toJson<String>(metadataJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ResearchItemRow copyWith(
+          {String? id,
+          String? projectId,
+          String? kind,
+          Value<String?> targetType = const Value.absent(),
+          Value<String?> targetId = const Value.absent(),
+          String? title,
+          String? uri,
+          String? body,
+          String? source,
+          String? tagsJson,
+          String? metadataJson,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      ResearchItemRow(
+        id: id ?? this.id,
+        projectId: projectId ?? this.projectId,
+        kind: kind ?? this.kind,
+        targetType: targetType.present ? targetType.value : this.targetType,
+        targetId: targetId.present ? targetId.value : this.targetId,
+        title: title ?? this.title,
+        uri: uri ?? this.uri,
+        body: body ?? this.body,
+        source: source ?? this.source,
+        tagsJson: tagsJson ?? this.tagsJson,
+        metadataJson: metadataJson ?? this.metadataJson,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  ResearchItemRow copyWithCompanion(ResearchItemsCompanion data) {
+    return ResearchItemRow(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      targetType:
+          data.targetType.present ? data.targetType.value : this.targetType,
+      targetId: data.targetId.present ? data.targetId.value : this.targetId,
+      title: data.title.present ? data.title.value : this.title,
+      uri: data.uri.present ? data.uri.value : this.uri,
+      body: data.body.present ? data.body.value : this.body,
+      source: data.source.present ? data.source.value : this.source,
+      tagsJson: data.tagsJson.present ? data.tagsJson.value : this.tagsJson,
+      metadataJson: data.metadataJson.present
+          ? data.metadataJson.value
+          : this.metadataJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ResearchItemRow(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('kind: $kind, ')
+          ..write('targetType: $targetType, ')
+          ..write('targetId: $targetId, ')
+          ..write('title: $title, ')
+          ..write('uri: $uri, ')
+          ..write('body: $body, ')
+          ..write('source: $source, ')
+          ..write('tagsJson: $tagsJson, ')
+          ..write('metadataJson: $metadataJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, projectId, kind, targetType, targetId,
+      title, uri, body, source, tagsJson, metadataJson, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ResearchItemRow &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.kind == this.kind &&
+          other.targetType == this.targetType &&
+          other.targetId == this.targetId &&
+          other.title == this.title &&
+          other.uri == this.uri &&
+          other.body == this.body &&
+          other.source == this.source &&
+          other.tagsJson == this.tagsJson &&
+          other.metadataJson == this.metadataJson &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ResearchItemsCompanion extends UpdateCompanion<ResearchItemRow> {
+  final Value<String> id;
+  final Value<String> projectId;
+  final Value<String> kind;
+  final Value<String?> targetType;
+  final Value<String?> targetId;
+  final Value<String> title;
+  final Value<String> uri;
+  final Value<String> body;
+  final Value<String> source;
+  final Value<String> tagsJson;
+  final Value<String> metadataJson;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const ResearchItemsCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.targetType = const Value.absent(),
+    this.targetId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.uri = const Value.absent(),
+    this.body = const Value.absent(),
+    this.source = const Value.absent(),
+    this.tagsJson = const Value.absent(),
+    this.metadataJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ResearchItemsCompanion.insert({
+    required String id,
+    required String projectId,
+    required String kind,
+    this.targetType = const Value.absent(),
+    this.targetId = const Value.absent(),
+    required String title,
+    this.uri = const Value.absent(),
+    this.body = const Value.absent(),
+    this.source = const Value.absent(),
+    this.tagsJson = const Value.absent(),
+    this.metadataJson = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        projectId = Value(projectId),
+        kind = Value(kind),
+        title = Value(title),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<ResearchItemRow> custom({
+    Expression<String>? id,
+    Expression<String>? projectId,
+    Expression<String>? kind,
+    Expression<String>? targetType,
+    Expression<String>? targetId,
+    Expression<String>? title,
+    Expression<String>? uri,
+    Expression<String>? body,
+    Expression<String>? source,
+    Expression<String>? tagsJson,
+    Expression<String>? metadataJson,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (kind != null) 'kind': kind,
+      if (targetType != null) 'target_type': targetType,
+      if (targetId != null) 'target_id': targetId,
+      if (title != null) 'title': title,
+      if (uri != null) 'uri': uri,
+      if (body != null) 'body': body,
+      if (source != null) 'source': source,
+      if (tagsJson != null) 'tags_json': tagsJson,
+      if (metadataJson != null) 'metadata_json': metadataJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ResearchItemsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? projectId,
+      Value<String>? kind,
+      Value<String?>? targetType,
+      Value<String?>? targetId,
+      Value<String>? title,
+      Value<String>? uri,
+      Value<String>? body,
+      Value<String>? source,
+      Value<String>? tagsJson,
+      Value<String>? metadataJson,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return ResearchItemsCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      kind: kind ?? this.kind,
+      targetType: targetType ?? this.targetType,
+      targetId: targetId ?? this.targetId,
+      title: title ?? this.title,
+      uri: uri ?? this.uri,
+      body: body ?? this.body,
+      source: source ?? this.source,
+      tagsJson: tagsJson ?? this.tagsJson,
+      metadataJson: metadataJson ?? this.metadataJson,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (targetType.present) {
+      map['target_type'] = Variable<String>(targetType.value);
+    }
+    if (targetId.present) {
+      map['target_id'] = Variable<String>(targetId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (uri.present) {
+      map['uri'] = Variable<String>(uri.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (tagsJson.present) {
+      map['tags_json'] = Variable<String>(tagsJson.value);
+    }
+    if (metadataJson.present) {
+      map['metadata_json'] = Variable<String>(metadataJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ResearchItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('kind: $kind, ')
+          ..write('targetType: $targetType, ')
+          ..write('targetId: $targetId, ')
+          ..write('title: $title, ')
+          ..write('uri: $uri, ')
+          ..write('body: $body, ')
+          ..write('source: $source, ')
+          ..write('tagsJson: $tagsJson, ')
+          ..write('metadataJson: $metadataJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AIProviderConfigsTable extends AIProviderConfigs
     with TableInfo<$AIProviderConfigsTable, AIProviderConfigRow> {
   @override
@@ -6473,6 +7094,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RelationshipsTable relationships = $RelationshipsTable(this);
   late final $AISuggestionsTable aISuggestions = $AISuggestionsTable(this);
   late final $ProjectNotesTable projectNotes = $ProjectNotesTable(this);
+  late final $ResearchItemsTable researchItems = $ResearchItemsTable(this);
   late final $AIProviderConfigsTable aIProviderConfigs =
       $AIProviderConfigsTable(this);
   late final $AppPreferencesTable appPreferences = $AppPreferencesTable(this);
@@ -6490,6 +7112,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         relationships,
         aISuggestions,
         projectNotes,
+        researchItems,
         aIProviderConfigs,
         appPreferences,
         metricEvents
@@ -6627,6 +7250,20 @@ final class $$ProjectsTableReferences
         .filter((f) => f.projectId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_projectNotesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ResearchItemsTable, List<ResearchItemRow>>
+      _researchItemsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.researchItems,
+              aliasName: 'projects__id__research_items__project_id');
+
+  $$ResearchItemsTableProcessedTableManager get researchItemsRefs {
+    final manager = $$ResearchItemsTableTableManager($_db, $_db.researchItems)
+        .filter((f) => f.projectId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_researchItemsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -6834,6 +7471,27 @@ class $$ProjectsTableFilterComposer
             $$ProjectNotesTableFilterComposer(
               $db: $db,
               $table: $db.projectNotes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> researchItemsRefs(
+      Expression<bool> Function($$ResearchItemsTableFilterComposer f) f) {
+    final $$ResearchItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.researchItems,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ResearchItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.researchItems,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -7111,6 +7769,27 @@ class $$ProjectsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> researchItemsRefs<T extends Object>(
+      Expression<T> Function($$ResearchItemsTableAnnotationComposer a) f) {
+    final $$ResearchItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.researchItems,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ResearchItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.researchItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> metricEventsRefs<T extends Object>(
       Expression<T> Function($$MetricEventsTableAnnotationComposer a) f) {
     final $$MetricEventsTableAnnotationComposer composer = $composerBuilder(
@@ -7152,6 +7831,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
         bool relationshipsRefs,
         bool aISuggestionsRefs,
         bool projectNotesRefs,
+        bool researchItemsRefs,
         bool metricEventsRefs})> {
   $$ProjectsTableTableManager(_$AppDatabase db, $ProjectsTable table)
       : super(TableManagerState(
@@ -7239,6 +7919,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
               relationshipsRefs = false,
               aISuggestionsRefs = false,
               projectNotesRefs = false,
+              researchItemsRefs = false,
               metricEventsRefs = false}) {
             return PrefetchHooks(
               db: db,
@@ -7250,6 +7931,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
                 if (relationshipsRefs) db.relationships,
                 if (aISuggestionsRefs) db.aISuggestions,
                 if (projectNotesRefs) db.projectNotes,
+                if (researchItemsRefs) db.researchItems,
                 if (metricEventsRefs) db.metricEvents
               ],
               addJoins: null,
@@ -7345,6 +8027,19 @@ class $$ProjectsTableTableManager extends RootTableManager<
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.projectId == item.id),
                         typedResults: items),
+                  if (researchItemsRefs)
+                    await $_getPrefetchedData<ProjectRow, $ProjectsTable,
+                            ResearchItemRow>(
+                        currentTable: table,
+                        referencedTable: $$ProjectsTableReferences
+                            ._researchItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProjectsTableReferences(db, table, p0)
+                                .researchItemsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.projectId == item.id),
+                        typedResults: items),
                   if (metricEventsRefs)
                     await $_getPrefetchedData<ProjectRow, $ProjectsTable,
                             MetricEventRow>(
@@ -7384,6 +8079,7 @@ typedef $$ProjectsTableProcessedTableManager = ProcessedTableManager<
         bool relationshipsRefs,
         bool aISuggestionsRefs,
         bool projectNotesRefs,
+        bool researchItemsRefs,
         bool metricEventsRefs})>;
 typedef $$ChaptersTableCreateCompanionBuilder = ChaptersCompanion Function({
   required String id,
@@ -10389,6 +11085,402 @@ typedef $$ProjectNotesTableProcessedTableManager = ProcessedTableManager<
     (ProjectNoteRow, $$ProjectNotesTableReferences),
     ProjectNoteRow,
     PrefetchHooks Function({bool projectId})>;
+typedef $$ResearchItemsTableCreateCompanionBuilder = ResearchItemsCompanion
+    Function({
+  required String id,
+  required String projectId,
+  required String kind,
+  Value<String?> targetType,
+  Value<String?> targetId,
+  required String title,
+  Value<String> uri,
+  Value<String> body,
+  Value<String> source,
+  Value<String> tagsJson,
+  Value<String> metadataJson,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$ResearchItemsTableUpdateCompanionBuilder = ResearchItemsCompanion
+    Function({
+  Value<String> id,
+  Value<String> projectId,
+  Value<String> kind,
+  Value<String?> targetType,
+  Value<String?> targetId,
+  Value<String> title,
+  Value<String> uri,
+  Value<String> body,
+  Value<String> source,
+  Value<String> tagsJson,
+  Value<String> metadataJson,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$ResearchItemsTableReferences extends BaseReferences<_$AppDatabase,
+    $ResearchItemsTable, ResearchItemRow> {
+  $$ResearchItemsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProjectsTable _projectIdTable(_$AppDatabase db) =>
+      db.projects.createAlias('research_items__project_id__projects__id');
+
+  $$ProjectsTableProcessedTableManager get projectId {
+    final $_column = $_itemColumn<String>('project_id')!;
+
+    final manager = $$ProjectsTableTableManager($_db, $_db.projects)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$ResearchItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $ResearchItemsTable> {
+  $$ResearchItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get kind => $composableBuilder(
+      column: $table.kind, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get targetType => $composableBuilder(
+      column: $table.targetType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get targetId => $composableBuilder(
+      column: $table.targetId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get uri => $composableBuilder(
+      column: $table.uri, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get body => $composableBuilder(
+      column: $table.body, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tagsJson => $composableBuilder(
+      column: $table.tagsJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metadataJson => $composableBuilder(
+      column: $table.metadataJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  $$ProjectsTableFilterComposer get projectId {
+    final $$ProjectsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableFilterComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ResearchItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ResearchItemsTable> {
+  $$ResearchItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+      column: $table.kind, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get targetType => $composableBuilder(
+      column: $table.targetType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get targetId => $composableBuilder(
+      column: $table.targetId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get uri => $composableBuilder(
+      column: $table.uri, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get body => $composableBuilder(
+      column: $table.body, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tagsJson => $composableBuilder(
+      column: $table.tagsJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metadataJson => $composableBuilder(
+      column: $table.metadataJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  $$ProjectsTableOrderingComposer get projectId {
+    final $$ProjectsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableOrderingComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ResearchItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ResearchItemsTable> {
+  $$ResearchItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get targetType => $composableBuilder(
+      column: $table.targetType, builder: (column) => column);
+
+  GeneratedColumn<String> get targetId =>
+      $composableBuilder(column: $table.targetId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get uri =>
+      $composableBuilder(column: $table.uri, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get tagsJson =>
+      $composableBuilder(column: $table.tagsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get metadataJson => $composableBuilder(
+      column: $table.metadataJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$ProjectsTableAnnotationComposer get projectId {
+    final $$ProjectsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ResearchItemsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ResearchItemsTable,
+    ResearchItemRow,
+    $$ResearchItemsTableFilterComposer,
+    $$ResearchItemsTableOrderingComposer,
+    $$ResearchItemsTableAnnotationComposer,
+    $$ResearchItemsTableCreateCompanionBuilder,
+    $$ResearchItemsTableUpdateCompanionBuilder,
+    (ResearchItemRow, $$ResearchItemsTableReferences),
+    ResearchItemRow,
+    PrefetchHooks Function({bool projectId})> {
+  $$ResearchItemsTableTableManager(_$AppDatabase db, $ResearchItemsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ResearchItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ResearchItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ResearchItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> projectId = const Value.absent(),
+            Value<String> kind = const Value.absent(),
+            Value<String?> targetType = const Value.absent(),
+            Value<String?> targetId = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> uri = const Value.absent(),
+            Value<String> body = const Value.absent(),
+            Value<String> source = const Value.absent(),
+            Value<String> tagsJson = const Value.absent(),
+            Value<String> metadataJson = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ResearchItemsCompanion(
+            id: id,
+            projectId: projectId,
+            kind: kind,
+            targetType: targetType,
+            targetId: targetId,
+            title: title,
+            uri: uri,
+            body: body,
+            source: source,
+            tagsJson: tagsJson,
+            metadataJson: metadataJson,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String projectId,
+            required String kind,
+            Value<String?> targetType = const Value.absent(),
+            Value<String?> targetId = const Value.absent(),
+            required String title,
+            Value<String> uri = const Value.absent(),
+            Value<String> body = const Value.absent(),
+            Value<String> source = const Value.absent(),
+            Value<String> tagsJson = const Value.absent(),
+            Value<String> metadataJson = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ResearchItemsCompanion.insert(
+            id: id,
+            projectId: projectId,
+            kind: kind,
+            targetType: targetType,
+            targetId: targetId,
+            title: title,
+            uri: uri,
+            body: body,
+            source: source,
+            tagsJson: tagsJson,
+            metadataJson: metadataJson,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ResearchItemsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({projectId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (projectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.projectId,
+                    referencedTable:
+                        $$ResearchItemsTableReferences._projectIdTable(db),
+                    referencedColumn:
+                        $$ResearchItemsTableReferences._projectIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ResearchItemsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ResearchItemsTable,
+    ResearchItemRow,
+    $$ResearchItemsTableFilterComposer,
+    $$ResearchItemsTableOrderingComposer,
+    $$ResearchItemsTableAnnotationComposer,
+    $$ResearchItemsTableCreateCompanionBuilder,
+    $$ResearchItemsTableUpdateCompanionBuilder,
+    (ResearchItemRow, $$ResearchItemsTableReferences),
+    ResearchItemRow,
+    PrefetchHooks Function({bool projectId})>;
 typedef $$AIProviderConfigsTableCreateCompanionBuilder
     = AIProviderConfigsCompanion Function({
   required String id,
@@ -11084,6 +12176,8 @@ class $AppDatabaseManager {
       $$AISuggestionsTableTableManager(_db, _db.aISuggestions);
   $$ProjectNotesTableTableManager get projectNotes =>
       $$ProjectNotesTableTableManager(_db, _db.projectNotes);
+  $$ResearchItemsTableTableManager get researchItems =>
+      $$ResearchItemsTableTableManager(_db, _db.researchItems);
   $$AIProviderConfigsTableTableManager get aIProviderConfigs =>
       $$AIProviderConfigsTableTableManager(_db, _db.aIProviderConfigs);
   $$AppPreferencesTableTableManager get appPreferences =>

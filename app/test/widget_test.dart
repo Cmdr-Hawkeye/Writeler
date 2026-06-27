@@ -8,6 +8,7 @@ import 'package:writeler/features/catalog/infrastructure/in_memory_relationship_
 import 'package:writeler/features/metrics/application/in_memory_metric_repository.dart';
 import 'package:writeler/features/notes/infrastructure/in_memory_project_note_repository.dart';
 import 'package:writeler/features/projects/application/create_project.dart';
+import 'package:writeler/features/research/infrastructure/in_memory_research_item_repository.dart';
 import 'package:writeler/features/projects/infrastructure/in_memory_project_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_ai_provider_config_repository.dart';
 import 'package:writeler/features/settings/infrastructure/in_memory_app_preference_repository.dart';
@@ -97,17 +98,74 @@ void main() {
     expect(find.text('Project created'), findsOneWidget);
     expect(find.text('Activity'), findsNothing);
 
-    await tester.tap(find.text('Logs').first);
-    await tester.pumpAndSettle();
+    await tapNavigationItem(tester, 'Logs');
 
     expect(find.text('Logs'), findsWidgets);
     expect(find.textContaining('Chronological events'), findsOneWidget);
 
-    await tester.tap(find.text('Project structure').first);
-    await tester.pumpAndSettle();
+    await tapNavigationItem(tester, 'Project structure');
 
     expect(find.text('Structure cockpit'), findsOneWidget);
     expect(find.text('Author cockpit'), findsOneWidget);
+  });
+
+  testWidgets('research library creates a linked source', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final sceneRepository = InMemorySceneRepository();
+    final researchRepository = InMemoryResearchItemRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Research Book'),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(projectId: project.id, title: 'Archive Scene'),
+    );
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: sceneRepository,
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        researchItemRepository: researchRepository,
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Research');
+    await tester.tap(find.text('New source'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).at(0), 'NASA archive');
+    await tester.enterText(
+        find.byType(TextField).at(1), 'https://example.test');
+    await tester.enterText(find.byType(TextField).at(2), 'Example Archive');
+    await tester.enterText(find.byType(TextField).at(3), 'space, station');
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Scene: Archive Scene').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'Useful details.');
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    final items = await researchRepository.listForProject(project.id);
+    expect(items.single.title, 'NASA archive');
+    expect(items.single.uri, 'https://example.test');
+    expect(items.single.tags, ['space', 'station']);
+    expect(items.single.target?.id, scene.id);
+    expect(find.text('NASA archive'), findsWidgets);
   });
 
   testWidgets('project wizard stores author metadata', (tester) async {

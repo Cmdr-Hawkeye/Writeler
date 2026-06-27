@@ -6,6 +6,7 @@ import '../../catalog/domain/catalog_item.dart';
 import '../../catalog/domain/relationship.dart';
 import '../../notes/domain/project_note.dart';
 import '../../projects/domain/project.dart';
+import '../../research/domain/research_item.dart';
 import '../../structure/domain/chapter.dart';
 import '../../structure/domain/scene.dart';
 
@@ -17,6 +18,7 @@ final class ProjectArchive {
     required this.catalogItems,
     required this.relationships,
     this.notes = const [],
+    this.researchItems = const [],
   });
 
   final Project project;
@@ -25,6 +27,7 @@ final class ProjectArchive {
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
   final List<ProjectNote> notes;
+  final List<ResearchItem> researchItems;
 }
 
 final class ProjectArchivePreview {
@@ -36,6 +39,7 @@ final class ProjectArchivePreview {
     required this.catalogItemCount,
     required this.relationshipCount,
     required this.noteCount,
+    required this.researchItemCount,
     this.sourceFormat = 'Writeler',
     this.sourceName,
   });
@@ -47,6 +51,7 @@ final class ProjectArchivePreview {
   final int catalogItemCount;
   final int relationshipCount;
   final int noteCount;
+  final int researchItemCount;
   final String sourceFormat;
   final String? sourceName;
 }
@@ -66,6 +71,8 @@ final class ProjectArchiveCodec {
           .map((relationship) => relationship.toJson())
           .toList(),
       'notes': archive.notes.map((note) => note.toJson()).toList(),
+      'researchItems':
+          archive.researchItems.map((item) => item.toJson()).toList(),
     });
   }
 
@@ -89,6 +96,8 @@ final class ProjectArchiveCodec {
     final relationshipJson =
         _list(json['relationships'] ?? const [], 'relationships');
     final noteJson = _list(json['notes'] ?? const [], 'notes');
+    final researchJson =
+        _list(json['researchItems'] ?? const [], 'researchItems');
 
     return ProjectArchive(
       project: Project.fromJson(projectJson),
@@ -97,6 +106,7 @@ final class ProjectArchiveCodec {
       catalogItems: catalogJson.map(CatalogItem.fromJson).toList(),
       relationships: relationshipJson.map(Relationship.fromJson).toList(),
       notes: noteJson.map(ProjectNote.fromJson).toList(),
+      researchItems: researchJson.map(ResearchItem.fromJson).toList(),
     );
   }
 
@@ -124,6 +134,8 @@ final class ProjectArchiveCodec {
       relationshipCount:
           _list(json['relationships'] ?? const [], 'relationships').length,
       noteCount: _list(json['notes'] ?? const [], 'notes').length,
+      researchItemCount:
+          _list(json['researchItems'] ?? const [], 'researchItems').length,
     );
   }
 

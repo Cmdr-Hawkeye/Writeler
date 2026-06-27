@@ -130,6 +130,7 @@ final class WritelerShell extends StatefulWidget {
     required this.metricRepository,
     required this.aiSuggestionRepository,
     required this.projectNoteRepository,
+    required this.researchItemRepository,
     required this.aiProviderConfigRepository,
     required this.secretVault,
     required this.designTheme,
@@ -155,6 +156,7 @@ final class WritelerShell extends StatefulWidget {
   final MetricRepository metricRepository;
   final AISuggestionRepository aiSuggestionRepository;
   final ProjectNoteRepository projectNoteRepository;
+  final ResearchItemRepository researchItemRepository;
   final AIProviderConfigRepository aiProviderConfigRepository;
   final SecretVault secretVault;
   final WritelerDesignTheme designTheme;
@@ -227,6 +229,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   List<MetricEvent> _metrics = const [];
   List<AISuggestion> _suggestions = const [];
   List<ProjectNote> _notes = const [];
+  List<ResearchItem> _researchItems = const [];
   List<SceneSnapshot> _sceneSnapshots = const [];
   Project? _selectedProject;
   Scene? _selectedScene;
@@ -326,6 +329,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       icon: Icons.hub_outlined,
       selectedIcon: Icons.hub,
       labelBuilder: (copy) => copy.t('relationshipGraph'),
+      group: _WorkspaceNavGroup.world,
+    ),
+    _WorkspaceNavItem(
+      index: 19,
+      icon: Icons.travel_explore_outlined,
+      selectedIcon: Icons.travel_explore,
+      labelBuilder: (copy) => copy.t('researchLibrary'),
       group: _WorkspaceNavGroup.world,
     ),
     _WorkspaceNavItem(
@@ -522,6 +532,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     final notesFuture = widget.projectNoteRepository.listForProject(projectId);
     final snapshotsFuture =
         widget.sceneSnapshotRepository.listByProject(projectId);
+    final researchFuture =
+        widget.researchItemRepository.listForProject(projectId);
     final scenes = await scenesFuture;
     final chapters = await chaptersFuture;
     final catalogItems = await catalogFuture;
@@ -530,6 +542,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     final suggestions = await suggestionsFuture;
     final notes = await notesFuture;
     final snapshots = await snapshotsFuture;
+    final researchItems = await researchFuture;
     if (!mounted) return;
     setState(() {
       _scenes = scenes;
@@ -540,6 +553,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       _suggestions = suggestions;
       _notes = notes;
       _sceneSnapshots = snapshots;
+      _researchItems = researchItems;
       _selectedScene = scenes.firstOrNull;
       _syncSceneControllers(_selectedScene);
     });
@@ -557,6 +571,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       _suggestions = const [];
       _notes = const [];
       _sceneSnapshots = const [];
+      _researchItems = const [];
       _syncSceneControllers(null);
     });
     await _loadProjectData(project.id);
@@ -1650,6 +1665,88 @@ final class _WritelerShellState extends State<WritelerShell> {
     return note;
   }
 
+  Future<void> _saveResearchItem(
+    WritelerCopy copy, {
+    ResearchItem? existing,
+    required ResearchItemKind kind,
+    required String title,
+    required String uri,
+    required String body,
+    required String source,
+    required List<String> tags,
+    required EntityRef? target,
+  }) async {
+    final project = _selectedProject;
+    if (project == null) return;
+
+    final now = DateTime.now().toUtc();
+    final item = existing == null
+        ? ResearchItem(
+            id: newLocalId('research'),
+            projectId: project.id,
+            kind: kind,
+            target: target,
+            title: title.trim().isEmpty
+                ? copy.t('untitledResearchItem')
+                : title.trim(),
+            uri: uri.trim(),
+            body: body.trim(),
+            source: source.trim(),
+            tags: tags,
+            createdAt: now,
+            updatedAt: now,
+          )
+        : existing.copyWith(
+            kind: kind,
+            target: target,
+            clearTarget: target == null,
+            title: title.trim().isEmpty
+                ? copy.t('untitledResearchItem')
+                : title.trim(),
+            uri: uri.trim(),
+            body: body.trim(),
+            source: source.trim(),
+            tags: tags,
+            updatedAt: now,
+          );
+
+    await widget.researchItemRepository.save(item);
+    final items =
+        await widget.researchItemRepository.listForProject(project.id);
+    if (!mounted) return;
+    setState(() => _researchItems = items);
+    await _recordProjectMetric(
+      eventType: existing == null ? 'research.created' : 'research.updated',
+      metadata: {'researchId': item.id, 'kind': item.kind.wireName},
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('researchSaved'))),
+    );
+  }
+
+  Future<void> _deleteResearchItem(
+    ResearchItem item,
+    WritelerCopy copy,
+  ) async {
+    final project = _selectedProject;
+    if (project == null) return;
+
+    await widget.researchItemRepository.delete(item.id);
+    final items =
+        await widget.researchItemRepository.listForProject(project.id);
+    if (!mounted) return;
+    setState(() => _researchItems = items);
+    await _recordProjectMetric(
+      eventType: 'research.deleted',
+      metadata: {'researchId': item.id, 'kind': item.kind.wireName},
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('researchDeleted'))),
+    );
+  }
+
   Future<void> _downloadExport(WritelerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
@@ -1661,6 +1758,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       catalogItems: _catalogItems,
       relationships: _relationships,
       notes: _notes,
+      researchItems: _researchItems,
       profile: ExportProfile(
         id: 'ui-download',
         projectId: project.id,
@@ -1684,6 +1782,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       catalogItems: _catalogItems,
       relationships: _relationships,
       notes: _notes,
+      researchItems: _researchItems,
       profile: ExportProfile(
         id: 'ui-publishing',
         projectId: project.id,
@@ -1809,11 +1908,17 @@ final class _WritelerShellState extends State<WritelerShell> {
       for (final note in archive.notes) {
         await widget.projectNoteRepository.save(note);
       }
+      for (final item in archive.researchItems) {
+        await widget.researchItemRepository.save(item);
+      }
 
       final projects = await widget.projectRepository.listActive();
       final suggestions = await widget.aiSuggestionRepository
           .listForProject(archive.project.id);
       final notes = await widget.projectNoteRepository.listForProject(
+        archive.project.id,
+      );
+      final researchItems = await widget.researchItemRepository.listForProject(
         archive.project.id,
       );
       if (!mounted) return;
@@ -1826,6 +1931,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         _relationships = archive.relationships;
         _suggestions = suggestions;
         _notes = notes;
+        _researchItems = researchItems;
         _selectedScene = archive.scenes.firstOrNull;
         _syncSceneControllers(_selectedScene);
         _importArchiveController.clear();
@@ -1847,6 +1953,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           'catalogItems': archive.catalogItems.length,
           'relationships': archive.relationships.length,
           'notes': archive.notes.length,
+          'researchItems': archive.researchItems.length,
           if (inspection.syncEnvelope != null)
             ...inspection.syncEnvelope!.toJson(),
         },
@@ -2003,6 +2110,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         5 => copy.t('objects'),
         14 => copy.t('timeline'),
         15 => copy.t('relationshipGraph'),
+        19 => copy.t('researchLibrary'),
         6 => copy.t('analysis'),
         18 => copy.t('styleCockpit'),
         7 => copy.t('notesCockpit'),
@@ -2025,6 +2133,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         5 => Icons.category_outlined,
         14 => Icons.timeline_outlined,
         15 => Icons.hub_outlined,
+        19 => Icons.travel_explore_outlined,
         6 => Icons.query_stats_outlined,
         18 => Icons.auto_graph_outlined,
         7 => Icons.sticky_note_2_outlined,
@@ -2210,6 +2319,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           chapters: _chapters,
           catalogItems: _catalogItems,
           relationships: _relationships,
+          researchItems: _researchItems,
           suggestions: _suggestions,
           selectedScene: _selectedScene,
           manuscriptController: _manuscriptController,
@@ -2361,6 +2471,35 @@ final class _WritelerShellState extends State<WritelerShell> {
           onDeleteRelationship: (relationship) =>
               _deleteRelationship(relationship, copy),
         ),
+      19 => _ResearchWorkspace(
+          copy: copy,
+          project: _selectedProject,
+          items: _researchItems,
+          scenes: _scenes,
+          catalogItems: _catalogItems,
+          onSaveItem: ({
+            existing,
+            required kind,
+            required title,
+            required uri,
+            required body,
+            required source,
+            required tags,
+            required target,
+          }) =>
+              _saveResearchItem(
+            copy,
+            existing: existing,
+            kind: kind,
+            title: title,
+            uri: uri,
+            body: body,
+            source: source,
+            tags: tags,
+            target: target,
+          ),
+          onDeleteItem: (item) => _deleteResearchItem(item, copy),
+        ),
       6 => _AnalysisWorkspace(
           copy: copy,
           chapters: _chapters,
@@ -2451,6 +2590,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           chapters: _chapters,
           scenes: _scenes,
           notes: _notes,
+          researchItems: _researchItems,
           exporter: _projectExporter,
           catalogItems: _catalogItems,
           relationships: _relationships,

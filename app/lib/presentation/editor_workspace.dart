@@ -9,6 +9,7 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.chapters,
     required this.catalogItems,
     required this.relationships,
+    required this.researchItems,
     required this.suggestions,
     required this.scenes,
     required this.selectedScene,
@@ -48,6 +49,7 @@ final class _ProjectWorkspace extends StatefulWidget {
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<ResearchItem> researchItems;
   final List<AISuggestion> suggestions;
   final List<Scene> scenes;
   final Scene? selectedScene;
@@ -277,6 +279,7 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                                 chapters: widget.chapters,
                                 catalogItems: widget.catalogItems,
                                 relationships: widget.relationships,
+                                researchItems: widget.researchItems,
                                 suggestions: widget.suggestions,
                                 controller: widget.manuscriptController,
                                 summaryController: widget.summaryController,
@@ -1206,6 +1209,7 @@ final class _SceneEditor extends StatefulWidget {
     required this.chapters,
     required this.catalogItems,
     required this.relationships,
+    required this.researchItems,
     required this.suggestions,
     required this.controller,
     required this.summaryController,
@@ -1242,6 +1246,7 @@ final class _SceneEditor extends StatefulWidget {
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<ResearchItem> researchItems;
   final List<AISuggestion> suggestions;
   final TextEditingController controller;
   final TextEditingController summaryController;
@@ -1373,6 +1378,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
       chapters: widget.chapters,
       catalogItems: widget.catalogItems,
       relationships: widget.relationships,
+      researchItems: widget.researchItems,
       suggestions: widget.suggestions,
       summaryController: widget.summaryController,
       goalController: widget.goalController,
@@ -2836,6 +2842,7 @@ final class _SceneInspector extends StatelessWidget {
     required this.chapters,
     required this.catalogItems,
     required this.relationships,
+    required this.researchItems,
     required this.suggestions,
     required this.summaryController,
     required this.goalController,
@@ -2858,6 +2865,7 @@ final class _SceneInspector extends StatelessWidget {
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<ResearchItem> researchItems;
   final List<AISuggestion> suggestions;
   final TextEditingController summaryController;
   final TextEditingController goalController;
@@ -2934,6 +2942,14 @@ final class _SceneInspector extends StatelessWidget {
             onToggleLink: onToggleSceneCatalogLink,
             onAddExistingItems: onAddExistingSceneCatalogItems,
             onCreateItem: onCreateSceneCatalogItem,
+          ),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: color.outlineVariant),
+          const SizedBox(height: 14),
+          _SceneResearchViewer(
+            copy: copy,
+            scene: scene,
+            items: researchItems,
           ),
           const SizedBox(height: 16),
           Divider(height: 1, color: color.outlineVariant),

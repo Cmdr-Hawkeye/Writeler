@@ -445,6 +445,7 @@ final class ProjectImporter {
       catalogItemCount: archive.catalogItems.length,
       relationshipCount: archive.relationships.length,
       noteCount: archive.notes.length,
+      researchItemCount: archive.researchItems.length,
       sourceFormat: sourceFormat,
       sourceName: sourceName,
     );

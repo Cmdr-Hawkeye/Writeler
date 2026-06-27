@@ -9,6 +9,7 @@ final class _ExportCenter extends StatelessWidget {
     required this.chapters,
     required this.scenes,
     required this.notes,
+    required this.researchItems,
     required this.catalogItems,
     required this.relationships,
     required this.exporter,
@@ -35,6 +36,7 @@ final class _ExportCenter extends StatelessWidget {
   final List<Chapter> chapters;
   final List<Scene> scenes;
   final List<ProjectNote> notes;
+  final List<ResearchItem> researchItems;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
   final ProjectExporter exporter;
@@ -67,6 +69,7 @@ final class _ExportCenter extends StatelessWidget {
             catalogItems: catalogItems,
             relationships: relationships,
             notes: notes,
+            researchItems: researchItems,
             profile: ExportProfile(
               id: 'preview',
               projectId: project.id,

@@ -10,6 +10,7 @@ final class _WorkspaceView extends StatelessWidget {
     required this.chapters,
     required this.catalogItems,
     required this.relationships,
+    required this.researchItems,
     required this.suggestions,
     required this.scenes,
     required this.selectedScene,
@@ -52,6 +53,7 @@ final class _WorkspaceView extends StatelessWidget {
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
+  final List<ResearchItem> researchItems;
   final List<AISuggestion> suggestions;
   final List<Scene> scenes;
   final Scene? selectedScene;
@@ -105,6 +107,7 @@ final class _WorkspaceView extends StatelessWidget {
       chapters: chapters,
       catalogItems: catalogItems,
       relationships: relationships,
+      researchItems: researchItems,
       suggestions: suggestions,
       scenes: scenes,
       selectedScene: selectedScene,

@@ -13,6 +13,7 @@ final class WritelerApp extends StatefulWidget {
     required this.metricRepository,
     required this.aiSuggestionRepository,
     required this.projectNoteRepository,
+    this.researchItemRepository,
     required this.aiProviderConfigRepository,
     required this.appPreferenceRepository,
     required this.secretVault,
@@ -28,6 +29,7 @@ final class WritelerApp extends StatefulWidget {
   final MetricRepository metricRepository;
   final AISuggestionRepository aiSuggestionRepository;
   final ProjectNoteRepository projectNoteRepository;
+  final ResearchItemRepository? researchItemRepository;
   final AIProviderConfigRepository aiProviderConfigRepository;
   final AppPreferenceRepository appPreferenceRepository;
   final SecretVault secretVault;
@@ -245,6 +247,8 @@ final class _WritelerAppState extends State<WritelerApp> {
         metricRepository: widget.metricRepository,
         aiSuggestionRepository: widget.aiSuggestionRepository,
         projectNoteRepository: widget.projectNoteRepository,
+        researchItemRepository:
+            widget.researchItemRepository ?? InMemoryResearchItemRepository(),
         aiProviderConfigRepository: widget.aiProviderConfigRepository,
         secretVault: widget.secretVault,
         designTheme: _designTheme,

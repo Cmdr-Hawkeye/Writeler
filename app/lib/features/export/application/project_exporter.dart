@@ -6,6 +6,7 @@ import '../../catalog/domain/catalog_item.dart';
 import '../../catalog/domain/relationship.dart';
 import '../../notes/domain/project_note.dart';
 import '../../projects/domain/project.dart';
+import '../../research/domain/research_item.dart';
 import '../../structure/domain/chapter.dart';
 import '../../structure/domain/scene.dart';
 import '../domain/export_artifact.dart';
@@ -30,6 +31,7 @@ final class ProjectExporter {
     List<CatalogItem> catalogItems = const [],
     List<Relationship> relationships = const [],
     List<ProjectNote> notes = const [],
+    List<ResearchItem> researchItems = const [],
   }) {
     switch (profile.format) {
       case ExportFormat.markdown:
@@ -63,6 +65,7 @@ final class ProjectExporter {
             catalogItems: catalogItems,
             relationships: relationships,
             notes: notes,
+            researchItems: researchItems,
           ),
         );
       case ExportFormat.yWriter:
@@ -111,6 +114,7 @@ final class ProjectExporter {
     List<CatalogItem> catalogItems = const [],
     List<Relationship> relationships = const [],
     List<ProjectNote> notes = const [],
+    List<ResearchItem> researchItems = const [],
   }) {
     final previewText = exportProject(
       project: project,
@@ -120,6 +124,7 @@ final class ProjectExporter {
       catalogItems: catalogItems,
       relationships: relationships,
       notes: notes,
+      researchItems: researchItems,
     );
     final slug = _fileSlug(project.title);
     switch (profile.format) {
