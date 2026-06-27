@@ -79,10 +79,14 @@ import 'features/structure/domain/chapter.dart';
 import 'features/structure/domain/chapter_repository.dart';
 import 'features/structure/domain/scene.dart';
 import 'features/structure/domain/scene_repository.dart';
+import 'features/structure/domain/scene_snapshot.dart';
+import 'features/structure/domain/scene_snapshot_repository.dart';
 import 'features/structure/infrastructure/drift_chapter_repository.dart';
 import 'features/structure/infrastructure/drift_scene_repository.dart';
+import 'features/structure/infrastructure/drift_scene_snapshot_repository.dart';
 import 'features/structure/infrastructure/lazy_chapter_repository.dart';
 import 'features/structure/infrastructure/lazy_scene_repository.dart';
+import 'features/structure/infrastructure/lazy_scene_snapshot_repository.dart';
 import 'shared/writeler_copy.dart';
 
 part 'presentation/app_root.dart';
@@ -112,6 +116,9 @@ void main() {
       ),
       sceneRepository: LazySceneRepository(
         () => DriftSceneRepository(getDatabase()),
+      ),
+      sceneSnapshotRepository: LazySceneSnapshotRepository(
+        () => DriftSceneSnapshotRepository(getDatabase()),
       ),
       chapterRepository: LazyChapterRepository(
         () => DriftChapterRepository(getDatabase()),

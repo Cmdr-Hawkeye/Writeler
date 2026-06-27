@@ -123,6 +123,7 @@ final class WritelerShell extends StatefulWidget {
   const WritelerShell({
     required this.projectRepository,
     required this.sceneRepository,
+    required this.sceneSnapshotRepository,
     required this.chapterRepository,
     required this.catalogItemRepository,
     required this.relationshipRepository,
@@ -147,6 +148,7 @@ final class WritelerShell extends StatefulWidget {
 
   final ProjectRepository projectRepository;
   final SceneRepository sceneRepository;
+  final SceneSnapshotRepository sceneSnapshotRepository;
   final ChapterRepository chapterRepository;
   final CatalogItemRepository catalogItemRepository;
   final RelationshipRepository relationshipRepository;
@@ -225,6 +227,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   List<MetricEvent> _metrics = const [];
   List<AISuggestion> _suggestions = const [];
   List<ProjectNote> _notes = const [];
+  List<SceneSnapshot> _sceneSnapshots = const [];
   Project? _selectedProject;
   Scene? _selectedScene;
   String? _selectedSceneChapterId;
@@ -510,6 +513,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     final suggestionsFuture =
         widget.aiSuggestionRepository.listForProject(projectId);
     final notesFuture = widget.projectNoteRepository.listForProject(projectId);
+    final snapshotsFuture =
+        widget.sceneSnapshotRepository.listByProject(projectId);
     final scenes = await scenesFuture;
     final chapters = await chaptersFuture;
     final catalogItems = await catalogFuture;
@@ -517,6 +522,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     final metrics = await metricsFuture;
     final suggestions = await suggestionsFuture;
     final notes = await notesFuture;
+    final snapshots = await snapshotsFuture;
     if (!mounted) return;
     setState(() {
       _scenes = scenes;
@@ -526,6 +532,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       _metrics = metrics;
       _suggestions = suggestions;
       _notes = notes;
+      _sceneSnapshots = snapshots;
       _selectedScene = scenes.firstOrNull;
       _syncSceneControllers(_selectedScene);
     });
@@ -542,6 +549,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       _metrics = const [];
       _suggestions = const [];
       _notes = const [];
+      _sceneSnapshots = const [];
       _syncSceneControllers(null);
     });
     await _loadProjectData(project.id);
@@ -622,20 +630,13 @@ final class _WritelerShellState extends State<WritelerShell> {
     if (scene == null || project == null) return;
 
     _autosaveTimer?.cancel();
-    final wordTargetText = _wordTargetController.text.trim();
-    final wordTarget = int.tryParse(wordTargetText);
-    final updated = scene.copyWith(
-      summary: _summaryController.text.trim(),
-      manuscriptText: _manuscriptController.text,
-      chapterId: _selectedSceneChapterId,
-      clearChapterId: _selectedSceneChapterId == null,
-      status: _selectedSceneStatus,
-      estimatedWordTarget: wordTarget,
-      clearEstimatedWordTarget: wordTargetText.isEmpty,
-      goal: _goalController.text.trim(),
-      conflict: _conflictController.text.trim(),
-      outcome: _outcomeController.text.trim(),
-    );
+    final updated = _sceneDraftFromControllers(scene);
+    if (_shouldCreateAutomaticSnapshot(scene, updated)) {
+      await _createSceneSnapshot(
+        scene,
+        reason: SceneSnapshotReason.majorEdit,
+      );
+    }
     await widget.sceneRepository.save(updated);
     final scenes = await widget.sceneRepository.listByProject(project.id);
 
@@ -663,6 +664,150 @@ final class _WritelerShellState extends State<WritelerShell> {
         SnackBar(content: Text(copy.t('sceneSaved'))),
       );
     }
+  }
+
+  Scene _sceneDraftFromControllers(Scene scene) {
+    final wordTargetText = _wordTargetController.text.trim();
+    final wordTarget = int.tryParse(wordTargetText);
+    return scene.copyWith(
+      summary: _summaryController.text.trim(),
+      manuscriptText: _manuscriptController.text,
+      chapterId: _selectedSceneChapterId,
+      clearChapterId: _selectedSceneChapterId == null,
+      status: _selectedSceneStatus,
+      estimatedWordTarget: wordTarget,
+      clearEstimatedWordTarget: wordTargetText.isEmpty,
+      goal: _goalController.text.trim(),
+      conflict: _conflictController.text.trim(),
+      outcome: _outcomeController.text.trim(),
+    );
+  }
+
+  bool _shouldCreateAutomaticSnapshot(Scene before, Scene after) {
+    final manuscriptDelta =
+        (after.manuscriptText.length - before.manuscriptText.length).abs();
+    final planningChanged = before.summary != after.summary ||
+        before.goal != after.goal ||
+        before.conflict != after.conflict ||
+        before.outcome != after.outcome;
+    final statusChanged = before.status != after.status ||
+        before.chapterId != after.chapterId ||
+        before.estimatedWordTarget != after.estimatedWordTarget;
+    final substantialTextChange = manuscriptDelta >= 500 ||
+        (before.manuscriptText.isNotEmpty &&
+            manuscriptDelta / before.manuscriptText.length >= 0.18);
+    return substantialTextChange || planningChanged || statusChanged;
+  }
+
+  Future<void> _createSceneSnapshot(
+    Scene scene, {
+    required SceneSnapshotReason reason,
+    String label = '',
+  }) async {
+    final latest =
+        await widget.sceneSnapshotRepository.latestForScene(scene.id);
+    if (latest != null &&
+        jsonEncode(latest.scene.toJson()) == jsonEncode(scene.toJson())) {
+      return;
+    }
+    final snapshot = SceneSnapshot(
+      id: newLocalId('sceneSnapshot'),
+      projectId: scene.projectId,
+      sceneId: scene.id,
+      sceneTitle: scene.title,
+      label: label,
+      reason: reason,
+      scene: scene,
+      createdAt: DateTime.now().toUtc(),
+    );
+    await widget.sceneSnapshotRepository.save(snapshot);
+    final snapshots =
+        await widget.sceneSnapshotRepository.listByProject(scene.projectId);
+    if (!mounted) return;
+    setState(() => _sceneSnapshots = snapshots);
+    await _recordProjectMetric(
+      eventType: 'scene.snapshot.created',
+      metadata: {
+        'sceneId': scene.id,
+        'reason': reason.wireName,
+      },
+    );
+  }
+
+  Future<void> _createManualSceneSnapshot(WritelerCopy copy) async {
+    final scene = _selectedScene;
+    if (scene == null) return;
+    if (_sceneSaveState == _SceneSaveState.unsaved) {
+      await _saveSelectedScene(copy, showSnackBar: false);
+    }
+    final current = _selectedScene ?? scene;
+    await _createSceneSnapshot(
+      current,
+      reason: SceneSnapshotReason.manual,
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('snapshotCreated'))),
+    );
+  }
+
+  Future<void> _deleteSceneSnapshot(
+    SceneSnapshot snapshot,
+    WritelerCopy copy,
+  ) async {
+    await widget.sceneSnapshotRepository.delete(snapshot.id);
+    final snapshots =
+        await widget.sceneSnapshotRepository.listByProject(snapshot.projectId);
+    if (!mounted) return;
+    setState(() => _sceneSnapshots = snapshots);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('snapshotDeleted'))),
+    );
+  }
+
+  Future<void> _restoreSceneSnapshot(
+    SceneSnapshot snapshot,
+    WritelerCopy copy,
+  ) async {
+    var current =
+        _scenes.where((scene) => scene.id == snapshot.sceneId).firstOrNull;
+    if (_selectedScene?.id == snapshot.sceneId &&
+        _sceneSaveState == _SceneSaveState.unsaved) {
+      current = _sceneDraftFromControllers(_selectedScene!);
+    }
+    if (current != null) {
+      await _createSceneSnapshot(
+        current,
+        reason: SceneSnapshotReason.restore,
+      );
+    }
+    final restored = snapshot.scene.copyWith();
+    await widget.sceneRepository.save(restored);
+    final scenes =
+        await widget.sceneRepository.listByProject(restored.projectId);
+    final snapshots =
+        await widget.sceneSnapshotRepository.listByProject(restored.projectId);
+    if (!mounted) return;
+    setState(() {
+      _scenes = scenes;
+      _sceneSnapshots = snapshots;
+      _selectedScene = scenes.firstWhere(
+        (scene) => scene.id == restored.id,
+        orElse: () => restored,
+      );
+      _syncSceneControllers(_selectedScene);
+    });
+    await _recordProjectMetric(
+      eventType: 'scene.snapshot.restored',
+      metadata: {
+        'sceneId': restored.id,
+        'snapshotId': snapshot.id,
+      },
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('snapshotRestored'))),
+    );
   }
 
   Future<void> _deleteProject(Project project, WritelerCopy copy) async {
@@ -1352,6 +1497,10 @@ final class _WritelerShellState extends State<WritelerShell> {
     }
 
     final updated = patch.applyTo(scene);
+    await _createSceneSnapshot(
+      scene,
+      reason: SceneSnapshotReason.aiAccepted,
+    );
     await widget.sceneRepository.save(updated);
     final scenes = await widget.sceneRepository.listByProject(scene.projectId);
     final selected = _selectedScene?.id == updated.id
@@ -2009,6 +2158,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           selectedSceneChapterId: _selectedSceneChapterId,
           sceneSaveState: _sceneSaveState,
           lastSceneSavedAt: _lastSceneSavedAt,
+          sceneSnapshots: _sceneSnapshots,
           spellCheckSettings: widget.spellCheckSettings,
           spellChecker: widget.spellChecker,
           onSelectProject: _selectProject,
@@ -2030,6 +2180,11 @@ final class _WritelerShellState extends State<WritelerShell> {
           isRequestingAi: _isRequestingAi,
           onRequestSceneAiHelp: (task, prompt) =>
               _requestEditorSceneAiHelp(copy, task, prompt),
+          onCreateSceneSnapshot: () => _createManualSceneSnapshot(copy),
+          onRestoreSceneSnapshot: (snapshot) =>
+              _restoreSceneSnapshot(snapshot, copy),
+          onDeleteSceneSnapshot: (snapshot) =>
+              _deleteSceneSnapshot(snapshot, copy),
           onSaveScene: () => _saveSelectedScene(copy),
         ),
       2 => _SceneBoard(

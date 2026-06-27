@@ -23,6 +23,7 @@ final class _WorkspaceView extends StatelessWidget {
     required this.selectedSceneChapterId,
     required this.sceneSaveState,
     required this.lastSceneSavedAt,
+    required this.sceneSnapshots,
     required this.spellCheckSettings,
     required this.spellChecker,
     required this.onSelectProject,
@@ -38,6 +39,9 @@ final class _WorkspaceView extends StatelessWidget {
     required this.onCreateScene,
     required this.isRequestingAi,
     required this.onRequestSceneAiHelp,
+    required this.onCreateSceneSnapshot,
+    required this.onRestoreSceneSnapshot,
+    required this.onDeleteSceneSnapshot,
     required this.onSaveScene,
   });
 
@@ -60,6 +64,7 @@ final class _WorkspaceView extends StatelessWidget {
   final String? selectedSceneChapterId;
   final _SceneSaveState sceneSaveState;
   final DateTime? lastSceneSavedAt;
+  final List<SceneSnapshot> sceneSnapshots;
   final SpellCheckSettings spellCheckSettings;
   final SpellChecker spellChecker;
   final ValueChanged<Project> onSelectProject;
@@ -77,6 +82,9 @@ final class _WorkspaceView extends StatelessWidget {
   final VoidCallback onCreateScene;
   final bool isRequestingAi;
   final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
+  final VoidCallback onCreateSceneSnapshot;
+  final ValueChanged<SceneSnapshot> onRestoreSceneSnapshot;
+  final ValueChanged<SceneSnapshot> onDeleteSceneSnapshot;
   final VoidCallback onSaveScene;
 
   @override
@@ -107,6 +115,7 @@ final class _WorkspaceView extends StatelessWidget {
       selectedSceneChapterId: selectedSceneChapterId,
       sceneSaveState: sceneSaveState,
       lastSceneSavedAt: lastSceneSavedAt,
+      sceneSnapshots: sceneSnapshots,
       spellCheckSettings: spellCheckSettings,
       spellChecker: spellChecker,
       onSelectScene: onSelectScene,
@@ -120,6 +129,9 @@ final class _WorkspaceView extends StatelessWidget {
       onCreateScene: onCreateScene,
       isRequestingAi: isRequestingAi,
       onRequestSceneAiHelp: onRequestSceneAiHelp,
+      onCreateSceneSnapshot: onCreateSceneSnapshot,
+      onRestoreSceneSnapshot: onRestoreSceneSnapshot,
+      onDeleteSceneSnapshot: onDeleteSceneSnapshot,
       onSaveScene: onSaveScene,
     );
 

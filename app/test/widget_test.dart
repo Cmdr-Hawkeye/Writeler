@@ -16,6 +16,7 @@ import 'package:writeler/features/structure/application/create_chapter.dart';
 import 'package:writeler/features/structure/application/create_scene.dart';
 import 'package:writeler/features/structure/application/in_memory_chapter_repository.dart';
 import 'package:writeler/features/structure/application/in_memory_scene_repository.dart';
+import 'package:writeler/features/structure/application/in_memory_scene_snapshot_repository.dart';
 import 'package:writeler/main.dart';
 
 Future<void> tapNavigationItem(WidgetTester tester, String label) async {
@@ -36,6 +37,7 @@ void main() {
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -70,6 +72,7 @@ void main() {
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -119,6 +122,7 @@ void main() {
         projectRepository: projectRepository,
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -183,6 +187,7 @@ void main() {
         projectRepository: projectRepository,
         chapterRepository: chapterRepository,
         sceneRepository: sceneRepository,
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -227,6 +232,7 @@ void main() {
         projectRepository: projectRepository,
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: sceneRepository,
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -267,6 +273,7 @@ void main() {
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -320,6 +327,7 @@ void main() {
         projectRepository: projectRepository,
         chapterRepository: chapterRepository,
         sceneRepository: sceneRepository,
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: catalogItemRepository,
         relationshipRepository: relationshipRepository,
         metricRepository: InMemoryMetricRepository(),
@@ -488,6 +496,7 @@ void main() {
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -536,6 +545,7 @@ void main() {
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -571,6 +581,7 @@ void main() {
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -608,6 +619,7 @@ void main() {
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),
@@ -653,6 +665,7 @@ void main() {
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
         catalogItemRepository: InMemoryCatalogItemRepository(),
         relationshipRepository: InMemoryRelationshipRepository(),
         metricRepository: InMemoryMetricRepository(),

@@ -6,6 +6,7 @@ final class WritelerApp extends StatefulWidget {
   const WritelerApp({
     required this.projectRepository,
     required this.sceneRepository,
+    required this.sceneSnapshotRepository,
     required this.chapterRepository,
     required this.catalogItemRepository,
     required this.relationshipRepository,
@@ -20,6 +21,7 @@ final class WritelerApp extends StatefulWidget {
 
   final ProjectRepository projectRepository;
   final SceneRepository sceneRepository;
+  final SceneSnapshotRepository sceneSnapshotRepository;
   final ChapterRepository chapterRepository;
   final CatalogItemRepository catalogItemRepository;
   final RelationshipRepository relationshipRepository;
@@ -236,6 +238,7 @@ final class _WritelerAppState extends State<WritelerApp> {
       home: WritelerShell(
         projectRepository: widget.projectRepository,
         sceneRepository: widget.sceneRepository,
+        sceneSnapshotRepository: widget.sceneSnapshotRepository,
         chapterRepository: widget.chapterRepository,
         catalogItemRepository: widget.catalogItemRepository,
         relationshipRepository: widget.relationshipRepository,

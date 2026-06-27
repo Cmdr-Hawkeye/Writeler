@@ -22,6 +22,7 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.selectedSceneChapterId,
     required this.sceneSaveState,
     required this.lastSceneSavedAt,
+    required this.sceneSnapshots,
     required this.spellCheckSettings,
     required this.spellChecker,
     required this.onSelectScene,
@@ -35,6 +36,9 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.onCreateScene,
     required this.isRequestingAi,
     required this.onRequestSceneAiHelp,
+    required this.onCreateSceneSnapshot,
+    required this.onRestoreSceneSnapshot,
+    required this.onDeleteSceneSnapshot,
     required this.onSaveScene,
   });
 
@@ -56,6 +60,7 @@ final class _ProjectWorkspace extends StatefulWidget {
   final String? selectedSceneChapterId;
   final _SceneSaveState sceneSaveState;
   final DateTime? lastSceneSavedAt;
+  final List<SceneSnapshot> sceneSnapshots;
   final SpellCheckSettings spellCheckSettings;
   final SpellChecker spellChecker;
   final ValueChanged<Scene> onSelectScene;
@@ -71,6 +76,9 @@ final class _ProjectWorkspace extends StatefulWidget {
   final VoidCallback onCreateScene;
   final bool isRequestingAi;
   final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
+  final VoidCallback onCreateSceneSnapshot;
+  final ValueChanged<SceneSnapshot> onRestoreSceneSnapshot;
+  final ValueChanged<SceneSnapshot> onDeleteSceneSnapshot;
   final VoidCallback onSaveScene;
 
   @override
@@ -209,6 +217,11 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                                 widget.selectedSceneChapterId,
                             saveState: widget.sceneSaveState,
                             lastSavedAt: widget.lastSceneSavedAt,
+                            snapshots: widget.sceneSnapshots
+                                .where((snapshot) =>
+                                    snapshot.sceneId ==
+                                    widget.selectedScene!.id)
+                                .toList(),
                             spellCheckSettings: widget.spellCheckSettings,
                             spellChecker: widget.spellChecker,
                             focusMode: _focusMode,
@@ -227,6 +240,9 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                             onSceneStatusChanged: widget.onSceneStatusChanged,
                             isRequestingAi: widget.isRequestingAi,
                             onRequestSceneAiHelp: widget.onRequestSceneAiHelp,
+                            onCreateSnapshot: widget.onCreateSceneSnapshot,
+                            onRestoreSnapshot: widget.onRestoreSceneSnapshot,
+                            onDeleteSnapshot: widget.onDeleteSceneSnapshot,
                             onSaveScene: widget.onSaveScene,
                           ),
                   ),
@@ -669,6 +685,7 @@ final class _SceneEditor extends StatefulWidget {
     required this.selectedSceneChapterId,
     required this.saveState,
     required this.lastSavedAt,
+    required this.snapshots,
     required this.spellCheckSettings,
     required this.spellChecker,
     required this.focusMode,
@@ -682,6 +699,9 @@ final class _SceneEditor extends StatefulWidget {
     required this.onSceneStatusChanged,
     required this.isRequestingAi,
     required this.onRequestSceneAiHelp,
+    required this.onCreateSnapshot,
+    required this.onRestoreSnapshot,
+    required this.onDeleteSnapshot,
     required this.onSaveScene,
   });
 
@@ -701,6 +721,7 @@ final class _SceneEditor extends StatefulWidget {
   final String? selectedSceneChapterId;
   final _SceneSaveState saveState;
   final DateTime? lastSavedAt;
+  final List<SceneSnapshot> snapshots;
   final SpellCheckSettings spellCheckSettings;
   final SpellChecker spellChecker;
   final bool focusMode;
@@ -716,6 +737,9 @@ final class _SceneEditor extends StatefulWidget {
   final ValueChanged<DraftStatus> onSceneStatusChanged;
   final bool isRequestingAi;
   final void Function(AITaskKind task, String prompt) onRequestSceneAiHelp;
+  final VoidCallback onCreateSnapshot;
+  final ValueChanged<SceneSnapshot> onRestoreSnapshot;
+  final ValueChanged<SceneSnapshot> onDeleteSnapshot;
   final VoidCallback onSaveScene;
 
   @override
@@ -730,6 +754,19 @@ final class _SceneEditorState extends State<_SceneEditor> {
   bool _spellCheckCompleted = false;
   String? _spellCheckError;
   List<SpellCheckIssue> _spellIssues = const [];
+  bool _showSnapshots = false;
+  SceneSnapshot? _selectedSnapshot;
+
+  @override
+  void didUpdateWidget(covariant _SceneEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_selectedSnapshot == null) return;
+    final stillExists = widget.snapshots
+        .any((snapshot) => snapshot.id == _selectedSnapshot!.id);
+    if (!stillExists) {
+      _selectedSnapshot = null;
+    }
+  }
 
   @override
   void dispose() {
@@ -888,6 +925,20 @@ final class _SceneEditorState extends State<_SceneEditor> {
                     ),
                   ),
                   Tooltip(
+                    message: copy.t('sceneSnapshots'),
+                    child: IconButton.outlined(
+                      isSelected: _showSnapshots,
+                      onPressed: () => setState(
+                        () => _showSnapshots = !_showSnapshots,
+                      ),
+                      icon: Badge.count(
+                        count: widget.snapshots.length,
+                        isLabelVisible: widget.snapshots.isNotEmpty,
+                        child: const Icon(Icons.history_outlined),
+                      ),
+                    ),
+                  ),
+                  Tooltip(
                     message: copy.t('editorFontSize'),
                     child: PopupMenuButton<double>(
                       tooltip: copy.t('editorFontSize'),
@@ -973,6 +1024,22 @@ final class _SceneEditorState extends State<_SceneEditor> {
                 _spellCheckError = null;
                 _spellCheckCompleted = false;
               }),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (!widget.focusMode && _showSnapshots) ...[
+            _SceneSnapshotsPanel(
+              copy: copy,
+              currentScene: scene,
+              snapshots: widget.snapshots,
+              selectedSnapshot: _selectedSnapshot,
+              onSelectSnapshot: (snapshot) => setState(
+                () => _selectedSnapshot =
+                    _selectedSnapshot?.id == snapshot.id ? null : snapshot,
+              ),
+              onCreateSnapshot: widget.onCreateSnapshot,
+              onRestoreSnapshot: widget.onRestoreSnapshot,
+              onDeleteSnapshot: widget.onDeleteSnapshot,
             ),
             const SizedBox(height: 12),
           ],
@@ -1253,6 +1320,402 @@ final class _SpellCheckResultsPanel extends StatelessWidget {
       ),
     );
   }
+}
+
+final class _SceneSnapshotsPanel extends StatelessWidget {
+  const _SceneSnapshotsPanel({
+    required this.copy,
+    required this.currentScene,
+    required this.snapshots,
+    required this.selectedSnapshot,
+    required this.onSelectSnapshot,
+    required this.onCreateSnapshot,
+    required this.onRestoreSnapshot,
+    required this.onDeleteSnapshot,
+  });
+
+  final WritelerCopy copy;
+  final Scene currentScene;
+  final List<SceneSnapshot> snapshots;
+  final SceneSnapshot? selectedSnapshot;
+  final ValueChanged<SceneSnapshot> onSelectSnapshot;
+  final VoidCallback onCreateSnapshot;
+  final ValueChanged<SceneSnapshot> onRestoreSnapshot;
+  final ValueChanged<SceneSnapshot> onDeleteSnapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.history_outlined, color: color.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    copy.t('sceneSnapshots'),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onCreateSnapshot,
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: Text(copy.t('createSnapshot')),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (snapshots.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  copy.t('noSnapshotsYet'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+              )
+            else
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 760;
+                  final list = _SnapshotList(
+                    copy: copy,
+                    snapshots: snapshots,
+                    selectedSnapshot: selectedSnapshot,
+                    onSelectSnapshot: onSelectSnapshot,
+                    onRestoreSnapshot: onRestoreSnapshot,
+                    onDeleteSnapshot: onDeleteSnapshot,
+                  );
+                  final diff = selectedSnapshot == null
+                      ? _SnapshotDiffPlaceholder(copy: copy)
+                      : _SceneSnapshotDiff(
+                          copy: copy,
+                          currentScene: currentScene,
+                          snapshot: selectedSnapshot!,
+                        );
+                  if (compact) {
+                    return Column(
+                      children: [
+                        SizedBox(height: 190, child: list),
+                        const SizedBox(height: 10),
+                        diff,
+                      ],
+                    );
+                  }
+                  return SizedBox(
+                    height: 260,
+                    child: Row(
+                      children: [
+                        SizedBox(width: 320, child: list),
+                        const SizedBox(width: 12),
+                        Expanded(child: diff),
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _SnapshotList extends StatelessWidget {
+  const _SnapshotList({
+    required this.copy,
+    required this.snapshots,
+    required this.selectedSnapshot,
+    required this.onSelectSnapshot,
+    required this.onRestoreSnapshot,
+    required this.onDeleteSnapshot,
+  });
+
+  final WritelerCopy copy;
+  final List<SceneSnapshot> snapshots;
+  final SceneSnapshot? selectedSnapshot;
+  final ValueChanged<SceneSnapshot> onSelectSnapshot;
+  final ValueChanged<SceneSnapshot> onRestoreSnapshot;
+  final ValueChanged<SceneSnapshot> onDeleteSnapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      itemCount: snapshots.length,
+      separatorBuilder: (_, __) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final snapshot = snapshots[index];
+        final selected = selectedSnapshot?.id == snapshot.id;
+        return ListTile(
+          selected: selected,
+          leading: Icon(_snapshotReasonIcon(snapshot.reason)),
+          title: Text(
+            _snapshotReasonLabel(snapshot.reason, copy),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(_formatLocalDateTime(snapshot.createdAt)),
+          onTap: () => onSelectSnapshot(snapshot),
+          trailing: Wrap(
+            spacing: 2,
+            children: [
+              Tooltip(
+                message: copy.t('restoreSnapshot'),
+                child: IconButton(
+                  onPressed: () => onRestoreSnapshot(snapshot),
+                  icon: const Icon(Icons.restore_outlined),
+                ),
+              ),
+              Tooltip(
+                message: copy.t('deleteSnapshot'),
+                child: IconButton(
+                  onPressed: () => onDeleteSnapshot(snapshot),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+final class _SnapshotDiffPlaceholder extends StatelessWidget {
+  const _SnapshotDiffPlaceholder({required this.copy});
+
+  final WritelerCopy copy;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(
+            copy.t('selectSnapshotForDiff'),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color.onSurfaceVariant,
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _SceneSnapshotDiff extends StatelessWidget {
+  const _SceneSnapshotDiff({
+    required this.copy,
+    required this.currentScene,
+    required this.snapshot,
+  });
+
+  final WritelerCopy copy;
+  final Scene currentScene;
+  final SceneSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final fields = _snapshotDiffRows(currentScene, snapshot.scene, copy);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: fields.isEmpty
+          ? Center(child: Text(copy.t('snapshotNoDiff')))
+          : ListView.separated(
+              padding: const EdgeInsets.all(10),
+              itemCount: fields.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) =>
+                  _SnapshotDiffRow(row: fields[index]),
+            ),
+    );
+  }
+}
+
+final class _SnapshotDiffRow extends StatelessWidget {
+  const _SnapshotDiffRow({required this.row});
+
+  final _SnapshotDiffData row;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          row.label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _DiffTextBox(
+                title: row.beforeTitle,
+                text: row.before,
+                color: color.errorContainer.withValues(alpha: 0.36),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _DiffTextBox(
+                title: row.afterTitle,
+                text: row.after,
+                color: color.primaryContainer.withValues(alpha: 0.34),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+final class _DiffTextBox extends StatelessWidget {
+  const _DiffTextBox({
+    required this.title,
+    required this.text,
+    required this.color,
+  });
+
+  final String title;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              text.trim().isEmpty ? '-' : _shortPreview(text),
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _SnapshotDiffData {
+  const _SnapshotDiffData({
+    required this.label,
+    required this.beforeTitle,
+    required this.before,
+    required this.afterTitle,
+    required this.after,
+  });
+
+  final String label;
+  final String beforeTitle;
+  final String before;
+  final String afterTitle;
+  final String after;
+}
+
+List<_SnapshotDiffData> _snapshotDiffRows(
+  Scene current,
+  Scene snapshot,
+  WritelerCopy copy,
+) {
+  final rows = <_SnapshotDiffData>[];
+  void addIfChanged(String label, String before, String after) {
+    if (before.trim() == after.trim()) return;
+    rows.add(
+      _SnapshotDiffData(
+        label: label,
+        beforeTitle: copy.t('snapshotVersion'),
+        before: before,
+        afterTitle: copy.t('currentVersion'),
+        after: after,
+      ),
+    );
+  }
+
+  addIfChanged(copy.t('sceneTitle'), snapshot.title, current.title);
+  addIfChanged(copy.t('summary'), snapshot.summary, current.summary);
+  addIfChanged(copy.t('goal'), snapshot.goal ?? '', current.goal ?? '');
+  addIfChanged(
+    copy.t('conflict'),
+    snapshot.conflict ?? '',
+    current.conflict ?? '',
+  );
+  addIfChanged(
+      copy.t('outcome'), snapshot.outcome ?? '', current.outcome ?? '');
+  addIfChanged(
+      copy.t('manuscript'), snapshot.manuscriptText, current.manuscriptText);
+  return rows;
+}
+
+String _shortPreview(String value) {
+  final lines = value.trim().split(RegExp(r'\r?\n'));
+  if (lines.length <= 8) return value.trim();
+  return [...lines.take(8), '...'].join('\n');
+}
+
+String _snapshotReasonLabel(SceneSnapshotReason reason, WritelerCopy copy) {
+  return switch (reason) {
+    SceneSnapshotReason.manual => copy.t('snapshotReasonManual'),
+    SceneSnapshotReason.majorEdit => copy.t('snapshotReasonMajorEdit'),
+    SceneSnapshotReason.aiAccepted => copy.t('snapshotReasonAiAccepted'),
+    SceneSnapshotReason.restore => copy.t('snapshotReasonRestore'),
+  };
+}
+
+IconData _snapshotReasonIcon(SceneSnapshotReason reason) {
+  return switch (reason) {
+    SceneSnapshotReason.manual => Icons.bookmark_add_outlined,
+    SceneSnapshotReason.majorEdit => Icons.edit_note_outlined,
+    SceneSnapshotReason.aiAccepted => Icons.psychology_alt_outlined,
+    SceneSnapshotReason.restore => Icons.restore_outlined,
+  };
 }
 
 final class _FocusModeButton extends StatelessWidget {

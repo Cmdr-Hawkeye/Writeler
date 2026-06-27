@@ -72,6 +72,21 @@ class Scenes extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('SceneSnapshotRow')
+class SceneSnapshots extends Table {
+  TextColumn get id => text()();
+  TextColumn get projectId => text().references(Projects, #id)();
+  TextColumn get sceneId => text().references(Scenes, #id)();
+  TextColumn get sceneTitle => text()();
+  TextColumn get label => text().withDefault(const Constant(''))();
+  TextColumn get reason => text()();
+  TextColumn get sceneJson => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DataClassName('CatalogItemRow')
 class CatalogItems extends Table {
   TextColumn get id => text()();
@@ -196,6 +211,7 @@ class MetricEvents extends Table {
     Projects,
     Chapters,
     Scenes,
+    SceneSnapshots,
     CatalogItems,
     Relationships,
     AISuggestions,
@@ -219,7 +235,7 @@ final class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -248,6 +264,9 @@ final class AppDatabase extends _$AppDatabase {
           }
           if (from < 8) {
             await migrator.createTable(appPreferences);
+          }
+          if (from < 9) {
+            await migrator.createTable(sceneSnapshots);
           }
         },
         beforeOpen: (details) async {

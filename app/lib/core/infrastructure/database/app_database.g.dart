@@ -2340,6 +2340,434 @@ class ScenesCompanion extends UpdateCompanion<SceneRow> {
   }
 }
 
+class $SceneSnapshotsTable extends SceneSnapshots
+    with TableInfo<$SceneSnapshotsTable, SceneSnapshotRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SceneSnapshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES projects (id)'));
+  static const VerificationMeta _sceneIdMeta =
+      const VerificationMeta('sceneId');
+  @override
+  late final GeneratedColumn<String> sceneId = GeneratedColumn<String>(
+      'scene_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES scenes (id)'));
+  static const VerificationMeta _sceneTitleMeta =
+      const VerificationMeta('sceneTitle');
+  @override
+  late final GeneratedColumn<String> sceneTitle = GeneratedColumn<String>(
+      'scene_title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+      'label', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+      'reason', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sceneJsonMeta =
+      const VerificationMeta('sceneJson');
+  @override
+  late final GeneratedColumn<String> sceneJson = GeneratedColumn<String>(
+      'scene_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, projectId, sceneId, sceneTitle, label, reason, sceneJson, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'scene_snapshots';
+  @override
+  VerificationContext validateIntegrity(Insertable<SceneSnapshotRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('scene_id')) {
+      context.handle(_sceneIdMeta,
+          sceneId.isAcceptableOrUnknown(data['scene_id']!, _sceneIdMeta));
+    } else if (isInserting) {
+      context.missing(_sceneIdMeta);
+    }
+    if (data.containsKey('scene_title')) {
+      context.handle(
+          _sceneTitleMeta,
+          sceneTitle.isAcceptableOrUnknown(
+              data['scene_title']!, _sceneTitleMeta));
+    } else if (isInserting) {
+      context.missing(_sceneTitleMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+          _labelMeta, label.isAcceptableOrUnknown(data['label']!, _labelMeta));
+    }
+    if (data.containsKey('reason')) {
+      context.handle(_reasonMeta,
+          reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta));
+    } else if (isInserting) {
+      context.missing(_reasonMeta);
+    }
+    if (data.containsKey('scene_json')) {
+      context.handle(_sceneJsonMeta,
+          sceneJson.isAcceptableOrUnknown(data['scene_json']!, _sceneJsonMeta));
+    } else if (isInserting) {
+      context.missing(_sceneJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SceneSnapshotRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SceneSnapshotRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}project_id'])!,
+      sceneId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}scene_id'])!,
+      sceneTitle: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}scene_title'])!,
+      label: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}label'])!,
+      reason: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reason'])!,
+      sceneJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}scene_json'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $SceneSnapshotsTable createAlias(String alias) {
+    return $SceneSnapshotsTable(attachedDatabase, alias);
+  }
+}
+
+class SceneSnapshotRow extends DataClass
+    implements Insertable<SceneSnapshotRow> {
+  final String id;
+  final String projectId;
+  final String sceneId;
+  final String sceneTitle;
+  final String label;
+  final String reason;
+  final String sceneJson;
+  final DateTime createdAt;
+  const SceneSnapshotRow(
+      {required this.id,
+      required this.projectId,
+      required this.sceneId,
+      required this.sceneTitle,
+      required this.label,
+      required this.reason,
+      required this.sceneJson,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['project_id'] = Variable<String>(projectId);
+    map['scene_id'] = Variable<String>(sceneId);
+    map['scene_title'] = Variable<String>(sceneTitle);
+    map['label'] = Variable<String>(label);
+    map['reason'] = Variable<String>(reason);
+    map['scene_json'] = Variable<String>(sceneJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SceneSnapshotsCompanion toCompanion(bool nullToAbsent) {
+    return SceneSnapshotsCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      sceneId: Value(sceneId),
+      sceneTitle: Value(sceneTitle),
+      label: Value(label),
+      reason: Value(reason),
+      sceneJson: Value(sceneJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SceneSnapshotRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SceneSnapshotRow(
+      id: serializer.fromJson<String>(json['id']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      sceneId: serializer.fromJson<String>(json['sceneId']),
+      sceneTitle: serializer.fromJson<String>(json['sceneTitle']),
+      label: serializer.fromJson<String>(json['label']),
+      reason: serializer.fromJson<String>(json['reason']),
+      sceneJson: serializer.fromJson<String>(json['sceneJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'projectId': serializer.toJson<String>(projectId),
+      'sceneId': serializer.toJson<String>(sceneId),
+      'sceneTitle': serializer.toJson<String>(sceneTitle),
+      'label': serializer.toJson<String>(label),
+      'reason': serializer.toJson<String>(reason),
+      'sceneJson': serializer.toJson<String>(sceneJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SceneSnapshotRow copyWith(
+          {String? id,
+          String? projectId,
+          String? sceneId,
+          String? sceneTitle,
+          String? label,
+          String? reason,
+          String? sceneJson,
+          DateTime? createdAt}) =>
+      SceneSnapshotRow(
+        id: id ?? this.id,
+        projectId: projectId ?? this.projectId,
+        sceneId: sceneId ?? this.sceneId,
+        sceneTitle: sceneTitle ?? this.sceneTitle,
+        label: label ?? this.label,
+        reason: reason ?? this.reason,
+        sceneJson: sceneJson ?? this.sceneJson,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  SceneSnapshotRow copyWithCompanion(SceneSnapshotsCompanion data) {
+    return SceneSnapshotRow(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      sceneId: data.sceneId.present ? data.sceneId.value : this.sceneId,
+      sceneTitle:
+          data.sceneTitle.present ? data.sceneTitle.value : this.sceneTitle,
+      label: data.label.present ? data.label.value : this.label,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      sceneJson: data.sceneJson.present ? data.sceneJson.value : this.sceneJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SceneSnapshotRow(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('sceneId: $sceneId, ')
+          ..write('sceneTitle: $sceneTitle, ')
+          ..write('label: $label, ')
+          ..write('reason: $reason, ')
+          ..write('sceneJson: $sceneJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, projectId, sceneId, sceneTitle, label, reason, sceneJson, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SceneSnapshotRow &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.sceneId == this.sceneId &&
+          other.sceneTitle == this.sceneTitle &&
+          other.label == this.label &&
+          other.reason == this.reason &&
+          other.sceneJson == this.sceneJson &&
+          other.createdAt == this.createdAt);
+}
+
+class SceneSnapshotsCompanion extends UpdateCompanion<SceneSnapshotRow> {
+  final Value<String> id;
+  final Value<String> projectId;
+  final Value<String> sceneId;
+  final Value<String> sceneTitle;
+  final Value<String> label;
+  final Value<String> reason;
+  final Value<String> sceneJson;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const SceneSnapshotsCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.sceneId = const Value.absent(),
+    this.sceneTitle = const Value.absent(),
+    this.label = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.sceneJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SceneSnapshotsCompanion.insert({
+    required String id,
+    required String projectId,
+    required String sceneId,
+    required String sceneTitle,
+    this.label = const Value.absent(),
+    required String reason,
+    required String sceneJson,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        projectId = Value(projectId),
+        sceneId = Value(sceneId),
+        sceneTitle = Value(sceneTitle),
+        reason = Value(reason),
+        sceneJson = Value(sceneJson),
+        createdAt = Value(createdAt);
+  static Insertable<SceneSnapshotRow> custom({
+    Expression<String>? id,
+    Expression<String>? projectId,
+    Expression<String>? sceneId,
+    Expression<String>? sceneTitle,
+    Expression<String>? label,
+    Expression<String>? reason,
+    Expression<String>? sceneJson,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (sceneId != null) 'scene_id': sceneId,
+      if (sceneTitle != null) 'scene_title': sceneTitle,
+      if (label != null) 'label': label,
+      if (reason != null) 'reason': reason,
+      if (sceneJson != null) 'scene_json': sceneJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SceneSnapshotsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? projectId,
+      Value<String>? sceneId,
+      Value<String>? sceneTitle,
+      Value<String>? label,
+      Value<String>? reason,
+      Value<String>? sceneJson,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
+    return SceneSnapshotsCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      sceneId: sceneId ?? this.sceneId,
+      sceneTitle: sceneTitle ?? this.sceneTitle,
+      label: label ?? this.label,
+      reason: reason ?? this.reason,
+      sceneJson: sceneJson ?? this.sceneJson,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (sceneId.present) {
+      map['scene_id'] = Variable<String>(sceneId.value);
+    }
+    if (sceneTitle.present) {
+      map['scene_title'] = Variable<String>(sceneTitle.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (sceneJson.present) {
+      map['scene_json'] = Variable<String>(sceneJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SceneSnapshotsCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('sceneId: $sceneId, ')
+          ..write('sceneTitle: $sceneTitle, ')
+          ..write('label: $label, ')
+          ..write('reason: $reason, ')
+          ..write('sceneJson: $sceneJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CatalogItemsTable extends CatalogItems
     with TableInfo<$CatalogItemsTable, CatalogItemRow> {
   @override
@@ -6040,6 +6468,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProjectsTable projects = $ProjectsTable(this);
   late final $ChaptersTable chapters = $ChaptersTable(this);
   late final $ScenesTable scenes = $ScenesTable(this);
+  late final $SceneSnapshotsTable sceneSnapshots = $SceneSnapshotsTable(this);
   late final $CatalogItemsTable catalogItems = $CatalogItemsTable(this);
   late final $RelationshipsTable relationships = $RelationshipsTable(this);
   late final $AISuggestionsTable aISuggestions = $AISuggestionsTable(this);
@@ -6056,6 +6485,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         projects,
         chapters,
         scenes,
+        sceneSnapshots,
         catalogItems,
         relationships,
         aISuggestions,
@@ -6127,6 +6557,20 @@ final class $$ProjectsTableReferences
         .filter((f) => f.projectId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_scenesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$SceneSnapshotsTable, List<SceneSnapshotRow>>
+      _sceneSnapshotsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.sceneSnapshots,
+              aliasName: 'projects__id__scene_snapshots__project_id');
+
+  $$SceneSnapshotsTableProcessedTableManager get sceneSnapshotsRefs {
+    final manager = $$SceneSnapshotsTableTableManager($_db, $_db.sceneSnapshots)
+        .filter((f) => f.projectId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_sceneSnapshotsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -6285,6 +6729,27 @@ class $$ProjectsTableFilterComposer
             $$ScenesTableFilterComposer(
               $db: $db,
               $table: $db.scenes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> sceneSnapshotsRefs(
+      Expression<bool> Function($$SceneSnapshotsTableFilterComposer f) f) {
+    final $$SceneSnapshotsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.sceneSnapshots,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SceneSnapshotsTableFilterComposer(
+              $db: $db,
+              $table: $db.sceneSnapshots,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -6541,6 +7006,27 @@ class $$ProjectsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> sceneSnapshotsRefs<T extends Object>(
+      Expression<T> Function($$SceneSnapshotsTableAnnotationComposer a) f) {
+    final $$SceneSnapshotsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.sceneSnapshots,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SceneSnapshotsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sceneSnapshots,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> catalogItemsRefs<T extends Object>(
       Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
     final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
@@ -6661,6 +7147,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool chaptersRefs,
         bool scenesRefs,
+        bool sceneSnapshotsRefs,
         bool catalogItemsRefs,
         bool relationshipsRefs,
         bool aISuggestionsRefs,
@@ -6747,6 +7234,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {chaptersRefs = false,
               scenesRefs = false,
+              sceneSnapshotsRefs = false,
               catalogItemsRefs = false,
               relationshipsRefs = false,
               aISuggestionsRefs = false,
@@ -6757,6 +7245,7 @@ class $$ProjectsTableTableManager extends RootTableManager<
               explicitlyWatchedTables: [
                 if (chaptersRefs) db.chapters,
                 if (scenesRefs) db.scenes,
+                if (sceneSnapshotsRefs) db.sceneSnapshots,
                 if (catalogItemsRefs) db.catalogItems,
                 if (relationshipsRefs) db.relationships,
                 if (aISuggestionsRefs) db.aISuggestions,
@@ -6787,6 +7276,19 @@ class $$ProjectsTableTableManager extends RootTableManager<
                             $$ProjectsTableReferences._scenesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProjectsTableReferences(db, table, p0).scenesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.projectId == item.id),
+                        typedResults: items),
+                  if (sceneSnapshotsRefs)
+                    await $_getPrefetchedData<ProjectRow, $ProjectsTable,
+                            SceneSnapshotRow>(
+                        currentTable: table,
+                        referencedTable: $$ProjectsTableReferences
+                            ._sceneSnapshotsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProjectsTableReferences(db, table, p0)
+                                .sceneSnapshotsRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.projectId == item.id),
@@ -6877,6 +7379,7 @@ typedef $$ProjectsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool chaptersRefs,
         bool scenesRefs,
+        bool sceneSnapshotsRefs,
         bool catalogItemsRefs,
         bool relationshipsRefs,
         bool aISuggestionsRefs,
@@ -7302,6 +7805,20 @@ final class $$ScenesTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
+
+  static MultiTypedResultKey<$SceneSnapshotsTable, List<SceneSnapshotRow>>
+      _sceneSnapshotsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.sceneSnapshots,
+              aliasName: 'scenes__id__scene_snapshots__scene_id');
+
+  $$SceneSnapshotsTableProcessedTableManager get sceneSnapshotsRefs {
+    final manager = $$SceneSnapshotsTableTableManager($_db, $_db.sceneSnapshots)
+        .filter((f) => f.sceneId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_sceneSnapshotsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$ScenesTableFilterComposer
@@ -7409,6 +7926,27 @@ class $$ScenesTableFilterComposer
                   $removeJoinBuilderFromRootComposer,
             ));
     return composer;
+  }
+
+  Expression<bool> sceneSnapshotsRefs(
+      Expression<bool> Function($$SceneSnapshotsTableFilterComposer f) f) {
+    final $$SceneSnapshotsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.sceneSnapshots,
+        getReferencedColumn: (t) => t.sceneId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SceneSnapshotsTableFilterComposer(
+              $db: $db,
+              $table: $db.sceneSnapshots,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
   }
 }
 
@@ -7626,6 +8164,27 @@ class $$ScenesTableAnnotationComposer
             ));
     return composer;
   }
+
+  Expression<T> sceneSnapshotsRefs<T extends Object>(
+      Expression<T> Function($$SceneSnapshotsTableAnnotationComposer a) f) {
+    final $$SceneSnapshotsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.sceneSnapshots,
+        getReferencedColumn: (t) => t.sceneId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SceneSnapshotsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sceneSnapshots,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$ScenesTableTableManager extends RootTableManager<
@@ -7639,7 +8198,7 @@ class $$ScenesTableTableManager extends RootTableManager<
     $$ScenesTableUpdateCompanionBuilder,
     (SceneRow, $$ScenesTableReferences),
     SceneRow,
-    PrefetchHooks Function({bool projectId})> {
+    PrefetchHooks Function({bool projectId, bool sceneSnapshotsRefs})> {
   $$ScenesTableTableManager(_$AppDatabase db, $ScenesTable table)
       : super(TableManagerState(
           db: db,
@@ -7766,10 +8325,13 @@ class $$ScenesTableTableManager extends RootTableManager<
               .map((e) =>
                   (e.readTable(table), $$ScenesTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({projectId = false}) {
+          prefetchHooksCallback: (
+              {projectId = false, sceneSnapshotsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [],
+              explicitlyWatchedTables: [
+                if (sceneSnapshotsRefs) db.sceneSnapshots
+              ],
               addJoins: <
                   T extends TableManagerState<
                       dynamic,
@@ -7797,7 +8359,21 @@ class $$ScenesTableTableManager extends RootTableManager<
                 return state;
               },
               getPrefetchedDataCallback: (items) async {
-                return [];
+                return [
+                  if (sceneSnapshotsRefs)
+                    await $_getPrefetchedData<SceneRow, $ScenesTable,
+                            SceneSnapshotRow>(
+                        currentTable: table,
+                        referencedTable: $$ScenesTableReferences
+                            ._sceneSnapshotsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ScenesTableReferences(db, table, p0)
+                                .sceneSnapshotsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.sceneId == item.id),
+                        typedResults: items)
+                ];
               },
             );
           },
@@ -7815,7 +8391,403 @@ typedef $$ScenesTableProcessedTableManager = ProcessedTableManager<
     $$ScenesTableUpdateCompanionBuilder,
     (SceneRow, $$ScenesTableReferences),
     SceneRow,
-    PrefetchHooks Function({bool projectId})>;
+    PrefetchHooks Function({bool projectId, bool sceneSnapshotsRefs})>;
+typedef $$SceneSnapshotsTableCreateCompanionBuilder = SceneSnapshotsCompanion
+    Function({
+  required String id,
+  required String projectId,
+  required String sceneId,
+  required String sceneTitle,
+  Value<String> label,
+  required String reason,
+  required String sceneJson,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$SceneSnapshotsTableUpdateCompanionBuilder = SceneSnapshotsCompanion
+    Function({
+  Value<String> id,
+  Value<String> projectId,
+  Value<String> sceneId,
+  Value<String> sceneTitle,
+  Value<String> label,
+  Value<String> reason,
+  Value<String> sceneJson,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+final class $$SceneSnapshotsTableReferences extends BaseReferences<
+    _$AppDatabase, $SceneSnapshotsTable, SceneSnapshotRow> {
+  $$SceneSnapshotsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProjectsTable _projectIdTable(_$AppDatabase db) =>
+      db.projects.createAlias('scene_snapshots__project_id__projects__id');
+
+  $$ProjectsTableProcessedTableManager get projectId {
+    final $_column = $_itemColumn<String>('project_id')!;
+
+    final manager = $$ProjectsTableTableManager($_db, $_db.projects)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ScenesTable _sceneIdTable(_$AppDatabase db) =>
+      db.scenes.createAlias('scene_snapshots__scene_id__scenes__id');
+
+  $$ScenesTableProcessedTableManager get sceneId {
+    final $_column = $_itemColumn<String>('scene_id')!;
+
+    final manager = $$ScenesTableTableManager($_db, $_db.scenes)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sceneIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$SceneSnapshotsTableFilterComposer
+    extends Composer<_$AppDatabase, $SceneSnapshotsTable> {
+  $$SceneSnapshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sceneTitle => $composableBuilder(
+      column: $table.sceneTitle, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get label => $composableBuilder(
+      column: $table.label, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get reason => $composableBuilder(
+      column: $table.reason, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sceneJson => $composableBuilder(
+      column: $table.sceneJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$ProjectsTableFilterComposer get projectId {
+    final $$ProjectsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableFilterComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ScenesTableFilterComposer get sceneId {
+    final $$ScenesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sceneId,
+        referencedTable: $db.scenes,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ScenesTableFilterComposer(
+              $db: $db,
+              $table: $db.scenes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SceneSnapshotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SceneSnapshotsTable> {
+  $$SceneSnapshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sceneTitle => $composableBuilder(
+      column: $table.sceneTitle, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get label => $composableBuilder(
+      column: $table.label, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+      column: $table.reason, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sceneJson => $composableBuilder(
+      column: $table.sceneJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$ProjectsTableOrderingComposer get projectId {
+    final $$ProjectsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableOrderingComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ScenesTableOrderingComposer get sceneId {
+    final $$ScenesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sceneId,
+        referencedTable: $db.scenes,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ScenesTableOrderingComposer(
+              $db: $db,
+              $table: $db.scenes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SceneSnapshotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SceneSnapshotsTable> {
+  $$SceneSnapshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sceneTitle => $composableBuilder(
+      column: $table.sceneTitle, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get sceneJson =>
+      $composableBuilder(column: $table.sceneJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ProjectsTableAnnotationComposer get projectId {
+    final $$ProjectsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.projects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ScenesTableAnnotationComposer get sceneId {
+    final $$ScenesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sceneId,
+        referencedTable: $db.scenes,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ScenesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.scenes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SceneSnapshotsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SceneSnapshotsTable,
+    SceneSnapshotRow,
+    $$SceneSnapshotsTableFilterComposer,
+    $$SceneSnapshotsTableOrderingComposer,
+    $$SceneSnapshotsTableAnnotationComposer,
+    $$SceneSnapshotsTableCreateCompanionBuilder,
+    $$SceneSnapshotsTableUpdateCompanionBuilder,
+    (SceneSnapshotRow, $$SceneSnapshotsTableReferences),
+    SceneSnapshotRow,
+    PrefetchHooks Function({bool projectId, bool sceneId})> {
+  $$SceneSnapshotsTableTableManager(
+      _$AppDatabase db, $SceneSnapshotsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SceneSnapshotsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SceneSnapshotsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SceneSnapshotsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> projectId = const Value.absent(),
+            Value<String> sceneId = const Value.absent(),
+            Value<String> sceneTitle = const Value.absent(),
+            Value<String> label = const Value.absent(),
+            Value<String> reason = const Value.absent(),
+            Value<String> sceneJson = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SceneSnapshotsCompanion(
+            id: id,
+            projectId: projectId,
+            sceneId: sceneId,
+            sceneTitle: sceneTitle,
+            label: label,
+            reason: reason,
+            sceneJson: sceneJson,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String projectId,
+            required String sceneId,
+            required String sceneTitle,
+            Value<String> label = const Value.absent(),
+            required String reason,
+            required String sceneJson,
+            required DateTime createdAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SceneSnapshotsCompanion.insert(
+            id: id,
+            projectId: projectId,
+            sceneId: sceneId,
+            sceneTitle: sceneTitle,
+            label: label,
+            reason: reason,
+            sceneJson: sceneJson,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$SceneSnapshotsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({projectId = false, sceneId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (projectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.projectId,
+                    referencedTable:
+                        $$SceneSnapshotsTableReferences._projectIdTable(db),
+                    referencedColumn:
+                        $$SceneSnapshotsTableReferences._projectIdTable(db).id,
+                  ) as T;
+                }
+                if (sceneId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sceneId,
+                    referencedTable:
+                        $$SceneSnapshotsTableReferences._sceneIdTable(db),
+                    referencedColumn:
+                        $$SceneSnapshotsTableReferences._sceneIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SceneSnapshotsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SceneSnapshotsTable,
+    SceneSnapshotRow,
+    $$SceneSnapshotsTableFilterComposer,
+    $$SceneSnapshotsTableOrderingComposer,
+    $$SceneSnapshotsTableAnnotationComposer,
+    $$SceneSnapshotsTableCreateCompanionBuilder,
+    $$SceneSnapshotsTableUpdateCompanionBuilder,
+    (SceneSnapshotRow, $$SceneSnapshotsTableReferences),
+    SceneSnapshotRow,
+    PrefetchHooks Function({bool projectId, bool sceneId})>;
 typedef $$CatalogItemsTableCreateCompanionBuilder = CatalogItemsCompanion
     Function({
   required String id,
@@ -10102,6 +11074,8 @@ class $AppDatabaseManager {
       $$ChaptersTableTableManager(_db, _db.chapters);
   $$ScenesTableTableManager get scenes =>
       $$ScenesTableTableManager(_db, _db.scenes);
+  $$SceneSnapshotsTableTableManager get sceneSnapshots =>
+      $$SceneSnapshotsTableTableManager(_db, _db.sceneSnapshots);
   $$CatalogItemsTableTableManager get catalogItems =>
       $$CatalogItemsTableTableManager(_db, _db.catalogItems);
   $$RelationshipsTableTableManager get relationships =>

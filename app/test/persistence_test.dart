@@ -17,14 +17,17 @@ import 'package:writeler/features/settings/infrastructure/drift_ai_provider_conf
 import 'package:writeler/features/settings/infrastructure/drift_app_preference_repository.dart';
 import 'package:writeler/features/structure/application/create_chapter.dart';
 import 'package:writeler/features/structure/application/create_scene.dart';
+import 'package:writeler/features/structure/domain/scene_snapshot.dart';
 import 'package:writeler/features/structure/infrastructure/drift_chapter_repository.dart';
 import 'package:writeler/features/structure/infrastructure/drift_scene_repository.dart';
+import 'package:writeler/features/structure/infrastructure/drift_scene_snapshot_repository.dart';
 
 void main() {
   late AppDatabase database;
   late DriftProjectRepository projectRepository;
   late DriftChapterRepository chapterRepository;
   late DriftSceneRepository sceneRepository;
+  late DriftSceneSnapshotRepository sceneSnapshotRepository;
   late DriftRelationshipRepository relationshipRepository;
   late DriftMetricRepository metricRepository;
   late DriftProjectNoteRepository noteRepository;
@@ -36,6 +39,7 @@ void main() {
     projectRepository = DriftProjectRepository(database);
     chapterRepository = DriftChapterRepository(database);
     sceneRepository = DriftSceneRepository(database);
+    sceneSnapshotRepository = DriftSceneSnapshotRepository(database);
     relationshipRepository = DriftRelationshipRepository(database);
     metricRepository = DriftMetricRepository(database);
     noteRepository = DriftProjectNoteRepository(database);
@@ -48,11 +52,11 @@ void main() {
   });
 
   test('database schema creates core local-first tables', () async {
-    expect(database.schemaVersion, 8);
+    expect(database.schemaVersion, 9);
 
     final rows = await database
         .customSelect(
-          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'app_preferences', 'catalog_items', 'chapters', 'metric_events', 'project_notes', 'projects', 'relationships', 'scenes') order by name",
+          "select name from sqlite_master where type = 'table' and name in ('a_i_provider_configs', 'a_i_suggestions', 'app_preferences', 'catalog_items', 'chapters', 'metric_events', 'project_notes', 'projects', 'relationships', 'scene_snapshots', 'scenes') order by name",
         )
         .get();
 
@@ -66,6 +70,7 @@ void main() {
       'project_notes',
       'projects',
       'relationships',
+      'scene_snapshots',
       'scenes',
     ]);
   });
@@ -132,6 +137,38 @@ void main() {
     expect(scenes.map((scene) => scene.title).toList(),
         ['First Scene', 'Later Scene']);
     expect(scenes.first.actualWordCount, 4);
+  });
+
+  test('scene snapshot repository stores restorable scene versions', () async {
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Versioned Book'),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(projectId: project.id, title: 'First Draft'),
+    );
+    final version = scene
+        .withAuthorText('Original paragraph.')
+        .copyWith(goal: 'Find the truth');
+
+    final snapshot = SceneSnapshot(
+      id: 'snapshot-1',
+      projectId: project.id,
+      sceneId: scene.id,
+      sceneTitle: scene.title,
+      reason: SceneSnapshotReason.manual,
+      scene: version,
+      createdAt: DateTime.utc(2026, 1, 2, 3, 4),
+    );
+
+    await sceneSnapshotRepository.save(snapshot);
+
+    final snapshots = await sceneSnapshotRepository.listForScene(scene.id);
+    expect(snapshots, hasLength(1));
+    expect(snapshots.single.scene.manuscriptText, 'Original paragraph.');
+    expect(snapshots.single.scene.goal, 'Find the truth');
+
+    final latest = await sceneSnapshotRepository.latestForScene(scene.id);
+    expect(latest?.id, 'snapshot-1');
   });
 
   test('chapter repository persists project structure order', () async {
