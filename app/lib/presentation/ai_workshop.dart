@@ -1204,6 +1204,7 @@ String _promptTemplateFor(AITaskKind task, WritelerCopy copy) {
     AITaskKind.characterProfile => copy.t('promptTemplateCharacter'),
     AITaskKind.storylineVariants => copy.t('promptTemplateStoryline'),
     AITaskKind.blurbVariants => copy.t('promptTemplateBlurb'),
+    AITaskKind.worldContextStarter => copy.t('storyContextEmptyPrompt'),
     AITaskKind.customScenePrompt => copy.t('defaultAiPrompt'),
   };
 }

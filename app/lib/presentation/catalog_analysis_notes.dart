@@ -2,6 +2,377 @@ part of '../main.dart';
 
 // Catalog, story analysis, notes cockpit, and related reusable analysis widgets.
 
+final class _ContextWorkspace extends StatefulWidget {
+  const _ContextWorkspace({
+    required this.copy,
+    required this.project,
+    required this.suggestions,
+    required this.isRequestingAi,
+    required this.lastAiError,
+    required this.onSaveContext,
+    required this.onRequestStarter,
+    required this.onAcceptSuggestion,
+    required this.onRejectSuggestion,
+  });
+
+  final WritelerCopy copy;
+  final Project? project;
+  final List<AISuggestion> suggestions;
+  final bool isRequestingAi;
+  final String? lastAiError;
+  final ValueChanged<String> onSaveContext;
+  final VoidCallback onRequestStarter;
+  final ValueChanged<AISuggestion> onAcceptSuggestion;
+  final ValueChanged<AISuggestion> onRejectSuggestion;
+
+  @override
+  State<_ContextWorkspace> createState() => _ContextWorkspaceState();
+}
+
+final class _ContextWorkspaceState extends State<_ContextWorkspace> {
+  late final TextEditingController _controller = TextEditingController(
+    text: _projectContextText(widget.project),
+  );
+
+  @override
+  void didUpdateWidget(covariant _ContextWorkspace oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.project?.id != widget.project?.id) {
+      _controller.text = _projectContextText(widget.project);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final project = widget.project;
+    final color = Theme.of(context).colorScheme;
+    final suggestions = widget.suggestions
+        .where((suggestion) =>
+            _isWorldStarterSuggestion(suggestion) &&
+            suggestion.userDecision == SuggestionDecision.pending)
+        .toList(growable: false)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    if (project == null) {
+      return _EmptyWorkspace(copy: widget.copy);
+    }
+
+    return Column(
+      children: [
+        _WorkspaceHeader(
+          title: widget.copy.t('storyContext'),
+          actionLabel: widget.copy.t('save'),
+          actionIcon: Icons.save_outlined,
+          actionHelp: widget.copy.t('helpSaveStoryContext'),
+          onAction: () => widget.onSaveContext(_controller.text),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 980;
+              final editor = _StoryContextEditor(
+                copy: widget.copy,
+                controller: _controller,
+                isRequestingAi: widget.isRequestingAi,
+                lastAiError: widget.lastAiError,
+                onSave: () => widget.onSaveContext(_controller.text),
+                onRequestStarter: widget.onRequestStarter,
+              );
+              final review = _WorldStarterReview(
+                copy: widget.copy,
+                suggestions: suggestions,
+                onAcceptSuggestion: widget.onAcceptSuggestion,
+                onRejectSuggestion: widget.onRejectSuggestion,
+              );
+              if (compact) {
+                return ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    SizedBox(height: 560, child: editor),
+                    const SizedBox(height: 18),
+                    SizedBox(height: 520, child: review),
+                  ],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: editor,
+                    ),
+                  ),
+                  VerticalDivider(width: 1, color: color.outlineVariant),
+                  SizedBox(
+                    width: 430,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: review,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _StoryContextEditor extends StatelessWidget {
+  const _StoryContextEditor({
+    required this.copy,
+    required this.controller,
+    required this.isRequestingAi,
+    required this.lastAiError,
+    required this.onSave,
+    required this.onRequestStarter,
+  });
+
+  final WritelerCopy copy;
+  final TextEditingController controller;
+  final bool isRequestingAi;
+  final String? lastAiError;
+  final VoidCallback onSave;
+  final VoidCallback onRequestStarter;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(color: color.primary, width: 3),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Text(
+              copy.t('storyContextProse'),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    height: 1.35,
+                    color: color.onSurface,
+                  ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            expands: true,
+            maxLines: null,
+            minLines: null,
+            textAlignVertical: TextAlignVertical.top,
+            decoration: InputDecoration(
+              hintText: copy.t('storyContextHint'),
+              border: const OutlineInputBorder(),
+              alignLabelWithHint: true,
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            FilledButton.icon(
+              onPressed: onSave,
+              icon: const Icon(Icons.save_outlined),
+              label: Text(copy.t('saveStoryContext')),
+            ),
+            _ActionHelp(
+              message: copy.t('helpWorldStarter'),
+              child: OutlinedButton.icon(
+                onPressed: isRequestingAi ? null : onRequestStarter,
+                icon: isRequestingAi
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.auto_awesome_outlined),
+                label: Text(copy.t('worldStarterButton')),
+              ),
+            ),
+            Chip(
+              avatar: const Icon(Icons.shield_outlined, size: 18),
+              label: Text(copy.t('aiDoesNotTouchManuscript')),
+            ),
+          ],
+        ),
+        if (lastAiError != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            lastAiError!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color.error,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+final class _WorldStarterReview extends StatelessWidget {
+  const _WorldStarterReview({
+    required this.copy,
+    required this.suggestions,
+    required this.onAcceptSuggestion,
+    required this.onRejectSuggestion,
+  });
+
+  final WritelerCopy copy;
+  final List<AISuggestion> suggestions;
+  final ValueChanged<AISuggestion> onAcceptSuggestion;
+  final ValueChanged<AISuggestion> onRejectSuggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(copy.t('worldStarterSuggestions'),
+            style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 6),
+        Text(
+          copy.t('worldStarterSuggestionsBody'),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: suggestions.isEmpty
+              ? _EmptyInlineMessage(message: copy.t('noWorldSuggestions'))
+              : ListView.separated(
+                  itemCount: suggestions.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final suggestion = suggestions[index];
+                    final kind = _worldSuggestionKind(suggestion);
+                    return _WorldStarterSuggestionTile(
+                      copy: copy,
+                      suggestion: suggestion,
+                      kind: kind,
+                      onAccept: () => onAcceptSuggestion(suggestion),
+                      onReject: () => onRejectSuggestion(suggestion),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _WorldStarterSuggestionTile extends StatelessWidget {
+  const _WorldStarterSuggestionTile({
+    required this.copy,
+    required this.suggestion,
+    required this.kind,
+    required this.onAccept,
+    required this.onReject,
+  });
+
+  final WritelerCopy copy;
+  final AISuggestion suggestion;
+  final String kind;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+        color: color.surfaceContainerLowest,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(_worldSuggestionKindIcon(kind),
+                    size: 19, color: color.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _worldSuggestionTitle(suggestion, copy),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _worldSuggestionKindLabel(kind, copy),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: color.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _worldSuggestionBody(suggestion),
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    copy.t('aiDoesNotTouchManuscript'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: copy.t('accept'),
+                  onPressed: onAccept,
+                  icon: const Icon(Icons.check),
+                ),
+                IconButton(
+                  tooltip: copy.t('reject'),
+                  onPressed: onReject,
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 final class _CatalogWorkspace extends StatelessWidget {
   const _CatalogWorkspace({
     required this.copy,

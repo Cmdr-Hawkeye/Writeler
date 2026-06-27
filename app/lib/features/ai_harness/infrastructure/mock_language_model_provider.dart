@@ -32,38 +32,174 @@ final class MockLanguageModelProvider implements LanguageModelProvider {
     final text = _mockText(prompt: prompt, german: german);
     final structureTask = prompt.contains('scenegoalconflictoutcome') ||
         prompt.contains('ziel, konflikt und ausgang');
+    final worldStarterTask = prompt.contains('worldstarter') ||
+        prompt.contains('kontext-starthilfe') ||
+        prompt.contains('welt, vorgeschichte');
     return ModelResponse(
       text: text,
-      structured: structureTask
-          ? {
-              'scenePatch': {
-                'summary': german
-                    ? 'Die Szene zeigt eine konkrete Entscheidung unter wachsendem Druck.'
-                    : 'The scene shows a concrete decision under rising pressure.',
-                'goal': german
-                    ? 'Die Figur will eine klare Information sichern, bevor die Gelegenheit verloren geht.'
-                    : 'The character wants to secure a clear piece of information before the chance is lost.',
-                'conflict': german
-                    ? 'Eine Gegenkraft zwingt sie, zwischen Tempo und Kontrolle zu wählen.'
-                    : 'An opposing force makes them choose between speed and control.',
-                'outcome': german
-                    ? 'Am Ende ist die Lage verändert und die nächste Entscheidung unausweichlich.'
-                    : 'By the end, the situation has changed and the next decision is unavoidable.',
-              },
-            }
-          : {
-              'questions': [
-                german
-                    ? 'Was will die Perspektivfigur vor Beginn der Szene?'
-                    : 'What does the point-of-view character want before the scene begins?',
-                german
-                    ? 'Was verändert sich bis zum Ende der Szene?'
-                    : 'What changes by the end of the scene?',
-              ],
-            },
+      structured: worldStarterTask
+          ? _worldStarterMock(german: german)
+          : structureTask
+              ? {
+                  'scenePatch': {
+                    'summary': german
+                        ? 'Die Szene zeigt eine konkrete Entscheidung unter wachsendem Druck.'
+                        : 'The scene shows a concrete decision under rising pressure.',
+                    'goal': german
+                        ? 'Die Figur will eine klare Information sichern, bevor die Gelegenheit verloren geht.'
+                        : 'The character wants to secure a clear piece of information before the chance is lost.',
+                    'conflict': german
+                        ? 'Eine Gegenkraft zwingt sie, zwischen Tempo und Kontrolle zu wählen.'
+                        : 'An opposing force makes them choose between speed and control.',
+                    'outcome': german
+                        ? 'Am Ende ist die Lage verändert und die nächste Entscheidung unausweichlich.'
+                        : 'By the end, the situation has changed and the next decision is unavoidable.',
+                  },
+                }
+              : {
+                  'questions': [
+                    german
+                        ? 'Was will die Perspektivfigur vor Beginn der Szene?'
+                        : 'What does the point-of-view character want before the scene begins?',
+                    german
+                        ? 'Was verändert sich bis zum Ende der Szene?'
+                        : 'What changes by the end of the scene?',
+                  ],
+                },
       estimatedInputTokens: await estimateTokens(request.prompt),
       estimatedOutputTokens: 32,
     );
+  }
+
+  Map<String, Object?> _worldStarterMock({required bool german}) {
+    final names = german
+        ? [
+            'Mara Venn',
+            'Tarek Sol',
+            'Lio Arendt',
+            'Niva Korr',
+            'Iven Rhun',
+            'Sena Vale',
+            'Orin Kael',
+            'Jara Nox',
+            'Milo Ferres',
+            'Elan Voss',
+          ]
+        : [
+            'Mara Venn',
+            'Tarek Sol',
+            'Lio Arendt',
+            'Niva Korr',
+            'Iven Rhun',
+            'Sena Vale',
+            'Orin Kael',
+            'Jara Nox',
+            'Milo Ferres',
+            'Elan Voss',
+          ];
+    return {
+      'worldStarter': {
+        'personas': [
+          for (final name in names)
+            {
+              'name': name,
+              'summary': german
+                  ? 'Eine Figur mit klarer Funktion im entstehenden Kontext.'
+                  : 'A persona with a clear function in the emerging context.',
+              'background': german
+                  ? 'Trägt eine alte Entscheidung mit sich, die neue Konflikte auslöst.'
+                  : 'Carries an old decision that creates new conflicts.',
+              'goal': german
+                  ? 'Will Sicherheit gewinnen, ohne die eigene Wahrheit offenzulegen.'
+                  : 'Wants to gain safety without revealing their truth.',
+              'conflict': german
+                  ? 'Loyalität und Eigeninteresse geraten aneinander.'
+                  : 'Loyalty and self-interest collide.',
+            },
+        ],
+        'relationships': [
+          {
+            'sourceName': names[0],
+            'targetName': names[1],
+            'type': 'rivalry',
+            'label': german ? 'alte Rivalität' : 'old rivalry',
+            'description': german
+                ? 'Beide brauchen dieselbe knappe Ressource.'
+                : 'Both need the same scarce resource.',
+            'strength': 0.8,
+          },
+          {
+            'sourceName': names[2],
+            'targetName': names[3],
+            'type': 'alliance',
+            'label': german ? 'brüchiges Bündnis' : 'fragile alliance',
+            'description': german
+                ? 'Das Bündnis hält nur, solange ein Geheimnis verborgen bleibt.'
+                : 'The alliance holds only while a secret stays hidden.',
+            'strength': 0.6,
+          },
+        ],
+        'locations': [
+          {
+            'name':
+                german ? 'Archiv der ersten Nacht' : 'Archive of First Night',
+            'summary': german
+                ? 'Ein Ort, an dem Weltregeln und verbotene Geschichte aufbewahrt werden.'
+                : 'A place where world rules and forbidden history are kept.',
+            'description': german
+                ? 'Ruhig, streng bewacht und voller widersprüchlicher Quellen.'
+                : 'Quiet, heavily guarded, and full of contradictory sources.',
+            'rules': german
+                ? 'Nur geprüfte Zeugnisse dürfen kopiert werden.'
+                : 'Only verified testimonies may be copied.',
+          },
+          {
+            'name': german ? 'Grenzmarkt' : 'Border Market',
+            'summary': german
+                ? 'Ein Umschlagplatz für Waren, Gerüchte und falsche Identitäten.'
+                : 'A hub for goods, rumors, and false identities.',
+            'description': german
+                ? 'Hier treffen Alltagsleben und politische Gefahr offen aufeinander.'
+                : 'Daily life and political danger meet in plain sight here.',
+            'rules': german
+                ? 'Niemand fragt nach Herkunft, solange bezahlt wird.'
+                : 'No one asks about origin while payment clears.',
+          },
+        ],
+        'drivers': [
+          {
+            'name': german ? 'Die verlorene Schuld' : 'The Lost Debt',
+            'goal': german
+                ? 'Eine alte Verpflichtung soll endlich eingelöst werden.'
+                : 'An old obligation must finally be fulfilled.',
+            'conflict': german
+                ? 'Die Wahrheit würde mehrere Leben zerstören.'
+                : 'The truth would destroy several lives.',
+            'stakes': german
+                ? 'Vertrauen, politische Ordnung und persönliche Freiheit.'
+                : 'Trust, political order, and personal freedom.',
+          },
+        ],
+        'events': [
+          {
+            'name': german ? 'Der Bruch der Archive' : 'The Archive Breach',
+            'time': german ? '15 Jahre vor Beginn' : '15 years before opening',
+            'summary': german
+                ? 'Eine öffentliche Wahrheit wurde ersetzt.'
+                : 'A public truth was replaced.',
+            'goal': german
+                ? 'Die Verantwortlichen wollten Stabilität erzwingen.'
+                : 'Those responsible wanted to enforce stability.',
+            'conflict': german
+                ? 'Überlebende erinnern sich anders.'
+                : 'Survivors remember differently.',
+            'consequence': german
+                ? 'Jede Recherche ist politisch gefährlich.'
+                : 'Every investigation is politically dangerous.',
+          },
+        ],
+      },
+    };
   }
 
   String _mockText({

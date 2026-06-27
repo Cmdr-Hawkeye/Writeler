@@ -465,11 +465,13 @@ final class _TimelineWorkspace extends StatelessWidget {
   const _TimelineWorkspace({
     required this.copy,
     required this.scenes,
+    required this.catalogItems,
     required this.onOpenScene,
   });
 
   final WritelerCopy copy;
   final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
   final ValueChanged<Scene> onOpenScene;
 
   @override
@@ -480,6 +482,10 @@ final class _TimelineWorkspace extends StatelessWidget {
         .where((scene) => scene.storyDateStart == null)
         .toList()
       ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    final events = catalogItems
+        .where((item) => item.type == EntityType.timelineEvent)
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
     return _SimpleWorkspace(
       title: copy.t('timeline'),
       child: ListView(
@@ -488,6 +494,17 @@ final class _TimelineWorkspace extends StatelessWidget {
           Text(copy.t('timelineBody'),
               style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 18),
+          Text(copy.t('historicalEvents'),
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          if (events.isEmpty)
+            _EmptyInlineMessage(message: copy.t('noHistoricalEvents')),
+          for (final event in events)
+            _TimelineEventRow(copy: copy, item: event),
+          const SizedBox(height: 24),
+          Text(copy.t('datedScenes'),
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
           if (dated.isEmpty)
             _EmptyInlineMessage(message: copy.t('noDatedScenes')),
           for (final scene in dated)
@@ -501,6 +518,42 @@ final class _TimelineWorkspace extends StatelessWidget {
           for (final scene in undated)
             _TimelineRow(copy: copy, scene: scene, onOpenScene: onOpenScene),
         ],
+      ),
+    );
+  }
+}
+
+final class _TimelineEventRow extends StatelessWidget {
+  const _TimelineEventRow({
+    required this.copy,
+    required this.item,
+  });
+
+  final WritelerCopy copy;
+  final CatalogItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final time = item.fields['time'] as String? ?? copy.t('withoutDate');
+    final consequence = item.fields['consequence'] as String?;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: color.tertiary, width: 2)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.only(left: 14),
+        leading: const Icon(Icons.event_note_outlined),
+        title: Text(item.name),
+        subtitle: Text(
+          [
+            time,
+            if (item.summary.trim().isNotEmpty) item.summary,
+            if (consequence?.trim().isNotEmpty == true) consequence!,
+          ].join(' · '),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
   }

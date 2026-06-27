@@ -19,6 +19,7 @@ import 'features/ai_harness/domain/ai_policy.dart';
 import 'features/ai_harness/domain/ai_suggestion.dart';
 import 'features/ai_harness/domain/ai_suggestion_repository.dart';
 import 'features/ai_harness/domain/language_model_provider.dart';
+import 'features/ai_harness/domain/model_request.dart';
 import 'features/ai_harness/infrastructure/drift_ai_suggestion_repository.dart';
 import 'features/ai_harness/infrastructure/anthropic_language_model_provider.dart';
 import 'features/ai_harness/infrastructure/gemini_language_model_provider.dart';

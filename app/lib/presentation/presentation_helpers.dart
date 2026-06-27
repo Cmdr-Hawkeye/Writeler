@@ -113,6 +113,7 @@ IconData _catalogIcon(EntityType type) {
   return switch (type) {
     EntityType.character => Icons.person_outline,
     EntityType.location => Icons.place_outlined,
+    EntityType.timelineEvent => Icons.event_note_outlined,
     EntityType.object => Icons.category_outlined,
     _ => Icons.label_outline,
   };
@@ -173,6 +174,9 @@ String _designThemeLabel(WritelerDesignTheme theme, WritelerCopy copy) {
 }
 
 String _aiTaskLabel(String taskName, WritelerCopy copy) {
+  if (taskName.startsWith('worldContextStarter')) {
+    return copy.t('aiTaskWorldContextStarter');
+  }
   final task = AITaskKind.values
       .where((candidate) => candidate.name == taskName)
       .firstOrNull;
@@ -191,6 +195,7 @@ String _aiTaskLabel(String taskName, WritelerCopy copy) {
     AITaskKind.researchStructuring => copy.t('aiTaskResearchStructuring'),
     AITaskKind.plotGapReview => copy.t('aiTaskPlotGapReview'),
     AITaskKind.dialogueIntentAnalysis => copy.t('aiTaskDialogueIntentAnalysis'),
+    AITaskKind.worldContextStarter => copy.t('aiTaskWorldContextStarter'),
   };
 }
 
@@ -277,7 +282,72 @@ String _entityTypeLabel(EntityType type, WritelerCopy copy) {
     EntityType.character => copy.t('character'),
     EntityType.location => copy.t('location'),
     EntityType.object => copy.t('object'),
+    EntityType.timelineEvent => copy.t('timelineEvent'),
     _ => type.wireName,
+  };
+}
+
+String _projectContextText(Project? project) {
+  return project?.metadata['storyContext'] as String? ?? '';
+}
+
+bool _isWorldStarterSuggestion(AISuggestion suggestion) {
+  return suggestion.suggestionType.startsWith('worldContextStarter');
+}
+
+String _worldSuggestionKind(AISuggestion suggestion) {
+  final item = _worldSuggestionItem(suggestion);
+  return item['kind'] as String? ?? 'unknown';
+}
+
+Map<String, Object?> _worldSuggestionItem(AISuggestion suggestion) {
+  final raw = suggestion.structuredResponse?['worldStarterItem'];
+  if (raw is Map) return Map<String, Object?>.from(raw);
+  return const {};
+}
+
+String _worldSuggestionTitle(AISuggestion suggestion, WritelerCopy copy) {
+  final item = _worldSuggestionItem(suggestion);
+  final name = item['name'] as String? ??
+      item['label'] as String? ??
+      item['type'] as String? ??
+      copy.t('untitledCatalogItem');
+  return name;
+}
+
+String _worldSuggestionBody(AISuggestion suggestion) {
+  final item = _worldSuggestionItem(suggestion);
+  final fields = [
+    item['summary'],
+    item['background'],
+    item['description'],
+    item['goal'],
+    item['conflict'],
+    item['consequence'],
+    item['stakes'],
+  ].whereType<String>().where((value) => value.trim().isNotEmpty).toList();
+  return fields.isEmpty ? suggestion.responseText : fields.join('\n');
+}
+
+String _worldSuggestionKindLabel(String kind, WritelerCopy copy) {
+  return switch (kind) {
+    'persona' => copy.t('worldSuggestionPersona'),
+    'relationship' => copy.t('worldSuggestionRelationship'),
+    'location' => copy.t('worldSuggestionLocation'),
+    'driver' => copy.t('worldSuggestionDriver'),
+    'event' => copy.t('worldSuggestionEvent'),
+    _ => copy.t('suggestions'),
+  };
+}
+
+IconData _worldSuggestionKindIcon(String kind) {
+  return switch (kind) {
+    'persona' => Icons.person_outline,
+    'relationship' => Icons.hub_outlined,
+    'location' => Icons.place_outlined,
+    'driver' => Icons.flag_outlined,
+    'event' => Icons.event_note_outlined,
+    _ => Icons.lightbulb_outline,
   };
 }
 

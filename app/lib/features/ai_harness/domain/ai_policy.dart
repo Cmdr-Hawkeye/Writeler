@@ -17,6 +17,7 @@ enum AITaskKind {
   researchStructuring,
   plotGapReview,
   dialogueIntentAnalysis,
+  worldContextStarter,
 }
 
 final class AIPolicy {
@@ -53,6 +54,7 @@ final class AIPolicy {
         kind == AITaskKind.authorQuestions ||
         kind == AITaskKind.researchStructuring ||
         kind == AITaskKind.plotGapReview ||
+        kind == AITaskKind.worldContextStarter ||
         kind == AITaskKind.characterProfile) {
       return;
     }

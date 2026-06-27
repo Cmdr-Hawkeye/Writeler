@@ -168,6 +168,68 @@ void main() {
     expect(find.text('NASA archive'), findsWidgets);
   });
 
+  testWidgets('story context saves text and accepts AI starter suggestions',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final catalogRepository = InMemoryCatalogItemRepository();
+    final suggestionRepository = InMemoryAISuggestionRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'World Book'),
+    );
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: catalogRepository,
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: suggestionRepository,
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        researchItemRepository: InMemoryResearchItemRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Context');
+    await tester.enterText(
+      find.byType(TextField).first,
+      'A city remembers a false peace and everyone pays with secrets.',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Save context'));
+    await tester.pumpAndSettle();
+
+    final savedProject = await projectRepository.findById(project.id);
+    expect(savedProject?.metadata['storyContext'], contains('false peace'));
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'AI starter'));
+    await tester.pumpAndSettle();
+
+    final suggestions = await suggestionRepository.listForProject(project.id);
+    expect(
+      suggestions.where((suggestion) =>
+          suggestion.suggestionType.startsWith('worldContextStarter.persona')),
+      hasLength(10),
+    );
+    expect(find.text('Mara Venn'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.check).first);
+    await tester.pumpAndSettle();
+
+    final catalogItems = await catalogRepository.listByProject(project.id);
+    expect(catalogItems.map((item) => item.name), contains('Mara Venn'));
+    expect(catalogItems.single.type, EntityType.character);
+  });
+
   testWidgets('project wizard stores author metadata', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

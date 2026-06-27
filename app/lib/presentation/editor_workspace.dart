@@ -42,6 +42,7 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.onDeleteSceneSnapshot,
     required this.onSaveScene,
     required this.onSaveSceneManuscript,
+    required this.onOpenContext,
   });
 
   final WritelerCopy copy;
@@ -85,6 +86,7 @@ final class _ProjectWorkspace extends StatefulWidget {
   final VoidCallback onSaveScene;
   final Future<void> Function(Scene scene, String manuscriptText)
       onSaveSceneManuscript;
+  final VoidCallback onOpenContext;
 
   @override
   State<_ProjectWorkspace> createState() => _ProjectWorkspaceState();
@@ -118,6 +120,7 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
         final hideSceneNavigator =
             fullManuscriptMode || constraints.maxWidth < 640;
         final compactActions = constraints.maxWidth < 760;
+        final compactAuxiliaryActions = constraints.maxWidth < 980;
 
         return Column(
           children: [
@@ -199,7 +202,19 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                         ),
                       ],
                       const SizedBox(width: 8),
-                      compactActions
+                      compactAuxiliaryActions
+                          ? IconButton.outlined(
+                              tooltip: widget.copy.t('openStoryContext'),
+                              onPressed: widget.onOpenContext,
+                              icon: const Icon(Icons.public_outlined),
+                            )
+                          : OutlinedButton.icon(
+                              onPressed: widget.onOpenContext,
+                              icon: const Icon(Icons.public_outlined),
+                              label: Text(widget.copy.t('storyContext')),
+                            ),
+                      const SizedBox(width: 8),
+                      compactAuxiliaryActions
                           ? IconButton.filled(
                               tooltip: widget.copy.t('newScene'),
                               onPressed: widget.onCreateScene,

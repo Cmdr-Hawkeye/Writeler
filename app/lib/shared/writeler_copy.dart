@@ -315,6 +315,37 @@ final class WritelerCopy {
     'status': 'Status',
     'wordTarget': 'Wortziel',
     'catalog': 'Katalog',
+    'storyContext': 'Kontext',
+    'openStoryContext': 'Kontext öffnen',
+    'storyContextProse':
+        'Jede Geschichte hat eine Vorgeschichte, eine Welt, in der sie spielt, eigene Regeln, alte Wunden und Kräfte, die schon wirken, bevor die erste Szene beginnt. Sammle hier den Ursprung deines Projekts: Was gilt in dieser Welt, was ist geschehen, wer steht unter Druck und welche Konflikte warten darauf, sichtbar zu werden?',
+    'storyContextHint':
+        'Beschreibe Vorgeschichte, Weltregeln, gesellschaftliche Kräfte, Ton, offene Fragen, Rechercheanker oder alles, was deine Szenen tragen soll.',
+    'saveStoryContext': 'Kontext speichern',
+    'storyContextSaved': 'Kontext gespeichert',
+    'helpSaveStoryContext':
+        'Speichert den Projektkontext als projektweite Grundlage für Katalog, Planung und KI-Kontext.',
+    'worldStarterButton': 'KI-Starthilfe',
+    'helpWorldStarter':
+        'Erstellt prüfbare Vorschläge für Personas, Beziehungen, Orte, Ziele, Konflikte und historische Ereignisse. Das Manuskript wird nicht verändert.',
+    'storyContextEmptyPrompt':
+        'Es gibt noch keinen Kontexttext. Entwickle einen vorsichtigen, offenen Startpunkt für das Projekt.',
+    'worldStarterSuggestions': 'Kontext-Vorschläge',
+    'worldStarterSuggestionsBody':
+        'Nimm nur Bausteine an, die wirklich zu deinem Projekt gehören. Angenommene Vorschläge werden zu Katalogeinträgen oder Beziehungen.',
+    'worldStarterCreated': 'KI-Starthilfe als Vorschläge gespeichert',
+    'worldStarterNoStructuredSuggestions':
+        'Die KI-Antwort enthielt keine erkennbaren Kontext-Vorschläge.',
+    'noWorldSuggestions': 'Noch keine offenen Kontext-Vorschläge.',
+    'aiDoesNotTouchManuscript': 'KI greift nicht ins Manuskript ein',
+    'worldSuggestionPersona': 'Persona',
+    'worldSuggestionRelationship': 'Beziehung',
+    'worldSuggestionLocation': 'Ort',
+    'worldSuggestionDriver': 'Ziel/Konflikt',
+    'worldSuggestionEvent': 'Historisches Ereignis',
+    'timelineEvent': 'Ereignis',
+    'historicalEvents': 'Historische Ereignisse',
+    'noHistoricalEvents': 'Noch keine historischen Ereignisse.',
     'name': 'Name',
     'newCharacter': 'Neue Figur',
     'newLocation': 'Neuer Ort',
@@ -595,6 +626,7 @@ final class WritelerCopy {
     'aiTaskResearchStructuring': 'Recherche strukturieren',
     'aiTaskPlotGapReview': 'Plot-Lücken prüfen',
     'aiTaskDialogueIntentAnalysis': 'Dialogabsicht analysieren',
+    'aiTaskWorldContextStarter': 'Kontext-Starthilfe',
     'suggestions': 'Vorschläge',
     'noSuggestions': 'Noch keine Vorschläge',
     'notes': 'Notizen',
@@ -1085,6 +1117,37 @@ final class WritelerCopy {
     'status': 'Status',
     'wordTarget': 'Word target',
     'catalog': 'Catalog',
+    'storyContext': 'Context',
+    'openStoryContext': 'Open context',
+    'storyContextProse':
+        'Every story has a before, a world it moves through, rules of its own, old wounds, and forces already in motion before the first scene begins. Gather the origin of your project here: what is true in this world, what has happened, who is under pressure, and which conflicts are waiting to surface?',
+    'storyContextHint':
+        'Describe backstory, world rules, social forces, tone, open questions, research anchors, or anything your scenes should rest on.',
+    'saveStoryContext': 'Save context',
+    'storyContextSaved': 'Context saved',
+    'helpSaveStoryContext':
+        'Saves the project context as a project-wide foundation for catalog, planning, and AI context.',
+    'worldStarterButton': 'AI starter',
+    'helpWorldStarter':
+        'Creates reviewable suggestions for personas, relationships, locations, goals, conflicts, and historical events. The manuscript is not changed.',
+    'storyContextEmptyPrompt':
+        'There is no context text yet. Develop a careful, open starting point for the project.',
+    'worldStarterSuggestions': 'Context suggestions',
+    'worldStarterSuggestionsBody':
+        'Accept only building blocks that truly belong to your project. Accepted suggestions become catalog entries or relationships.',
+    'worldStarterCreated': 'AI starter saved as suggestions',
+    'worldStarterNoStructuredSuggestions':
+        'The AI response did not contain recognizable context suggestions.',
+    'noWorldSuggestions': 'No open context suggestions yet.',
+    'aiDoesNotTouchManuscript': 'AI does not touch the manuscript',
+    'worldSuggestionPersona': 'Persona',
+    'worldSuggestionRelationship': 'Relationship',
+    'worldSuggestionLocation': 'Location',
+    'worldSuggestionDriver': 'Goal/conflict',
+    'worldSuggestionEvent': 'Historical event',
+    'timelineEvent': 'Event',
+    'historicalEvents': 'Historical events',
+    'noHistoricalEvents': 'No historical events yet.',
     'name': 'Name',
     'newCharacter': 'New Character',
     'newLocation': 'New Location',
@@ -1363,6 +1426,7 @@ final class WritelerCopy {
     'aiTaskResearchStructuring': 'Research structuring',
     'aiTaskPlotGapReview': 'Plot gap review',
     'aiTaskDialogueIntentAnalysis': 'Dialogue intent analysis',
+    'aiTaskWorldContextStarter': 'Context starter',
     'suggestions': 'Suggestions',
     'noSuggestions': 'No suggestions yet',
     'notes': 'Notes',

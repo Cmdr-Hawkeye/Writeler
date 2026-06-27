@@ -297,6 +297,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.write,
     ),
     _WorkspaceNavItem(
+      index: 20,
+      icon: Icons.public_outlined,
+      selectedIcon: Icons.public,
+      labelBuilder: (copy) => copy.t('storyContext'),
+      group: _WorkspaceNavGroup.world,
+    ),
+    _WorkspaceNavItem(
       index: 3,
       icon: Icons.person_outline,
       selectedIcon: Icons.person,
@@ -1347,6 +1354,176 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<void> _saveProjectContext(String value) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final metadata = Map<String, Object?>.from(project.metadata);
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      metadata.remove('storyContext');
+    } else {
+      metadata['storyContext'] = trimmed;
+    }
+    final updated = project.copyWith(metadata: metadata);
+    await widget.projectRepository.save(updated);
+    final projects = await widget.projectRepository.listActive();
+    if (!mounted) return;
+    setState(() {
+      _projects = projects;
+      _selectedProject = updated;
+    });
+    await _recordProjectMetric(
+      eventType: 'project.context.updated',
+      metadata: {'hasContext': trimmed.isNotEmpty},
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(
+              WritelerCopy(Localizations.localeOf(context).languageCode)
+                  .t('storyContextSaved'))),
+    );
+  }
+
+  Future<void> _requestWorldStarter(WritelerCopy copy) async {
+    final project = _selectedProject;
+    if (project == null || _isRequestingAi) return;
+    setState(() {
+      _isRequestingAi = true;
+      _lastAiError = null;
+    });
+    try {
+      final effectiveProject = _effectiveProjectForGlobalProfile(project);
+      const policy = AIPolicy();
+      policy.ensureProjectAllowsAI(effectiveProject);
+      final provider =
+          await _aiProviderRuntime.createProvider(_activeProviderConfig);
+      final prompt = const AIProjectPromptBuilder().build(
+        policy: policy,
+        project: effectiveProject,
+        chapters: _chapters,
+        scenes: _scenes,
+        task: AITaskKind.worldContextStarter,
+        userPrompt: _projectContextText(project).isEmpty
+            ? copy.t('storyContextEmptyPrompt')
+            : _projectContextText(project),
+        languageCode: copy.languageCode,
+      );
+      final response = await provider.generateText(
+        ModelRequest(
+          prompt: prompt,
+          target: EntityRef(type: EntityType.project, id: project.id),
+          context: {
+            'projectId': project.id,
+            'task': AITaskKind.worldContextStarter.name,
+          },
+          parameters: const ModelParameters(maxTokens: 2600),
+        ),
+      );
+      final created = await _saveWorldStarterSuggestions(
+        project: project,
+        provider: provider,
+        prompt: prompt,
+        responseText: response.text,
+        structured: response.structured,
+      );
+      final suggestions =
+          await widget.aiSuggestionRepository.listForProject(project.id);
+      if (!mounted) return;
+      setState(() => _suggestions = suggestions);
+      await _recordProjectMetric(
+        eventType: 'ai.world_starter.created',
+        metadata: {'suggestions': created},
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            created == 0
+                ? copy.t('worldStarterNoStructuredSuggestions')
+                : copy.t('worldStarterCreated'),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = _providerErrorMessage(error);
+      setState(() => _lastAiError = message);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      if (mounted) setState(() => _isRequestingAi = false);
+    }
+  }
+
+  Future<int> _saveWorldStarterSuggestions({
+    required Project project,
+    required LanguageModelProvider provider,
+    required String prompt,
+    required String responseText,
+    required Map<String, Object?>? structured,
+  }) async {
+    final world = structured?['worldStarter'];
+    if (world is! Map) return 0;
+    final normalized = Map<String, Object?>.from(world);
+    final entries = <({String kind, Map<String, Object?> item})>[
+      for (final item in _worldStarterList(normalized['personas']))
+        (kind: 'persona', item: item),
+      for (final item in _worldStarterList(normalized['relationships']))
+        (kind: 'relationship', item: item),
+      for (final item in _worldStarterList(normalized['locations']))
+        (kind: 'location', item: item),
+      for (final item in _worldStarterList(normalized['drivers']))
+        (kind: 'driver', item: item),
+      for (final item in _worldStarterList(normalized['events']))
+        (kind: 'event', item: item),
+    ];
+    final now = DateTime.now().toUtc();
+    var offset = 0;
+    for (final entry in entries) {
+      final item = {
+        'kind': entry.kind,
+        ...entry.item,
+      };
+      final suggestion = AISuggestion(
+        id: newLocalId('ai-suggestion'),
+        projectId: project.id,
+        target: EntityRef(type: EntityType.project, id: project.id),
+        suggestionType: 'worldContextStarter.${entry.kind}',
+        inputContextHash: '${prompt.hashCode.toRadixString(16)}-$offset',
+        providerId: provider.id,
+        modelName: provider.displayName,
+        promptTemplateId: 'project.worldContextStarter.v1',
+        promptText: prompt,
+        responseText: _worldStarterSuggestionText(item),
+        structuredResponse: {'worldStarterItem': item},
+        userDecision: SuggestionDecision.pending,
+        createdAt: now.add(Duration(milliseconds: offset)),
+      );
+      await widget.aiSuggestionRepository.save(suggestion);
+      offset += 1;
+    }
+    return entries.length;
+  }
+
+  List<Map<String, Object?>> _worldStarterList(Object? value) {
+    if (value is! List) return const [];
+    return [
+      for (final item in value)
+        if (item is Map) Map<String, Object?>.from(item),
+    ];
+  }
+
+  String _worldStarterSuggestionText(Map<String, Object?> item) {
+    final title = item['name'] ?? item['label'] ?? item['type'] ?? item['kind'];
+    final details = item.entries
+        .where((entry) => entry.key != 'kind')
+        .map((entry) => '${entry.key}: ${entry.value}')
+        .join('\n');
+    return '$title\n$details'.trim();
+  }
+
   Future<void> _requestAiSuggestion(
     WritelerCopy copy,
     AITaskKind task, {
@@ -1584,6 +1761,9 @@ final class _WritelerShellState extends State<WritelerShell> {
   Future<Map<String, Object?>> _applyAcceptedSuggestion(
     AISuggestion suggestion,
   ) async {
+    if (_isWorldStarterSuggestion(suggestion)) {
+      return _applyWorldStarterSuggestion(suggestion);
+    }
     if (suggestion.target.type != EntityType.scene) {
       return {'applied': false, 'reason': 'unsupportedTarget'};
     }
@@ -1633,6 +1813,239 @@ final class _WritelerShellState extends State<WritelerShell> {
       'applied': true,
       'scenePatch': patch.toJson(),
     };
+  }
+
+  Future<Map<String, Object?>> _applyWorldStarterSuggestion(
+    AISuggestion suggestion,
+  ) async {
+    final project = _selectedProject;
+    if (project == null) return {'applied': false, 'reason': 'missingProject'};
+    final item = _worldSuggestionItem(suggestion);
+    final kind = item['kind'] as String? ?? _worldSuggestionKind(suggestion);
+    final createdIds = <String>[];
+
+    switch (kind) {
+      case 'persona':
+        final catalogItem = await _createContextCatalogItem(
+          projectId: project.id,
+          type: EntityType.character,
+          name: item['name'] as String?,
+          summary: item['summary'] as String?,
+          fields: {
+            'background': item['background'],
+            'goal': item['goal'],
+            'conflict': item['conflict'],
+          },
+          role: 'persona',
+          suggestionId: suggestion.id,
+        );
+        if (catalogItem != null) createdIds.add(catalogItem.id);
+        break;
+      case 'location':
+        final catalogItem = await _createContextCatalogItem(
+          projectId: project.id,
+          type: EntityType.location,
+          name: item['name'] as String?,
+          summary: item['summary'] as String?,
+          fields: {
+            'description': item['description'],
+            'rules': item['rules'],
+          },
+          role: 'worldLocation',
+          suggestionId: suggestion.id,
+        );
+        if (catalogItem != null) createdIds.add(catalogItem.id);
+        break;
+      case 'driver':
+        final catalogItem = await _createContextCatalogItem(
+          projectId: project.id,
+          type: EntityType.object,
+          name: item['name'] as String?,
+          summary: item['goal'] as String? ?? item['conflict'] as String?,
+          fields: {
+            'goal': item['goal'],
+            'conflict': item['conflict'],
+            'stakes': item['stakes'],
+          },
+          role: 'goalConflict',
+          suggestionId: suggestion.id,
+        );
+        if (catalogItem != null) createdIds.add(catalogItem.id);
+        break;
+      case 'event':
+        final catalogItem = await _createContextCatalogItem(
+          projectId: project.id,
+          type: EntityType.timelineEvent,
+          name: item['name'] as String?,
+          summary: item['summary'] as String?,
+          fields: {
+            'time': item['time'],
+            'goal': item['goal'],
+            'conflict': item['conflict'],
+            'consequence': item['consequence'],
+          },
+          role: 'historicalEvent',
+          suggestionId: suggestion.id,
+        );
+        if (catalogItem != null) createdIds.add(catalogItem.id);
+        break;
+      case 'relationship':
+        final relationship = await _createContextRelationship(
+          projectId: project.id,
+          item: item,
+          suggestionId: suggestion.id,
+        );
+        if (relationship != null) createdIds.add(relationship.id);
+        break;
+      default:
+        return {'applied': false, 'reason': 'unknownWorldSuggestionKind'};
+    }
+
+    final catalogItems =
+        await widget.catalogItemRepository.listByProject(project.id);
+    final relationships =
+        await widget.relationshipRepository.listByProject(project.id);
+    if (mounted) {
+      setState(() {
+        _catalogItems = catalogItems;
+        _relationships = relationships;
+      });
+    }
+    await _recordProjectMetric(
+      eventType: 'ai.world_suggestion.applied',
+      metadata: {
+        'suggestionId': suggestion.id,
+        'kind': kind,
+        'createdIds': createdIds,
+      },
+    );
+    return {
+      'applied': createdIds.isNotEmpty,
+      'kind': kind,
+      'createdIds': createdIds,
+    };
+  }
+
+  Future<CatalogItem?> _createContextCatalogItem({
+    required String projectId,
+    required EntityType type,
+    required String? name,
+    required String? summary,
+    required Map<String, Object?> fields,
+    required String role,
+    required String suggestionId,
+  }) async {
+    final normalizedName = name?.trim();
+    if (normalizedName == null || normalizedName.isEmpty) return null;
+    final existing = _findCatalogItemByName(normalizedName, type);
+    if (existing != null) return existing;
+    return _createCatalogItem(
+      CreateCatalogItemCommand(
+        projectId: projectId,
+        type: type,
+        name: normalizedName,
+        summary: summary?.trim() ?? '',
+        fields: {
+          ...fields,
+          'contextRole': role,
+          'sourceSuggestionId': suggestionId,
+        },
+      ),
+    );
+  }
+
+  Future<Relationship?> _createContextRelationship({
+    required String projectId,
+    required Map<String, Object?> item,
+    required String suggestionId,
+  }) async {
+    final sourceName = (item['sourceName'] as String?)?.trim();
+    final targetName = (item['targetName'] as String?)?.trim();
+    if (sourceName == null ||
+        sourceName.isEmpty ||
+        targetName == null ||
+        targetName.isEmpty) {
+      return null;
+    }
+    final source = await _findOrCreateNamedContextEntity(
+      projectId: projectId,
+      name: sourceName,
+      suggestionId: suggestionId,
+    );
+    final target = await _findOrCreateNamedContextEntity(
+      projectId: projectId,
+      name: targetName,
+      suggestionId: suggestionId,
+    );
+    final relationshipType =
+        (item['type'] as String?)?.trim().isNotEmpty == true
+            ? (item['type'] as String).trim()
+            : 'relatedTo';
+    final duplicate = _relationships.where(
+      (relationship) =>
+          relationship.source.type == source.type &&
+          relationship.source.id == source.id &&
+          relationship.target.type == target.type &&
+          relationship.target.id == target.id &&
+          relationship.relationshipType == relationshipType,
+    );
+    if (duplicate.isNotEmpty) return duplicate.first;
+    final now = DateTime.now().toUtc();
+    final relationship = Relationship(
+      id: newLocalId('relationship'),
+      projectId: projectId,
+      source: EntityRef(type: source.type, id: source.id),
+      target: EntityRef(type: target.type, id: target.id),
+      relationshipType: relationshipType,
+      label: (item['label'] as String?)?.trim().isEmpty == false
+          ? (item['label'] as String).trim()
+          : null,
+      description: (item['description'] as String?)?.trim().isEmpty == false
+          ? (item['description'] as String).trim()
+          : null,
+      strength: (item['strength'] as num?)?.toDouble(),
+      direction: RelationshipDirection.directed,
+      createdAt: now,
+      updatedAt: now,
+      metadata: {
+        'contextRole': 'worldStarterRelationship',
+        'sourceSuggestionId': suggestionId,
+      },
+    );
+    await widget.relationshipRepository.save(relationship);
+    return relationship;
+  }
+
+  Future<CatalogItem> _findOrCreateNamedContextEntity({
+    required String projectId,
+    required String name,
+    required String suggestionId,
+  }) async {
+    final existing = _findCatalogItemByName(name, null);
+    if (existing != null) return existing;
+    return _createCatalogItem(
+      CreateCatalogItemCommand(
+        projectId: projectId,
+        type: EntityType.character,
+        name: name,
+        summary: '',
+        fields: {
+          'contextRole': 'relationshipEndpoint',
+          'sourceSuggestionId': suggestionId,
+        },
+      ),
+    );
+  }
+
+  CatalogItem? _findCatalogItemByName(String name, EntityType? type) {
+    final normalized = name.trim().toLowerCase();
+    return _catalogItems
+        .where(
+          (item) =>
+              (type == null || item.type == type) &&
+              item.name.trim().toLowerCase() == normalized,
+        )
+        .firstOrNull;
   }
 
   Future<void> _deleteNote(ProjectNote note, WritelerCopy copy) async {
@@ -2134,6 +2547,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         2 => copy.t('structureCockpit'),
         13 => copy.t('sceneBoard'),
         17 => copy.t('storyboard'),
+        20 => copy.t('storyContext'),
         3 => copy.t('characters'),
         4 => copy.t('locations'),
         5 => copy.t('objects'),
@@ -2157,6 +2571,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         2 => Icons.account_tree_outlined,
         13 => Icons.view_kanban_outlined,
         17 => Icons.polyline_outlined,
+        20 => Icons.public_outlined,
         3 => Icons.person_outline,
         4 => Icons.place_outlined,
         5 => Icons.category_outlined,
@@ -2219,6 +2634,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               EntityType.character => 3,
               EntityType.location => 4,
               EntityType.object => 5,
+              EntityType.timelineEvent => 14,
               _ => 2,
             },
           ),
@@ -2391,6 +2807,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           onSaveScene: () => _saveSelectedScene(copy),
           onSaveSceneManuscript: (scene, manuscriptText) =>
               _saveSceneManuscriptText(scene, manuscriptText, copy),
+          onOpenContext: () => setState(() => _selectedRailIndex = 20),
         ),
       2 => _SceneBoard(
           copy: copy,
@@ -2443,6 +2860,19 @@ final class _WritelerShellState extends State<WritelerShell> {
           catalogItems: _catalogItems,
           notes: _notes,
         ),
+      20 => _ContextWorkspace(
+          copy: copy,
+          project: _selectedProject,
+          suggestions: _suggestions,
+          isRequestingAi: _isRequestingAi,
+          lastAiError: _lastAiError,
+          onSaveContext: _saveProjectContext,
+          onRequestStarter: () => _requestWorldStarter(copy),
+          onAcceptSuggestion: (suggestion) =>
+              _decideSuggestion(copy, suggestion, SuggestionDecision.accepted),
+          onRejectSuggestion: (suggestion) =>
+              _decideSuggestion(copy, suggestion, SuggestionDecision.rejected),
+        ),
       3 => _CatalogWorkspace(
           copy: copy,
           type: EntityType.character,
@@ -2479,6 +2909,7 @@ final class _WritelerShellState extends State<WritelerShell> {
       14 => _TimelineWorkspace(
           copy: copy,
           scenes: _scenes,
+          catalogItems: _catalogItems,
           onOpenScene: (scene) {
             _selectScene(scene);
             setState(() => _selectedRailIndex = 1);
