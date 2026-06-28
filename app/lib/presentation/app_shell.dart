@@ -750,6 +750,41 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<void> _saveSelectedSceneAnnotations(
+    List<SceneAnnotation> annotations,
+  ) async {
+    final scene = _selectedScene;
+    final project = _selectedProject;
+    if (scene == null || project == null) return;
+
+    _autosaveTimer?.cancel();
+    final draft = _sceneDraftFromControllers(scene);
+    final updated = draft.copyWith(
+      metadata: SceneAnnotation.metadataWithAnnotations(
+        draft.metadata,
+        annotations,
+      ),
+    );
+    await widget.sceneRepository.save(updated);
+    final scenes = await widget.sceneRepository.listByProject(project.id);
+
+    if (!mounted) return;
+    setState(() {
+      _scenes = scenes;
+      _selectedScene = updated;
+      _sceneSaveState = _SceneSaveState.saved;
+      _lastSceneSavedAt = updated.updatedAt;
+    });
+    await _recordProjectMetric(
+      eventType: 'scene.annotation.updated',
+      value: annotations.where((annotation) => !annotation.resolved).length,
+      metadata: {
+        'sceneId': updated.id,
+        'annotations': annotations.length,
+      },
+    );
+  }
+
   Scene _sceneDraftFromControllers(Scene scene) {
     final wordTargetText = _wordTargetController.text.trim();
     final wordTarget = int.tryParse(wordTargetText);
@@ -2942,6 +2977,7 @@ final class _WritelerShellState extends State<WritelerShell> {
               _restoreSceneSnapshot(snapshot, copy),
           onDeleteSceneSnapshot: (snapshot) =>
               _deleteSceneSnapshot(snapshot, copy),
+          onSaveSceneAnnotations: _saveSelectedSceneAnnotations,
           onSaveScene: () => _saveSelectedScene(copy),
           onSaveSceneManuscript: (scene, manuscriptText) =>
               _saveSceneManuscriptText(scene, manuscriptText, copy),

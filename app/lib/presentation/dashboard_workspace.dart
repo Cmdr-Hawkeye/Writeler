@@ -43,6 +43,7 @@ final class _WorkspaceView extends StatelessWidget {
     required this.onCreateSceneSnapshot,
     required this.onRestoreSceneSnapshot,
     required this.onDeleteSceneSnapshot,
+    required this.onSaveSceneAnnotations,
     required this.onSaveScene,
     required this.onSaveSceneManuscript,
     required this.onOpenContext,
@@ -89,6 +90,8 @@ final class _WorkspaceView extends StatelessWidget {
   final VoidCallback onCreateSceneSnapshot;
   final ValueChanged<SceneSnapshot> onRestoreSceneSnapshot;
   final ValueChanged<SceneSnapshot> onDeleteSceneSnapshot;
+  final Future<void> Function(List<SceneAnnotation> annotations)
+      onSaveSceneAnnotations;
   final VoidCallback onSaveScene;
   final Future<void> Function(Scene scene, String manuscriptText)
       onSaveSceneManuscript;
@@ -140,6 +143,7 @@ final class _WorkspaceView extends StatelessWidget {
       onCreateSceneSnapshot: onCreateSceneSnapshot,
       onRestoreSceneSnapshot: onRestoreSceneSnapshot,
       onDeleteSceneSnapshot: onDeleteSceneSnapshot,
+      onSaveSceneAnnotations: onSaveSceneAnnotations,
       onSaveScene: onSaveScene,
       onSaveSceneManuscript: onSaveSceneManuscript,
       onOpenContext: onOpenContext,

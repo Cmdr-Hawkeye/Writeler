@@ -40,6 +40,7 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.onCreateSceneSnapshot,
     required this.onRestoreSceneSnapshot,
     required this.onDeleteSceneSnapshot,
+    required this.onSaveSceneAnnotations,
     required this.onSaveScene,
     required this.onSaveSceneManuscript,
     required this.onOpenContext,
@@ -83,6 +84,8 @@ final class _ProjectWorkspace extends StatefulWidget {
   final VoidCallback onCreateSceneSnapshot;
   final ValueChanged<SceneSnapshot> onRestoreSceneSnapshot;
   final ValueChanged<SceneSnapshot> onDeleteSceneSnapshot;
+  final Future<void> Function(List<SceneAnnotation> annotations)
+      onSaveSceneAnnotations;
   final VoidCallback onSaveScene;
   final Future<void> Function(Scene scene, String manuscriptText)
       onSaveSceneManuscript;
@@ -338,6 +341,8 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                                 onRestoreSnapshot:
                                     widget.onRestoreSceneSnapshot,
                                 onDeleteSnapshot: widget.onDeleteSceneSnapshot,
+                                onSaveSceneAnnotations:
+                                    widget.onSaveSceneAnnotations,
                                 onSaveScene: widget.onSaveScene,
                               ),
                   ),
@@ -1253,6 +1258,7 @@ final class _SceneEditor extends StatefulWidget {
     required this.onCreateSnapshot,
     required this.onRestoreSnapshot,
     required this.onDeleteSnapshot,
+    required this.onSaveSceneAnnotations,
     required this.onSaveScene,
   });
 
@@ -1292,6 +1298,8 @@ final class _SceneEditor extends StatefulWidget {
   final VoidCallback onCreateSnapshot;
   final ValueChanged<SceneSnapshot> onRestoreSnapshot;
   final ValueChanged<SceneSnapshot> onDeleteSnapshot;
+  final Future<void> Function(List<SceneAnnotation> annotations)
+      onSaveSceneAnnotations;
   final VoidCallback onSaveScene;
 
   @override
@@ -1307,6 +1315,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
   String? _spellCheckError;
   List<SpellCheckIssue> _spellIssues = const [];
   bool _showSnapshots = false;
+  bool _showAnnotations = false;
   SceneSnapshot? _selectedSnapshot;
 
   @override
@@ -1376,11 +1385,153 @@ final class _SceneEditorState extends State<_SceneEditor> {
     });
   }
 
+  Future<void> _createAnnotationFromSelection() async {
+    final selection = widget.controller.selection;
+    if (!selection.isValid || selection.isCollapsed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.copy.t('annotationNeedsSelection'))),
+      );
+      return;
+    }
+    final start = math.min(selection.start, selection.end);
+    final end = math.max(selection.start, selection.end);
+    final text = widget.controller.text;
+    if (start < 0 || end > text.length || start == end) return;
+    final selectedText = text.substring(start, end).trim();
+    if (selectedText.isEmpty) return;
+
+    final comment = await _showAnnotationDialog(
+      initialSelectedText: selectedText,
+    );
+    if (comment == null || comment.trim().isEmpty) return;
+
+    final now = DateTime.now().toUtc();
+    final annotations = [
+      ...SceneAnnotation.listFromMetadata(widget.scene.metadata),
+      SceneAnnotation(
+        id: newLocalId('annotation'),
+        sceneId: widget.scene.id,
+        startOffset: start,
+        endOffset: end,
+        selectedText: selectedText,
+        comment: comment.trim(),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ];
+    await widget.onSaveSceneAnnotations(annotations);
+    if (!mounted) return;
+    setState(() => _showAnnotations = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(widget.copy.t('annotationCreated'))),
+    );
+  }
+
+  Future<void> _editAnnotation(SceneAnnotation annotation) async {
+    final comment = await _showAnnotationDialog(
+      initialSelectedText: annotation.selectedText,
+      initialComment: annotation.comment,
+    );
+    if (comment == null || comment.trim().isEmpty) return;
+    final annotations = SceneAnnotation.listFromMetadata(widget.scene.metadata)
+        .map(
+          (item) => item.id == annotation.id
+              ? item.copyWith(comment: comment.trim())
+              : item,
+        )
+        .toList();
+    await widget.onSaveSceneAnnotations(annotations);
+  }
+
+  Future<void> _toggleAnnotationResolved(SceneAnnotation annotation) async {
+    final annotations = SceneAnnotation.listFromMetadata(widget.scene.metadata)
+        .map(
+          (item) => item.id == annotation.id
+              ? item.copyWith(resolved: !item.resolved)
+              : item,
+        )
+        .toList();
+    await widget.onSaveSceneAnnotations(annotations);
+  }
+
+  Future<void> _deleteAnnotation(SceneAnnotation annotation) async {
+    final annotations = SceneAnnotation.listFromMetadata(widget.scene.metadata)
+        .where((item) => item.id != annotation.id)
+        .toList();
+    await widget.onSaveSceneAnnotations(annotations);
+  }
+
+  void _selectAnnotationText(SceneAnnotation annotation) {
+    final range = _annotationTextRange(annotation, widget.controller.text);
+    if (range == null) return;
+    widget.controller.selection =
+        TextSelection(baseOffset: range.start, extentOffset: range.end);
+  }
+
+  Future<String?> _showAnnotationDialog({
+    required String initialSelectedText,
+    String initialComment = '',
+  }) async {
+    final controller = TextEditingController(text: initialComment);
+    try {
+      return showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(widget.copy.t('annotationDialogTitle')),
+          content: SizedBox(
+            width: 460,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  initialSelectedText,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  autofocus: true,
+                  controller: controller,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    labelText: widget.copy.t('annotationCommentLabel'),
+                    alignLabelWithHint: true,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(widget.copy.t('cancel')),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              icon: const Icon(Icons.add_comment_outlined),
+              label: Text(widget.copy.t('saveAnnotation')),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      controller.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final copy = widget.copy;
     final scene = widget.scene;
     final color = Theme.of(context).colorScheme;
+    final annotations = SceneAnnotation.listFromMetadata(scene.metadata);
+    final openAnnotationCount =
+        annotations.where((annotation) => !annotation.resolved).length;
     final manuscriptField = _ManuscriptField(
       copy: copy,
       controller: widget.controller,
@@ -1475,6 +1626,27 @@ final class _SceneEditorState extends State<_SceneEditor> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.spellcheck_outlined),
+                    ),
+                  ),
+                  Tooltip(
+                    message: copy.t('addAnnotation'),
+                    child: IconButton.outlined(
+                      onPressed: _createAnnotationFromSelection,
+                      icon: const Icon(Icons.add_comment_outlined),
+                    ),
+                  ),
+                  Tooltip(
+                    message: copy.t('annotations'),
+                    child: IconButton.outlined(
+                      isSelected: _showAnnotations,
+                      onPressed: () => setState(
+                        () => _showAnnotations = !_showAnnotations,
+                      ),
+                      icon: Badge.count(
+                        count: openAnnotationCount,
+                        isLabelVisible: openAnnotationCount > 0,
+                        child: const Icon(Icons.rate_review_outlined),
+                      ),
                     ),
                   ),
                   Tooltip(
@@ -1593,6 +1765,18 @@ final class _SceneEditorState extends State<_SceneEditor> {
               onCreateSnapshot: widget.onCreateSnapshot,
               onRestoreSnapshot: widget.onRestoreSnapshot,
               onDeleteSnapshot: widget.onDeleteSnapshot,
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (!widget.focusMode && _showAnnotations) ...[
+            _SceneAnnotationsPanel(
+              copy: copy,
+              annotations: annotations,
+              manuscriptText: widget.controller.text,
+              onSelectText: _selectAnnotationText,
+              onEdit: _editAnnotation,
+              onToggleResolved: _toggleAnnotationResolved,
+              onDelete: _deleteAnnotation,
             ),
             const SizedBox(height: 12),
           ],
@@ -1739,6 +1923,211 @@ final class _ManuscriptField extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+final class _SceneAnnotationsPanel extends StatelessWidget {
+  const _SceneAnnotationsPanel({
+    required this.copy,
+    required this.annotations,
+    required this.manuscriptText,
+    required this.onSelectText,
+    required this.onEdit,
+    required this.onToggleResolved,
+    required this.onDelete,
+  });
+
+  final WritelerCopy copy;
+  final List<SceneAnnotation> annotations;
+  final String manuscriptText;
+  final ValueChanged<SceneAnnotation> onSelectText;
+  final ValueChanged<SceneAnnotation> onEdit;
+  final ValueChanged<SceneAnnotation> onToggleResolved;
+  final ValueChanged<SceneAnnotation> onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final openCount =
+        annotations.where((annotation) => !annotation.resolved).length;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.rate_review_outlined, color: color.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${copy.t('annotations')} · $openCount ${copy.t('open')}',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+                _HelpTooltip(message: copy.t('helpAnnotations')),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (annotations.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 10, 10),
+                child: Text(
+                  copy.t('noAnnotationsYet'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color.onSurfaceVariant,
+                      ),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 260),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: annotations.length,
+                  separatorBuilder: (_, __) => Divider(
+                    height: 1,
+                    color: color.outlineVariant,
+                  ),
+                  itemBuilder: (context, index) {
+                    final annotation = annotations[index];
+                    return _SceneAnnotationTile(
+                      copy: copy,
+                      annotation: annotation,
+                      manuscriptText: manuscriptText,
+                      onSelectText: onSelectText,
+                      onEdit: onEdit,
+                      onToggleResolved: onToggleResolved,
+                      onDelete: onDelete,
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _SceneAnnotationTile extends StatelessWidget {
+  const _SceneAnnotationTile({
+    required this.copy,
+    required this.annotation,
+    required this.manuscriptText,
+    required this.onSelectText,
+    required this.onEdit,
+    required this.onToggleResolved,
+    required this.onDelete,
+  });
+
+  final WritelerCopy copy;
+  final SceneAnnotation annotation;
+  final String manuscriptText;
+  final ValueChanged<SceneAnnotation> onSelectText;
+  final ValueChanged<SceneAnnotation> onEdit;
+  final ValueChanged<SceneAnnotation> onToggleResolved;
+  final ValueChanged<SceneAnnotation> onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final range = _annotationTextRange(annotation, manuscriptText);
+    final resolved = annotation.resolved;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Opacity(
+        opacity: resolved ? 0.68 : 1,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Icon(
+                resolved
+                    ? Icons.task_alt_outlined
+                    : Icons.radio_button_unchecked,
+                size: 18,
+                color: resolved ? color.onSurfaceVariant : color.primary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    annotation.comment,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '“${annotation.selectedText}”',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
+                        ),
+                  ),
+                  if (range == null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      copy.t('annotationTextMoved'),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: color.tertiary,
+                          ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Wrap(
+              spacing: 2,
+              children: [
+                IconButton(
+                  tooltip: copy.t('selectAnnotationText'),
+                  onPressed:
+                      range == null ? null : () => onSelectText(annotation),
+                  icon: const Icon(Icons.my_location_outlined, size: 18),
+                ),
+                IconButton(
+                  tooltip: copy.t('editAnnotation'),
+                  onPressed: () => onEdit(annotation),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                ),
+                IconButton(
+                  tooltip: resolved
+                      ? copy.t('reopenAnnotation')
+                      : copy.t('resolveAnnotation'),
+                  onPressed: () => onToggleResolved(annotation),
+                  icon: Icon(
+                    resolved ? Icons.undo_outlined : Icons.check_circle_outline,
+                    size: 18,
+                  ),
+                ),
+                IconButton(
+                  tooltip: copy.t('deleteAnnotation'),
+                  onPressed: () => onDelete(annotation),
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -4052,4 +4441,25 @@ final class _ExistingSceneContextDialogState
       ],
     );
   }
+}
+
+TextRange? _annotationTextRange(
+  SceneAnnotation annotation,
+  String manuscriptText,
+) {
+  final start = annotation.startOffset;
+  final end = annotation.endOffset;
+  if (start >= 0 && end <= manuscriptText.length && start < end) {
+    final current = manuscriptText.substring(start, end);
+    if (current == annotation.selectedText) {
+      return TextRange(start: start, end: end);
+    }
+  }
+  if (annotation.selectedText.isEmpty) return null;
+  final fallbackStart = manuscriptText.indexOf(annotation.selectedText);
+  if (fallbackStart < 0) return null;
+  return TextRange(
+    start: fallbackStart,
+    end: fallbackStart + annotation.selectedText.length,
+  );
 }

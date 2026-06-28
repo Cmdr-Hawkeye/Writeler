@@ -87,6 +87,7 @@ import 'features/structure/application/create_scene.dart';
 import 'features/structure/domain/chapter.dart';
 import 'features/structure/domain/chapter_repository.dart';
 import 'features/structure/domain/scene.dart';
+import 'features/structure/domain/scene_annotation.dart';
 import 'features/structure/domain/scene_repository.dart';
 import 'features/structure/domain/scene_snapshot.dart';
 import 'features/structure/domain/scene_snapshot_repository.dart';
