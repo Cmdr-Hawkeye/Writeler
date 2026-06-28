@@ -181,9 +181,14 @@ final class AIProjectPromptBuilder {
         german
             ? 'Kontext-Starthilfe: Beginne mit einem JSON-Block {"worldStarter":{"personas":[{"name":"","summary":"","background":"","goal":"","conflict":""}],"relationships":[{"sourceName":"","targetName":"","type":"","label":"","description":"","strength":0.7}],"locations":[{"name":"","summary":"","description":"","rules":""}],"drivers":[{"name":"","goal":"","conflict":"","stakes":""}],"events":[{"name":"","time":"","summary":"","goal":"","conflict":"","consequence":""}]}}. Erzeuge genau 10 Personas plus passende Beziehungen, Orte, Ziele/Konflikte und historische Ereignisse. Jeder Eintrag soll als Vorschlag prüfbar sein. Schreibe keine Manuskriptprosa.'
             : 'World starter: Start with a JSON block {"worldStarter":{"personas":[{"name":"","summary":"","background":"","goal":"","conflict":""}],"relationships":[{"sourceName":"","targetName":"","type":"","label":"","description":"","strength":0.7}],"locations":[{"name":"","summary":"","description":"","rules":""}],"drivers":[{"name":"","goal":"","conflict":"","stakes":""}],"events":[{"name":"","time":"","summary":"","goal":"","conflict":"","consequence":""}]}}. Create exactly 10 personas plus fitting relationships, locations, goals/conflicts, and historical events. Each item must be reviewable as a suggestion. Do not write manuscript prose.',
-      german
-          ? 'Format: Gib 3 bis 6 nummerierte Punkte aus. Beginne mit der wichtigsten Beobachtung oder Entscheidung. Trenne Analyse, Risiko und nächsten Schritt klar.'
-          : 'Format: Return 3 to 6 numbered points. Start with the most important observation or decision. Clearly separate analysis, risk, and next step.',
+      if (task == AITaskKind.worldContextStarter)
+        german
+            ? 'Format: Gib zuerst das JSON-Objekt aus. Danach höchstens eine sehr kurze Notiz. Keine Markdown-Tabelle, keine Manuskriptprosa.'
+            : 'Format: Return the JSON object first. After it, add at most one very short note. No markdown table, no manuscript prose.'
+      else
+        german
+            ? 'Format: Gib 3 bis 6 nummerierte Punkte aus. Beginne mit der wichtigsten Beobachtung oder Entscheidung. Trenne Analyse, Risiko und nächsten Schritt klar.'
+            : 'Format: Return 3 to 6 numbered points. Start with the most important observation or decision. Clearly separate analysis, risk, and next step.',
     ].join('\n');
   }
 

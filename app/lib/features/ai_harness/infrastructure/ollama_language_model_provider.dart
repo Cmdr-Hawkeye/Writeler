@@ -8,6 +8,7 @@ import '../domain/language_model_provider.dart';
 import '../domain/model_http_transport.dart';
 import '../domain/model_request.dart';
 import 'openai_compatible_language_model_provider.dart';
+import 'structured_response_parser.dart';
 
 final class OllamaLanguageModelProvider implements LanguageModelProvider {
   const OllamaLanguageModelProvider({
@@ -79,6 +80,7 @@ final class OllamaLanguageModelProvider implements LanguageModelProvider {
 
     return ModelResponse(
       text: content.trim(),
+      structured: extractStructuredJson(content.trim()),
       estimatedInputTokens: _asInt(json['prompt_eval_count']),
       estimatedOutputTokens: _asInt(json['eval_count']),
     );

@@ -8,6 +8,7 @@ import '../domain/language_model_provider.dart';
 import '../domain/model_http_transport.dart';
 import '../domain/model_request.dart';
 import 'openai_compatible_language_model_provider.dart';
+import 'structured_response_parser.dart';
 
 final class AnthropicLanguageModelProvider implements LanguageModelProvider {
   const AnthropicLanguageModelProvider({
@@ -91,6 +92,7 @@ final class AnthropicLanguageModelProvider implements LanguageModelProvider {
     final usage = json['usage'];
     return ModelResponse(
       text: text,
+      structured: extractStructuredJson(text),
       estimatedInputTokens: usage is Map ? _asInt(usage['input_tokens']) : null,
       estimatedOutputTokens:
           usage is Map ? _asInt(usage['output_tokens']) : null,

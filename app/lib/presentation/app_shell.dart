@@ -1417,7 +1417,7 @@ final class _WritelerShellState extends State<WritelerShell> {
             'projectId': project.id,
             'task': AITaskKind.worldContextStarter.name,
           },
-          parameters: const ModelParameters(maxTokens: 2600),
+          parameters: const ModelParameters(maxTokens: 5000),
         ),
       );
       final created = await _saveWorldStarterSuggestions(
@@ -1464,19 +1464,43 @@ final class _WritelerShellState extends State<WritelerShell> {
     required String responseText,
     required Map<String, Object?>? structured,
   }) async {
-    final world = structured?['worldStarter'];
-    if (world is! Map) return 0;
-    final normalized = Map<String, Object?>.from(world);
+    final normalized = _worldStarterPayload(
+      structured ?? extractStructuredJson(responseText),
+    );
+    if (normalized == null) return 0;
     final entries = <({String kind, Map<String, Object?> item})>[
-      for (final item in _worldStarterList(normalized['personas']))
+      for (final item in _worldStarterList(
+        normalized,
+        const ['personas', 'persona', 'characters', 'figures', 'figuren'],
+      ))
         (kind: 'persona', item: item),
-      for (final item in _worldStarterList(normalized['relationships']))
+      for (final item in _worldStarterList(
+        normalized,
+        const ['relationships', 'beziehungen'],
+      ))
         (kind: 'relationship', item: item),
-      for (final item in _worldStarterList(normalized['locations']))
+      for (final item in _worldStarterList(
+        normalized,
+        const ['locations', 'places', 'orte'],
+      ))
         (kind: 'location', item: item),
-      for (final item in _worldStarterList(normalized['drivers']))
+      for (final item in _worldStarterList(
+        normalized,
+        const [
+          'drivers',
+          'goalsConflicts',
+          'goals',
+          'conflicts',
+          'zieleKonflikte',
+          'ziele',
+          'konflikte',
+        ],
+      ))
         (kind: 'driver', item: item),
-      for (final item in _worldStarterList(normalized['events']))
+      for (final item in _worldStarterList(
+        normalized,
+        const ['events', 'historicalEvents', 'timeline', 'ereignisse'],
+      ))
         (kind: 'event', item: item),
     ];
     final now = DateTime.now().toUtc();
@@ -1507,8 +1531,49 @@ final class _WritelerShellState extends State<WritelerShell> {
     return entries.length;
   }
 
-  List<Map<String, Object?>> _worldStarterList(Object? value) {
-    if (value is! List) return const [];
+  Map<String, Object?>? _worldStarterPayload(Map<String, Object?>? structured) {
+    if (structured == null) return null;
+    for (final key in const [
+      'worldStarter',
+      'contextStarter',
+      'storyContext',
+      'kontext',
+    ]) {
+      final value = structured[key];
+      if (value is Map) return Map<String, Object?>.from(value);
+    }
+    if (_hasAnyWorldStarterList(structured)) return structured;
+    return null;
+  }
+
+  bool _hasAnyWorldStarterList(Map<String, Object?> value) {
+    const keys = [
+      'personas',
+      'characters',
+      'figures',
+      'relationships',
+      'locations',
+      'places',
+      'drivers',
+      'goalsConflicts',
+      'events',
+      'historicalEvents',
+      'timeline',
+      'figuren',
+      'beziehungen',
+      'orte',
+      'zieleKonflikte',
+      'ereignisse',
+    ];
+    return keys.any((key) => value[key] is List);
+  }
+
+  List<Map<String, Object?>> _worldStarterList(
+    Map<String, Object?> source,
+    List<String> keys,
+  ) {
+    final value = keys.map((key) => source[key]).whereType<List>().firstOrNull;
+    if (value == null) return const [];
     return [
       for (final item in value)
         if (item is Map) Map<String, Object?>.from(item),

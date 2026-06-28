@@ -127,6 +127,44 @@ void main() {
     );
   });
 
+  test('OpenAI-compatible provider extracts structured JSON from prose',
+      () async {
+    final provider = OpenAICompatibleLanguageModelProvider(
+      id: 'default',
+      displayName: 'OpenAI Compatible',
+      modelName: 'gpt-test',
+      baseUrl: Uri.parse('https://example.test/v1'),
+      transport: _FakeTransport(
+        response: const ModelHttpResponse(
+          statusCode: 200,
+          body: '''
+{
+  "choices": [
+    {
+      "message": {
+        "content": "Hier ist die Starthilfe:\\n{\\"worldStarter\\":{\\"personas\\":[{\\"name\\":\\"Mara\\",\\"summary\\":\\"Archivarin\\"}],\\"locations\\":[{\\"name\\":\\"Archiv\\"}]}}\\nKurzer Hinweis: Bitte prüfen."
+      }
+    }
+  ]
+}
+''',
+        ),
+      ),
+    );
+
+    final response = await provider.generateText(
+      const ModelRequest(
+        prompt: 'Kontext-Starthilfe',
+        context: {},
+        parameters: ModelParameters(),
+      ),
+    );
+
+    final worldStarter = response.structured?['worldStarter'] as Map?;
+    final personas = worldStarter?['personas'] as List?;
+    expect(personas?.single, containsPair('name', 'Mara'));
+  });
+
   test('OpenRouter provider includes attribution headers', () async {
     final transport = _FakeTransport(
       response: const ModelHttpResponse(
