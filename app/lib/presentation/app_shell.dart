@@ -1385,6 +1385,79 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<void> _saveStoryboardState(Map<String, Object?> storyboard) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final metadata = Map<String, Object?>.from(project.metadata);
+    metadata['storyboard'] = storyboard;
+    final updated = project.copyWith(metadata: metadata);
+    await widget.projectRepository.save(updated);
+    final projects = await widget.projectRepository.listActive();
+    if (!mounted) return;
+    setState(() {
+      _projects = projects;
+      _selectedProject = updated;
+    });
+  }
+
+  Future<void> _reorderSceneFromStoryboard(
+    String sourceNodeId,
+    String targetNodeId,
+  ) async {
+    final sourceSceneId = _sceneIdFromStoryboardNode(sourceNodeId);
+    final targetSceneId = _sceneIdFromStoryboardNode(targetNodeId);
+    if (sourceSceneId == null ||
+        targetSceneId == null ||
+        sourceSceneId == targetSceneId) {
+      return;
+    }
+    final source =
+        _scenes.where((scene) => scene.id == sourceSceneId).firstOrNull;
+    final target =
+        _scenes.where((scene) => scene.id == targetSceneId).firstOrNull;
+    if (source == null || target == null) return;
+
+    await _moveSceneToChapterOrder(
+      source,
+      chapterId: target.chapterId,
+      orderIndex: _orderIndexBeforeTarget(
+        source: source,
+        target: target,
+      ),
+    );
+    await _recordProjectMetric(
+      eventType: 'storyboard.timeline.reordered',
+      metadata: {
+        'sceneId': source.id,
+        'beforeSceneId': target.id,
+        'chapterId': target.chapterId,
+      },
+    );
+  }
+
+  double _orderIndexBeforeTarget({
+    required Scene source,
+    required Scene target,
+  }) {
+    final ordered = _scenes
+        .where(
+          (scene) =>
+              scene.id != source.id && scene.chapterId == target.chapterId,
+        )
+        .toList()
+      ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    final targetIndex = ordered.indexWhere((scene) => scene.id == target.id);
+    if (targetIndex <= 0) return target.orderIndex - 1000;
+    final previous = ordered[targetIndex - 1];
+    return (previous.orderIndex + target.orderIndex) / 2;
+  }
+
+  String? _sceneIdFromStoryboardNode(String nodeId) {
+    const prefix = 'scene:';
+    if (!nodeId.startsWith(prefix)) return null;
+    return nodeId.substring(prefix.length);
+  }
+
   Future<void> _requestWorldStarter(WritelerCopy copy) async {
     final project = _selectedProject;
     if (project == null || _isRequestingAi) return;
@@ -2924,6 +2997,8 @@ final class _WritelerShellState extends State<WritelerShell> {
           scenes: _scenes,
           catalogItems: _catalogItems,
           notes: _notes,
+          onSaveStoryboard: _saveStoryboardState,
+          onReorderScene: _reorderSceneFromStoryboard,
         ),
       20 => _ContextWorkspace(
           copy: copy,

@@ -14,6 +14,8 @@ final class _StoryboardWorkspace extends StatefulWidget {
     required this.scenes,
     required this.catalogItems,
     required this.notes,
+    required this.onSaveStoryboard,
+    required this.onReorderScene,
   });
 
   final WritelerCopy copy;
@@ -21,6 +23,9 @@ final class _StoryboardWorkspace extends StatefulWidget {
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
   final List<ProjectNote> notes;
+  final Future<void> Function(Map<String, Object?> storyboard) onSaveStoryboard;
+  final Future<void> Function(String sourceNodeId, String targetNodeId)
+      onReorderScene;
 
   @override
   State<_StoryboardWorkspace> createState() => _StoryboardWorkspaceState();
@@ -29,8 +34,36 @@ final class _StoryboardWorkspace extends StatefulWidget {
 final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
   final Map<String, Offset> _positions = {};
   final Set<String> _connections = {};
+  final List<String> _timelineOrder = [];
   bool _connectMode = false;
   String? _pendingConnectionStartId;
+  Timer? _persistTimer;
+  bool _storyboardDirty = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPersistedState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _StoryboardWorkspace oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.project?.id != widget.project?.id ||
+        oldWidget.project?.metadata['storyboard'] !=
+            widget.project?.metadata['storyboard']) {
+      _loadPersistedState();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_storyboardDirty) {
+      unawaited(widget.onSaveStoryboard(_storyboardToJson()));
+    }
+    _persistTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +71,13 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
     if (project == null) return _EmptyWorkspace(copy: widget.copy);
 
     final nodes = _buildNodes(project);
-    final nodesById = {for (final node in nodes) node.id: node};
-    final timelineNodes =
-        nodes.where((node) => node.kind == _StoryboardNodeKind.scene).toList();
     _syncCanvasState(nodes);
+    final nodesById = {for (final node in nodes) node.id: node};
+    final nodesByIdForTimeline = {for (final node in nodes) node.id: node};
+    final timelineNodes = [
+      for (final id in _timelineOrder)
+        if (nodesByIdForTimeline[id] != null) nodesByIdForTimeline[id]!,
+    ];
 
     return Column(
       children: [
@@ -58,10 +94,13 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
           },
           onClearConnections: _connections.isEmpty
               ? null
-              : () => setState(() {
+              : () {
+                  setState(() {
                     _connections.clear();
                     _pendingConnectionStartId = null;
-                  }),
+                  });
+                  _schedulePersist();
+                },
         ),
         const Divider(height: 1),
         Expanded(
@@ -89,7 +128,11 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
         ],
         if (timelineNodes.isNotEmpty) ...[
           const Divider(height: 1),
-          _StoryboardTimeRail(copy: widget.copy, nodes: timelineNodes),
+          _StoryboardTimeRail(
+            copy: widget.copy,
+            nodes: timelineNodes,
+            onReorder: _reorderTimeline,
+          ),
         ],
       ],
     );
@@ -160,6 +203,10 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
 
   void _syncCanvasState(List<_StoryboardNode> nodes) {
     final nodeIds = nodes.map((node) => node.id).toSet();
+    final sceneNodeIds = nodes
+        .where((node) => node.kind == _StoryboardNodeKind.scene)
+        .map((node) => node.id)
+        .toSet();
     _positions.removeWhere((id, _) => !nodeIds.contains(id));
     _connections.removeWhere((key) {
       final parts = key.split('|');
@@ -167,6 +214,13 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
           !nodeIds.contains(parts.first) ||
           !nodeIds.contains(parts.last);
     });
+    _timelineOrder.removeWhere((id) => !sceneNodeIds.contains(id));
+    for (final node in nodes) {
+      if (node.kind == _StoryboardNodeKind.scene &&
+          !_timelineOrder.contains(node.id)) {
+        _timelineOrder.add(node.id);
+      }
+    }
 
     final usedByKind = <_StoryboardNodeKind, int>{};
     for (final node in nodes) {
@@ -198,6 +252,7 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
       final current = _positions[id] ?? Offset.zero;
       _positions[id] = _clampPosition(current + delta);
     });
+    _schedulePersist();
   }
 
   Offset _clampPosition(Offset position) {
@@ -227,10 +282,82 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
       _connections.add(_connectionKey(startId, id));
       _pendingConnectionStartId = null;
     });
+    _schedulePersist();
   }
 
   void _removeConnection(String key) {
     setState(() => _connections.remove(key));
+    _schedulePersist();
+  }
+
+  void _reorderTimeline(String sourceNodeId, String targetNodeId) {
+    if (sourceNodeId == targetNodeId) return;
+    setState(() {
+      _timelineOrder.remove(sourceNodeId);
+      final targetIndex = _timelineOrder.indexOf(targetNodeId);
+      if (targetIndex == -1) {
+        _timelineOrder.add(sourceNodeId);
+      } else {
+        _timelineOrder.insert(targetIndex, sourceNodeId);
+      }
+    });
+    _schedulePersist();
+    unawaited(widget.onReorderScene(sourceNodeId, targetNodeId));
+  }
+
+  void _loadPersistedState() {
+    _persistTimer?.cancel();
+    _positions.clear();
+    _connections.clear();
+    _timelineOrder.clear();
+    final storyboard = _storyboardMetadata(widget.project);
+    final positions = storyboard['positions'];
+    if (positions is Map) {
+      for (final entry in positions.entries) {
+        final id = entry.key.toString();
+        final value = entry.value;
+        if (value is Map) {
+          final x = _asDouble(value['x']);
+          final y = _asDouble(value['y']);
+          if (x != null && y != null) {
+            _positions[id] = _clampPosition(Offset(x, y));
+          }
+        }
+      }
+    }
+    final connections = storyboard['connections'];
+    if (connections is List) {
+      _connections.addAll(connections.whereType<String>());
+    }
+    final timeline = storyboard['timeline'];
+    if (timeline is List) {
+      _timelineOrder.addAll(timeline.whereType<String>());
+    }
+  }
+
+  void _schedulePersist() {
+    _storyboardDirty = true;
+    _persistTimer?.cancel();
+    _persistTimer = Timer(const Duration(milliseconds: 450), () {
+      _storyboardDirty = false;
+      unawaited(widget.onSaveStoryboard(_storyboardToJson()));
+    });
+  }
+
+  Map<String, Object?> _storyboardToJson() {
+    return {
+      'version': 1,
+      'positions': {
+        for (final entry in _positions.entries)
+          entry.key: {
+            'x': entry.value.dx,
+            'y': entry.value.dy,
+          },
+      },
+      'connections': (_connections.toList()..sort()),
+      'timeline': List<String>.unmodifiable(_timelineOrder),
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    };
   }
 }
 
@@ -728,10 +855,12 @@ final class _StoryboardTimeRail extends StatelessWidget {
   const _StoryboardTimeRail({
     required this.copy,
     required this.nodes,
+    required this.onReorder,
   });
 
   final WritelerCopy copy;
   final List<_StoryboardNode> nodes;
+  final void Function(String sourceNodeId, String targetNodeId) onReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -758,11 +887,15 @@ final class _StoryboardTimeRail extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    copy.t('storyboardTimelineHint'),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: color.onSurfaceVariant,
-                        ),
+                  Expanded(
+                    child: Text(
+                      copy.t('storyboardTimelineHint'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
                   ),
                 ],
               ),
@@ -792,6 +925,7 @@ final class _StoryboardTimeRail extends StatelessWidget {
                             child: _StoryboardTimeRailEvent(
                               index: index + 1,
                               node: nodes[index],
+                              onReorder: onReorder,
                             ),
                           ),
                       ],
@@ -811,16 +945,18 @@ final class _StoryboardTimeRailEvent extends StatelessWidget {
   const _StoryboardTimeRailEvent({
     required this.index,
     required this.node,
+    required this.onReorder,
   });
 
   final int index;
   final _StoryboardNode node;
+  final void Function(String sourceNodeId, String targetNodeId) onReorder;
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
     final tone = _toneForNode(context, _StoryboardNodeKind.scene);
-    return Column(
+    final content = Column(
       children: [
         Container(
           width: 28,
@@ -867,6 +1003,34 @@ final class _StoryboardTimeRailEvent extends StatelessWidget {
               ),
         ),
       ],
+    );
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (details) => details.data != node.id,
+      onAcceptWithDetails: (details) => onReorder(details.data, node.id),
+      builder: (context, candidateData, rejectedData) {
+        final highlighted = candidateData.isNotEmpty;
+        final child = AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          decoration: highlighted
+              ? BoxDecoration(
+                  color: tone.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: tone.withValues(alpha: 0.48)),
+                )
+              : null,
+          child: content,
+        );
+        return LongPressDraggable<String>(
+          data: node.id,
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(width: 156, child: child),
+          ),
+          childWhenDragging: Opacity(opacity: 0.42, child: child),
+          child: child,
+        );
+      },
     );
   }
 }
@@ -1279,6 +1443,21 @@ String _connectionLabel(String key, Map<String, _StoryboardNode> nodesById) {
   final first = nodesById[parts.first]?.title ?? parts.first;
   final second = nodesById[parts.last]?.title ?? parts.last;
   return '$first - $second';
+}
+
+Map<String, Object?> _storyboardMetadata(Project? project) {
+  final storyboard = project?.metadata['storyboard'];
+  if (storyboard is Map) return Map<String, Object?>.from(storyboard);
+  return const {};
+}
+
+double? _asDouble(Object? value) {
+  return switch (value) {
+    int() => value.toDouble(),
+    double() => value,
+    String() => double.tryParse(value),
+    _ => null,
+  };
 }
 
 String _firstFilled(Iterable<String?> values) {

@@ -432,6 +432,107 @@ void main() {
     expect(moved?.status, DraftStatus.revised);
   });
 
+  testWidgets('storyboard persists layout and can reorder scenes',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1500, 960));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final chapterRepository = InMemoryChapterRepository();
+    final sceneRepository = InMemorySceneRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Storyboard Book'),
+    );
+    final chapterOne = await CreateChapter(chapterRepository)(
+      CreateChapterCommand(
+        projectId: project.id,
+        title: 'Act One',
+        orderIndex: 1,
+      ),
+    );
+    final chapterTwo = await CreateChapter(chapterRepository)(
+      CreateChapterCommand(
+        projectId: project.id,
+        title: 'Act Two',
+        orderIndex: 2,
+      ),
+    );
+    final opening = await CreateScene(sceneRepository)(
+      CreateSceneCommand(
+        projectId: project.id,
+        chapterId: chapterOne.id,
+        title: 'Opening',
+        orderIndex: 1000,
+      ),
+    );
+    final second = await CreateScene(sceneRepository)(
+      CreateSceneCommand(
+        projectId: project.id,
+        chapterId: chapterTwo.id,
+        title: 'Second',
+        orderIndex: 2000,
+      ),
+    );
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: chapterRepository,
+        sceneRepository: sceneRepository,
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Storyboard');
+    await tester.drag(find.text('Opening').first, const Offset(90, 40));
+    await tester.pump(const Duration(milliseconds: 700));
+
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Opening').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Second').first);
+    await tester.pump(const Duration(milliseconds: 700));
+
+    final savedProject = await projectRepository.findById(project.id);
+    final storyboard = savedProject?.metadata['storyboard'] as Map?;
+    final positions = storyboard?['positions'] as Map?;
+    final connections = storyboard?['connections'] as List?;
+    final timeline = storyboard?['timeline'] as List?;
+    final expectedConnection = ['scene:${opening.id}', 'scene:${second.id}']
+      ..sort();
+    expect(positions?.containsKey('scene:${opening.id}'), isTrue);
+    expect(
+      connections,
+      contains('${expectedConnection.first}|${expectedConnection.last}'),
+    );
+    expect(
+        timeline, containsAll(['scene:${opening.id}', 'scene:${second.id}']));
+
+    final sourceCenter = tester.getCenter(find.text('Second').last);
+    final targetCenter = tester.getCenter(find.text('Opening').last);
+    final gesture = await tester.startGesture(sourceCenter);
+    await tester.pump(const Duration(milliseconds: 650));
+    await gesture.moveTo(targetCenter);
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    final moved = await sceneRepository.findById(second.id);
+    expect(moved?.chapterId, chapterOne.id);
+    expect(moved!.orderIndex, lessThan(opening.orderIndex));
+  });
+
   testWidgets('AI workshop opens with actionable project context',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));

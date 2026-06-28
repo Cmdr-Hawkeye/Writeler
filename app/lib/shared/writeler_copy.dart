@@ -402,7 +402,8 @@ final class WritelerCopy {
     'storyboardCanvas': 'Freie Storyboard-Fläche',
     'storyboardResetView': 'Storyboard links oben ausrichten',
     'storyboardTimeline': 'Zeitstrahl',
-    'storyboardTimelineHint': 'Szenenfolge nach Projektstruktur',
+    'storyboardTimelineHint':
+        'Szenenfolge nach Projektstruktur · Ziehen aktualisiert Reihenfolge und Kapitel',
     'storyboardPickSecondNode': 'Zweite Karte auswählen',
     'storyboardNodeConnectTooltip': 'Karte für eine Verbindung auswählen',
     'storyboardNodeMoveTooltip': 'Karte frei auf dem Storyboard verschieben',
@@ -1203,7 +1204,8 @@ final class WritelerCopy {
     'storyboardCanvas': 'Free storyboard canvas',
     'storyboardResetView': 'Align storyboard top left',
     'storyboardTimeline': 'Timeline',
-    'storyboardTimelineHint': 'Scene sequence by project structure',
+    'storyboardTimelineHint':
+        'Scene sequence by project structure · Dragging updates order and chapter',
     'storyboardPickSecondNode': 'Select second card',
     'storyboardNodeConnectTooltip': 'Select card for a connection',
     'storyboardNodeMoveTooltip': 'Move card freely on the storyboard',
