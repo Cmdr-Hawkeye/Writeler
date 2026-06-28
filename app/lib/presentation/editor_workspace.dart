@@ -379,6 +379,8 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
 
 enum _ManuscriptEditorMode { scene, fullManuscript }
 
+enum _EditorSidePanelKind { planning, context, research, ai }
+
 final class _FullManuscriptEditor extends StatefulWidget {
   const _FullManuscriptEditor({
     required this.copy,
@@ -1318,6 +1320,7 @@ final class _SceneEditorState extends State<_SceneEditor> {
   List<SpellCheckIssue> _spellIssues = const [];
   bool _showSnapshots = false;
   bool _showAnnotations = false;
+  _EditorSidePanelKind _selectedSidePanel = _EditorSidePanelKind.planning;
   SceneSnapshot? _selectedSnapshot;
 
   @override
@@ -1574,6 +1577,8 @@ final class _SceneEditorState extends State<_SceneEditor> {
       relationships: widget.relationships,
       researchItems: widget.researchItems,
       suggestions: widget.suggestions,
+      selectedPanel: _selectedSidePanel,
+      onPanelChanged: (panel) => setState(() => _selectedSidePanel = panel),
       summaryController: widget.summaryController,
       goalController: widget.goalController,
       conflictController: widget.conflictController,
@@ -1823,18 +1828,20 @@ final class _SceneEditorState extends State<_SceneEditor> {
                   return manuscriptField;
                 }
                 if (compact) {
-                  final hideInspector = constraints.maxHeight < 300;
+                  final hideInspector = constraints.maxHeight < 430;
                   if (hideInspector) {
                     return manuscriptField;
                   }
                   final minimumManuscriptHeight =
-                      constraints.maxHeight < 620 ? 160.0 : 360.0;
+                      constraints.maxHeight < 620 ? 260.0 : 360.0;
+                  final availableInspectorHeight =
+                      constraints.maxHeight - minimumManuscriptHeight;
+                  if (availableInspectorHeight < 180) {
+                    return manuscriptField;
+                  }
                   final inspectorHeight = math.min(
-                    (constraints.maxHeight * 0.34).clamp(160.0, 300.0),
-                    math.max(
-                      160.0,
-                      constraints.maxHeight - minimumManuscriptHeight,
-                    ),
+                    (constraints.maxHeight * 0.40).clamp(220.0, 340.0),
+                    availableInspectorHeight,
                   );
                   return Column(
                     children: [
@@ -3282,6 +3289,8 @@ final class _SceneInspector extends StatelessWidget {
     required this.relationships,
     required this.researchItems,
     required this.suggestions,
+    required this.selectedPanel,
+    required this.onPanelChanged,
     required this.summaryController,
     required this.goalController,
     required this.conflictController,
@@ -3305,6 +3314,8 @@ final class _SceneInspector extends StatelessWidget {
   final List<Relationship> relationships;
   final List<ResearchItem> researchItems;
   final List<AISuggestion> suggestions;
+  final _EditorSidePanelKind selectedPanel;
+  final ValueChanged<_EditorSidePanelKind> onPanelChanged;
   final TextEditingController summaryController;
   final TextEditingController goalController;
   final TextEditingController conflictController;
@@ -3325,28 +3336,51 @@ final class _SceneInspector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final panel = switch (selectedPanel) {
+      _EditorSidePanelKind.planning => _ScenePlanningFields(
+          copy: copy,
+          summaryController: summaryController,
+          goalController: goalController,
+          conflictController: conflictController,
+          outcomeController: outcomeController,
+          wordTargetController: wordTargetController,
+          selectedSceneStatus: selectedSceneStatus,
+          chapters: chapters,
+          selectedSceneChapterId: selectedSceneChapterId,
+          onSceneChapterChanged: onSceneChapterChanged,
+          onSceneStatusChanged: onSceneStatusChanged,
+        ),
+      _EditorSidePanelKind.context => _SceneContextLinks(
+          copy: copy,
+          scene: scene,
+          catalogItems: catalogItems,
+          relationships: relationships,
+          onToggleLink: onToggleSceneCatalogLink,
+          onAddExistingItems: onAddExistingSceneCatalogItems,
+          onCreateItem: onCreateSceneCatalogItem,
+        ),
+      _EditorSidePanelKind.research => _SceneResearchViewer(
+          copy: copy,
+          scene: scene,
+          items: researchItems,
+        ),
+      _EditorSidePanelKind.ai => _SceneAiHelpBox(
+          copy: copy,
+          scene: scene,
+          isRequesting: isRequestingAi,
+          latestSuggestion: _latestSceneSuggestion(scene, suggestions),
+          onRequest: onRequestSceneAiHelp,
+        ),
+    };
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color.surfaceContainerLow,
         border: Border.all(color: color.outlineVariant),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: ListView(
-        key: const ValueKey('scene-inspector-scroll'),
-        padding: const EdgeInsets.all(14),
-        children: [
-          Row(
-            children: [
-              Icon(Icons.tune_outlined, color: color.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                copy.t('sceneInspector'),
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _SceneMetaOverview(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final header = _SceneInspectorHeader(
             copy: copy,
             scene: scene,
             chapters: chapters,
@@ -3354,50 +3388,182 @@ final class _SceneInspector extends StatelessWidget {
             relationships: relationships,
             suggestions: suggestions,
             targetText: wordTargetController.text,
+            selectedPanel: selectedPanel,
+            onPanelChanged: onPanelChanged,
+            showMeta: constraints.maxHeight >= 320,
+          );
+
+          if (constraints.maxHeight < 320) {
+            final meta = _SceneMetaOverview(
+              copy: copy,
+              scene: scene,
+              chapters: chapters,
+              catalogItems: catalogItems,
+              relationships: relationships,
+              suggestions: suggestions,
+              targetText: wordTargetController.text,
+            );
+            return ListView(
+              key: ValueKey('scene-inspector-compact-${selectedPanel.name}'),
+              padding: EdgeInsets.zero,
+              children: [
+                header,
+                Divider(height: 1, color: color.outlineVariant),
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      panel,
+                      const SizedBox(height: 14),
+                      Divider(height: 1, color: color.outlineVariant),
+                      const SizedBox(height: 14),
+                      meta,
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
+
+          return Column(
+            children: [
+              header,
+              Divider(height: 1, color: color.outlineVariant),
+              Expanded(
+                child: ListView(
+                  key: ValueKey('scene-inspector-${selectedPanel.name}'),
+                  padding: const EdgeInsets.all(14),
+                  children: [panel],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+final class _SceneInspectorHeader extends StatelessWidget {
+  const _SceneInspectorHeader({
+    required this.copy,
+    required this.scene,
+    required this.chapters,
+    required this.catalogItems,
+    required this.relationships,
+    required this.suggestions,
+    required this.targetText,
+    required this.selectedPanel,
+    required this.onPanelChanged,
+    required this.showMeta,
+  });
+
+  final WritelerCopy copy;
+  final Scene scene;
+  final List<Chapter> chapters;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final List<AISuggestion> suggestions;
+  final String targetText;
+  final _EditorSidePanelKind selectedPanel;
+  final ValueChanged<_EditorSidePanelKind> onPanelChanged;
+  final bool showMeta;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(Icons.tune_outlined, color: color.primary, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  copy.t('sceneInspector'),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
-          _ScenePlanningFields(
+          if (showMeta) ...[
+            const SizedBox(height: 12),
+            _SceneMetaOverview(
+              copy: copy,
+              scene: scene,
+              chapters: chapters,
+              catalogItems: catalogItems,
+              relationships: relationships,
+              suggestions: suggestions,
+              targetText: targetText,
+            ),
+          ],
+          const SizedBox(height: 12),
+          _EditorSidePanelTabs(
             copy: copy,
-            summaryController: summaryController,
-            goalController: goalController,
-            conflictController: conflictController,
-            outcomeController: outcomeController,
-            wordTargetController: wordTargetController,
-            selectedSceneStatus: selectedSceneStatus,
-            chapters: chapters,
-            selectedSceneChapterId: selectedSceneChapterId,
-            onSceneChapterChanged: onSceneChapterChanged,
-            onSceneStatusChanged: onSceneStatusChanged,
+            selected: selectedPanel,
+            onSelected: onPanelChanged,
           ),
-          const SizedBox(height: 16),
-          Divider(height: 1, color: color.outlineVariant),
-          const SizedBox(height: 14),
-          _SceneContextLinks(
-            copy: copy,
-            scene: scene,
-            catalogItems: catalogItems,
-            relationships: relationships,
-            onToggleLink: onToggleSceneCatalogLink,
-            onAddExistingItems: onAddExistingSceneCatalogItems,
-            onCreateItem: onCreateSceneCatalogItem,
+        ],
+      ),
+    );
+  }
+}
+
+final class _EditorSidePanelTabs extends StatelessWidget {
+  const _EditorSidePanelTabs({
+    required this.copy,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final WritelerCopy copy;
+  final _EditorSidePanelKind selected;
+  final ValueChanged<_EditorSidePanelKind> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SegmentedButton<_EditorSidePanelKind>(
+        showSelectedIcon: false,
+        selected: {selected},
+        onSelectionChanged: (selection) => onSelected(selection.first),
+        segments: [
+          ButtonSegment(
+            value: _EditorSidePanelKind.planning,
+            icon: const Icon(Icons.account_tree_outlined, size: 18),
+            label: Text(
+              copy.t('editorPanelPlanning'),
+              key: const ValueKey('editor-panel-planning'),
+            ),
           ),
-          const SizedBox(height: 16),
-          Divider(height: 1, color: color.outlineVariant),
-          const SizedBox(height: 14),
-          _SceneResearchViewer(
-            copy: copy,
-            scene: scene,
-            items: researchItems,
+          ButtonSegment(
+            value: _EditorSidePanelKind.context,
+            icon: const Icon(Icons.hub_outlined, size: 18),
+            label: Text(
+              copy.t('editorPanelContext'),
+              key: const ValueKey('editor-panel-context'),
+            ),
           ),
-          const SizedBox(height: 16),
-          Divider(height: 1, color: color.outlineVariant),
-          const SizedBox(height: 14),
-          _SceneAiHelpBox(
-            copy: copy,
-            scene: scene,
-            isRequesting: isRequestingAi,
-            latestSuggestion: _latestSceneSuggestion(scene, suggestions),
-            onRequest: onRequestSceneAiHelp,
+          ButtonSegment(
+            value: _EditorSidePanelKind.research,
+            icon: const Icon(Icons.travel_explore_outlined, size: 18),
+            label: Text(
+              copy.t('editorPanelResearch'),
+              key: const ValueKey('editor-panel-research'),
+            ),
+          ),
+          ButtonSegment(
+            value: _EditorSidePanelKind.ai,
+            icon: const Icon(Icons.psychology_alt_outlined, size: 18),
+            label: Text(
+              copy.t('editorPanelAi'),
+              key: const ValueKey('editor-panel-ai'),
+            ),
           ),
         ],
       ),

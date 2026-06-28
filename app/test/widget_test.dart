@@ -748,16 +748,22 @@ void main() {
     final savedScene = (await sceneRepository.listByProject(project.id)).single;
     expect(savedScene.manuscriptText, 'Plain words**text**');
 
-    await tester.drag(
-      find.byKey(const ValueKey('scene-inspector-scroll')),
-      const Offset(0, -900),
-    );
+    expect(find.text('Scene meta'), findsOneWidget);
+    expect(find.text('Planning'), findsWidgets);
+    expect(find.text('Research'), findsWidgets);
+    expect(find.text('AI'), findsWidgets);
+
+    final contextPanelTab = find.byKey(const ValueKey('editor-panel-context'));
+    await tester.ensureVisible(contextPanelTab);
+    await tester.tap(contextPanelTab);
     await tester.pumpAndSettle();
     expect(find.text('Scene context'), findsOneWidget);
 
-    await tester.tap(find.byTooltip(
+    final addSceneContextButton = find.byTooltip(
       'Add character, location, or object to this scene',
-    ));
+    );
+    await tester.ensureVisible(addSceneContextButton);
+    await tester.tap(addSceneContextButton);
     await tester.pumpAndSettle();
     await tester.tap(find.text('New Character'));
     await tester.pumpAndSettle();
@@ -785,9 +791,8 @@ void main() {
     );
     expect(find.text('Mara'), findsNothing);
 
-    await tester.tap(find.byTooltip(
-      'Add character, location, or object to this scene',
-    ));
+    await tester.ensureVisible(addSceneContextButton);
+    await tester.tap(addSceneContextButton);
     await tester.pumpAndSettle();
     await tester.tap(find.text('New Character'));
     await tester.pumpAndSettle();
@@ -846,9 +851,13 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
     await tester.drag(
-      find.byKey(const ValueKey('scene-inspector-scroll')),
-      const Offset(0, -1400),
+      find.byKey(const ValueKey('scene-inspector-compact-context')),
+      const Offset(0, 1400),
     );
+    await tester.pumpAndSettle();
+    final aiPanelTab = find.byKey(const ValueKey('editor-panel-ai'));
+    await tester.ensureVisible(aiPanelTab);
+    await tester.tap(aiPanelTab);
     await tester.pumpAndSettle();
     expect(find.text('AI help'), findsOneWidget);
 
