@@ -4,6 +4,8 @@ const double _storyboardCanvasWidth = 1680;
 const double _storyboardCanvasHeight = 1040;
 const double _storyboardCardWidth = 230;
 const double _storyboardCardHeight = 92;
+const double _storyboardCanvasPadding = 96;
+const int _storyboardDefaultRowsPerLane = 7;
 
 enum _StoryboardNodeKind { scene, character, location, object, note }
 
@@ -35,6 +37,10 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
   final Map<String, Offset> _positions = {};
   final Set<String> _connections = {};
   final List<String> _timelineOrder = [];
+  Size _canvasSize = const Size(
+    _storyboardCanvasWidth,
+    _storyboardCanvasHeight,
+  );
   bool _connectMode = false;
   String? _pendingConnectionStartId;
   Timer? _persistTimer;
@@ -72,6 +78,7 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
 
     final nodes = _buildNodes(project);
     _syncCanvasState(nodes);
+    _canvasSize = _resolvedCanvasSize();
     final nodesById = {for (final node in nodes) node.id: node};
     final nodesByIdForTimeline = {for (final node in nodes) node.id: node};
     final timelineNodes = [
@@ -109,6 +116,7 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
               : _StoryboardCanvas(
                   copy: widget.copy,
                   nodes: nodes,
+                  canvasSize: _canvasSize,
                   positions: _positions,
                   connections: _connections,
                   connectMode: _connectMode,
@@ -232,25 +240,52 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
   }
 
   Offset _defaultPosition(_StoryboardNodeKind kind, int index) {
-    final column = switch (kind) {
+    final baseColumn = switch (kind) {
       _StoryboardNodeKind.character => 0,
       _StoryboardNodeKind.location => 1,
       _StoryboardNodeKind.object => 1,
       _StoryboardNodeKind.scene => 2,
       _StoryboardNodeKind.note => 3,
     };
+    final lane = index ~/ _storyboardDefaultRowsPerLane;
+    final row = index % _storyboardDefaultRowsPerLane;
     final stagger = switch (kind) {
       _StoryboardNodeKind.object => 52.0,
       _StoryboardNodeKind.note => 28.0,
       _ => 0.0,
     };
-    return Offset(56 + column * 390, 64 + index * 124 + stagger);
+    return Offset(
+      56 + baseColumn * 390 + lane * 260,
+      64 + row * 124 + stagger,
+    );
+  }
+
+  Size _resolvedCanvasSize([Offset? additionalPosition]) {
+    var width = _storyboardCanvasWidth;
+    var height = _storyboardCanvasHeight;
+    final positions = [
+      ..._positions.values,
+      if (additionalPosition != null) additionalPosition,
+    ];
+    for (final position in positions) {
+      width = math.max(
+        width,
+        position.dx + _storyboardCardWidth + _storyboardCanvasPadding,
+      );
+      height = math.max(
+        height,
+        position.dy + _storyboardCardHeight + _storyboardCanvasPadding,
+      );
+    }
+    return Size(width, height);
   }
 
   void _moveNode(String id, Offset delta) {
     setState(() {
       final current = _positions[id] ?? Offset.zero;
-      _positions[id] = _clampPosition(current + delta);
+      final proposed = current + delta;
+      _canvasSize = _resolvedCanvasSize(proposed);
+      _positions[id] = _clampPosition(proposed);
     });
     _schedulePersist();
   }
@@ -258,11 +293,11 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
   Offset _clampPosition(Offset position) {
     final x = position.dx.clamp(
       24,
-      _storyboardCanvasWidth - _storyboardCardWidth - 24,
+      _canvasSize.width - _storyboardCardWidth - 24,
     );
     final y = position.dy.clamp(
       24,
-      _storyboardCanvasHeight - _storyboardCardHeight - 24,
+      _canvasSize.height - _storyboardCardHeight - 24,
     );
     return Offset(x.toDouble(), y.toDouble());
   }
@@ -320,7 +355,7 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
           final x = _asDouble(value['x']);
           final y = _asDouble(value['y']);
           if (x != null && y != null) {
-            _positions[id] = _clampPosition(Offset(x, y));
+            _positions[id] = Offset(x, y);
           }
         }
       }
@@ -453,6 +488,7 @@ final class _StoryboardCanvas extends StatefulWidget {
   const _StoryboardCanvas({
     required this.copy,
     required this.nodes,
+    required this.canvasSize,
     required this.positions,
     required this.connections,
     required this.connectMode,
@@ -463,6 +499,7 @@ final class _StoryboardCanvas extends StatefulWidget {
 
   final WritelerCopy copy;
   final List<_StoryboardNode> nodes;
+  final Size canvasSize;
   final Map<String, Offset> positions;
   final Set<String> connections;
   final bool connectMode;
@@ -516,8 +553,8 @@ final class _StoryboardCanvasState extends State<_StoryboardCanvas> {
                 child: Semantics(
                   label: widget.copy.t('storyboardCanvas'),
                   child: SizedBox(
-                    width: _storyboardCanvasWidth,
-                    height: _storyboardCanvasHeight,
+                    width: widget.canvasSize.width,
+                    height: widget.canvasSize.height,
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [

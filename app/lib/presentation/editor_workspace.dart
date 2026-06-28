@@ -1309,6 +1309,8 @@ final class _SceneEditor extends StatefulWidget {
 final class _SceneEditorState extends State<_SceneEditor> {
   late final TextEditingController _searchController = TextEditingController();
   late final TextEditingController _replaceController = TextEditingController();
+  late final FocusNode _manuscriptFocusNode = FocusNode();
+  late final ScrollController _manuscriptScrollController = ScrollController();
   bool _showSearch = false;
   bool _isCheckingSpelling = false;
   bool _spellCheckCompleted = false;
@@ -1333,6 +1335,8 @@ final class _SceneEditorState extends State<_SceneEditor> {
   void dispose() {
     _searchController.dispose();
     _replaceController.dispose();
+    _manuscriptFocusNode.dispose();
+    _manuscriptScrollController.dispose();
     super.dispose();
   }
 
@@ -1466,6 +1470,28 @@ final class _SceneEditorState extends State<_SceneEditor> {
     if (range == null) return;
     widget.controller.selection =
         TextSelection(baseOffset: range.start, extentOffset: range.end);
+    _manuscriptFocusNode.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_manuscriptScrollController.hasClients) return;
+      final offset = _estimatedScrollOffsetForTextOffset(
+        widget.controller.text,
+        range.start,
+        widget.editorFontSize,
+      );
+      final target = offset
+          .clamp(
+            0.0,
+            _manuscriptScrollController.position.maxScrollExtent,
+          )
+          .toDouble();
+      unawaited(
+        _manuscriptScrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+        ),
+      );
+    });
   }
 
   Future<String?> _showAnnotationDialog({
@@ -1535,6 +1561,8 @@ final class _SceneEditorState extends State<_SceneEditor> {
     final manuscriptField = _ManuscriptField(
       copy: copy,
       controller: widget.controller,
+      focusNode: _manuscriptFocusNode,
+      scrollController: _manuscriptScrollController,
       focusMode: widget.focusMode,
       fontSize: widget.editorFontSize,
     );
@@ -1848,12 +1876,16 @@ final class _ManuscriptField extends StatelessWidget {
   const _ManuscriptField({
     required this.copy,
     required this.controller,
+    required this.focusNode,
+    required this.scrollController,
     required this.focusMode,
     required this.fontSize,
   });
 
   final WritelerCopy copy;
   final TextEditingController controller;
+  final FocusNode focusNode;
+  final ScrollController scrollController;
   final bool focusMode;
   final double fontSize;
 
@@ -1891,6 +1923,8 @@ final class _ManuscriptField extends StatelessWidget {
                 child: TextField(
                   key: const ValueKey('manuscript-field'),
                   controller: controller,
+                  focusNode: focusNode,
+                  scrollController: scrollController,
                   expands: true,
                   maxLines: null,
                   minLines: null,
@@ -4462,4 +4496,16 @@ TextRange? _annotationTextRange(
     start: fallbackStart,
     end: fallbackStart + annotation.selectedText.length,
   );
+}
+
+double _estimatedScrollOffsetForTextOffset(
+  String text,
+  int textOffset,
+  double fontSize,
+) {
+  final safeOffset = textOffset.clamp(0, text.length).toInt();
+  final beforeSelection = text.substring(0, safeOffset);
+  final explicitLines = '\n'.allMatches(beforeSelection).length;
+  final wrappedLines = beforeSelection.length ~/ 68;
+  return math.max(0, explicitLines + wrappedLines - 2) * fontSize * 1.75;
 }

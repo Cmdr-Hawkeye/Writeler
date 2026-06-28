@@ -388,13 +388,6 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.output,
     ),
     _WorkspaceNavItem(
-      index: 16,
-      icon: Icons.bar_chart_outlined,
-      selectedIcon: Icons.bar_chart,
-      labelBuilder: (copy) => copy.t('statistics'),
-      group: _WorkspaceNavGroup.output,
-    ),
-    _WorkspaceNavItem(
       index: 9,
       icon: Icons.ios_share_outlined,
       selectedIcon: Icons.ios_share,
@@ -2986,6 +2979,7 @@ final class _WritelerShellState extends State<WritelerShell> {
           onOpenStructure: () => setState(() => _selectedRailIndex = 2),
           onOpenNotes: () => setState(() => _selectedRailIndex = 7),
           onOpenAiWorkshop: () => setState(() => _selectedRailIndex = 8),
+          onOpenStatistics: () => setState(() => _selectedRailIndex = 16),
           onOpenScene: (scene) {
             _selectScene(scene);
             setState(() => _selectedRailIndex = 1);

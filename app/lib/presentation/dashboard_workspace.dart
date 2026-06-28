@@ -241,6 +241,7 @@ final class _ProjectOverview extends StatelessWidget {
     required this.onOpenStructure,
     required this.onOpenNotes,
     required this.onOpenAiWorkshop,
+    required this.onOpenStatistics,
     required this.onOpenScene,
   });
 
@@ -260,6 +261,7 @@ final class _ProjectOverview extends StatelessWidget {
   final VoidCallback onOpenStructure;
   final VoidCallback onOpenNotes;
   final VoidCallback onOpenAiWorkshop;
+  final VoidCallback onOpenStatistics;
   final ValueChanged<Scene> onOpenScene;
 
   @override
@@ -401,10 +403,27 @@ final class _ProjectOverview extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              FilledButton.icon(
-                onPressed: onOpenEditor,
-                icon: const Icon(Icons.edit_note_outlined),
-                label: Text(copy.t('openEditor')),
+              Flexible(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: onOpenStatistics,
+                        icon: const Icon(Icons.bar_chart_outlined),
+                        label: Text(copy.t('statistics')),
+                      ),
+                      FilledButton.icon(
+                        onPressed: onOpenEditor,
+                        icon: const Icon(Icons.edit_note_outlined),
+                        label: Text(copy.t('openEditor')),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -543,12 +562,6 @@ final class _ProjectOverview extends StatelessWidget {
                   label: copy.t('aiUses'),
                   value: '$aiEvents',
                   onTap: onOpenAiWorkshop,
-                ),
-                _DashboardSignalChip(
-                  icon: Icons.event_available_outlined,
-                  label: copy.t('todaySaves'),
-                  value: '$todaySaves',
-                  onTap: onOpenEditor,
                 ),
               ],
             ),
