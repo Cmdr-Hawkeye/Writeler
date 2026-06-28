@@ -107,6 +107,7 @@ part 'presentation/navigation_chrome.dart';
 part 'presentation/dashboard_workspace.dart';
 part 'presentation/protocols_workspace.dart';
 part 'presentation/storyboard_workspace.dart';
+part 'presentation/smart_collections_workspace.dart';
 part 'presentation/structure_workspace.dart';
 part 'presentation/catalog_analysis_notes.dart';
 part 'presentation/research_workspace.dart';

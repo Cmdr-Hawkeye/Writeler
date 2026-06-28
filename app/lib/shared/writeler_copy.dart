@@ -542,6 +542,33 @@ final class WritelerCopy {
     'missingStructure': 'Ziel, Konflikt oder Ausgang fehlt',
     'noAnalysisIssues': 'Keine akuten Strukturhinweise.',
     'styleCockpit': 'Stilcockpit',
+    'smartCollections': 'Smart Collections',
+    'savedCollections': 'Gespeicherte Ansichten',
+    'suggestedCollections': 'Vorgeschlagene Ansichten',
+    'saveCollection': 'Ansicht speichern',
+    'hideCollection': 'Ansicht ausblenden',
+    'noSavedCollections': 'Keine gespeicherten Ansichten',
+    'noSavedCollectionsBody':
+        'Speichere dynamische Ansichten, um wiederkehrende Revisionen schneller zu erreichen.',
+    'collectionEmptyTitle': 'Alles erledigt',
+    'collectionEmptyBody':
+        'Diese dynamische Ansicht enthält gerade keine Treffer.',
+    'collectionOpenAiSuggestions': 'Offene KI-Vorschläge',
+    'collectionOpenAiSuggestionsBody':
+        'Noch nicht angenommene, verworfene oder in Notizen umgewandelte KI-Antworten.',
+    'collectionScenesWithoutText': 'Szenen ohne Text',
+    'collectionScenesWithoutTextBody':
+        'Szenen, die geplant sind, aber noch kein Manuskript enthalten.',
+    'collectionPovPrefix': 'POV',
+    'collectionPovBody':
+        'Alle Szenen, die dieser Perspektivfigur zugeordnet sind.',
+    'collectionChaptersLowConflict': 'Kapitel mit zu wenig Konflikt',
+    'collectionChaptersLowConflictBody':
+        'Kapitel, in denen viele Szenen keinen klaren Konflikt haben.',
+    'collectionWeakConflictScenes': 'Szenen mit schwachem Konflikt',
+    'collectionNotesWithoutTarget': 'Notizen ohne Ziel',
+    'collectionNotesWithoutTargetBody':
+        'Notizen, die noch keinem Projektbereich, keiner Szene oder Entität zugeordnet sind.',
     'styleCockpitBody':
         'Lokale Stilhinweise für Rhythmus, Verständlichkeit und sprachliche Muster. Kein Urteil, sondern ein Arbeitsradar.',
     'styleCockpitEmptyTitle': 'Noch kein Manuskripttext',
@@ -1380,6 +1407,31 @@ final class WritelerCopy {
     'missingStructure': 'Goal, conflict, or outcome is missing',
     'noAnalysisIssues': 'No immediate structure notes.',
     'styleCockpit': 'Style cockpit',
+    'smartCollections': 'Smart Collections',
+    'savedCollections': 'Saved views',
+    'suggestedCollections': 'Suggested views',
+    'saveCollection': 'Save view',
+    'hideCollection': 'Hide view',
+    'noSavedCollections': 'No saved views',
+    'noSavedCollectionsBody':
+        'Save dynamic views to revisit recurring revision work faster.',
+    'collectionEmptyTitle': 'All clear',
+    'collectionEmptyBody': 'This dynamic view has no matches right now.',
+    'collectionOpenAiSuggestions': 'Open AI suggestions',
+    'collectionOpenAiSuggestionsBody':
+        'AI answers that are not accepted, rejected, or converted to notes yet.',
+    'collectionScenesWithoutText': 'Scenes without text',
+    'collectionScenesWithoutTextBody':
+        'Scenes that are planned but do not contain manuscript text yet.',
+    'collectionPovPrefix': 'POV',
+    'collectionPovBody': 'All scenes assigned to this point-of-view character.',
+    'collectionChaptersLowConflict': 'Chapters with low conflict',
+    'collectionChaptersLowConflictBody':
+        'Chapters where many scenes do not have a clear conflict.',
+    'collectionWeakConflictScenes': 'scenes with weak conflict',
+    'collectionNotesWithoutTarget': 'Notes without target',
+    'collectionNotesWithoutTargetBody':
+        'Notes not assigned to a project area, scene, or entity yet.',
     'styleCockpitBody':
         'Local style notes for rhythm, clarity, and language patterns. Not a verdict, but a working radar.',
     'styleCockpitEmptyTitle': 'No manuscript text yet',

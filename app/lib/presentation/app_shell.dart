@@ -360,6 +360,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.review,
     ),
     _WorkspaceNavItem(
+      index: 21,
+      icon: Icons.collections_bookmark_outlined,
+      selectedIcon: Icons.collections_bookmark,
+      labelBuilder: (copy) => copy.t('smartCollections'),
+      group: _WorkspaceNavGroup.review,
+    ),
+    _WorkspaceNavItem(
       index: 7,
       icon: Icons.sticky_note_2_outlined,
       selectedIcon: Icons.sticky_note_2,
@@ -2444,6 +2451,26 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
+  Future<void> _saveSmartCollectionIds(Set<String> collectionIds) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final metadata = Map<String, Object?>.from(project.metadata);
+    metadata['smartCollections'] = collectionIds.toList()..sort();
+    final updated = project.copyWith(metadata: metadata);
+    await widget.projectRepository.save(updated);
+    final projects = await widget.projectRepository.listActive();
+    if (!mounted) return;
+    setState(() {
+      _projects = projects;
+      _selectedProject = updated;
+    });
+    await _recordProjectMetric(
+      eventType: 'smartCollections.saved',
+      value: collectionIds.length,
+      metadata: {'projectId': updated.id},
+    );
+  }
+
   Future<void> _downloadArtifact(
     WritelerCopy copy,
     ExportArtifact artifact, {
@@ -2762,6 +2789,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         19 => copy.t('researchLibrary'),
         6 => copy.t('analysis'),
         18 => copy.t('styleCockpit'),
+        21 => copy.t('smartCollections'),
         7 => copy.t('notesCockpit'),
         8 => copy.t('aiWorkshop'),
         9 => copy.t('exports'),
@@ -2786,6 +2814,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         19 => Icons.travel_explore_outlined,
         6 => Icons.query_stats_outlined,
         18 => Icons.auto_graph_outlined,
+        21 => Icons.collections_bookmark_outlined,
         7 => Icons.sticky_note_2_outlined,
         8 => Icons.psychology_alt_outlined,
         9 => Icons.ios_share_outlined,
@@ -3189,6 +3218,23 @@ final class _WritelerShellState extends State<WritelerShell> {
             _selectScene(scene);
             setState(() => _selectedRailIndex = 1);
           },
+        ),
+      21 => _SmartCollectionsWorkspace(
+          copy: copy,
+          project: _selectedProject,
+          chapters: _chapters,
+          scenes: _scenes,
+          catalogItems: _catalogItems,
+          suggestions: _suggestions,
+          notes: _notes,
+          onSaveCollections: _saveSmartCollectionIds,
+          onOpenScene: (scene) {
+            _selectScene(scene);
+            setState(() => _selectedRailIndex = 1);
+          },
+          onOpenAiWorkshop: () => setState(() => _selectedRailIndex = 8),
+          onOpenNotes: () => setState(() => _selectedRailIndex = 7),
+          onOpenStructure: () => setState(() => _selectedRailIndex = 2),
         ),
       7 => _NotesCockpit(
           copy: copy,

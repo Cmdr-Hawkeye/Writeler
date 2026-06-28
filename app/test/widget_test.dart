@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:writeler/core/domain/draft_status.dart';
+import 'package:writeler/core/domain/entity_ref.dart';
 import 'package:writeler/core/domain/entity_type.dart';
+import 'package:writeler/features/ai_harness/domain/ai_suggestion.dart';
 import 'package:writeler/features/ai_harness/infrastructure/in_memory_ai_suggestion_repository.dart';
+import 'package:writeler/features/catalog/application/create_catalog_item.dart';
 import 'package:writeler/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
 import 'package:writeler/features/catalog/infrastructure/in_memory_relationship_repository.dart';
 import 'package:writeler/features/metrics/application/in_memory_metric_repository.dart';
+import 'package:writeler/features/notes/domain/project_note.dart';
 import 'package:writeler/features/notes/infrastructure/in_memory_project_note_repository.dart';
 import 'package:writeler/features/projects/application/create_project.dart';
 import 'package:writeler/features/research/infrastructure/in_memory_research_item_repository.dart';
@@ -533,6 +537,108 @@ void main() {
     expect(moved!.orderIndex, lessThan(opening.orderIndex));
   });
 
+  testWidgets('smart collections show dynamic saved project views',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 950));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final chapterRepository = InMemoryChapterRepository();
+    final sceneRepository = InMemorySceneRepository();
+    final catalogRepository = InMemoryCatalogItemRepository();
+    final suggestionRepository = InMemoryAISuggestionRepository();
+    final noteRepository = InMemoryProjectNoteRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Collections Book'),
+    );
+    final chapter = await CreateChapter(chapterRepository)(
+      CreateChapterCommand(projectId: project.id, title: 'Act One'),
+    );
+    final emptyScene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(
+        projectId: project.id,
+        chapterId: chapter.id,
+        title: 'Opening Empty',
+      ),
+    );
+    final character = await CreateCatalogItem(catalogRepository)(
+      CreateCatalogItemCommand(
+        projectId: project.id,
+        type: EntityType.character,
+        name: 'Mara',
+      ),
+    );
+    await sceneRepository.save(
+      emptyScene.copyWith(
+        povCharacterId: character.id,
+        goal: 'Find the signal',
+        conflict: '',
+        outcome: 'The door opens',
+      ),
+    );
+    final now = DateTime.now().toUtc();
+    await suggestionRepository.save(
+      AISuggestion(
+        id: 'suggestion-1',
+        projectId: project.id,
+        target: EntityRef(type: EntityType.scene, id: emptyScene.id),
+        suggestionType: 'sceneIdeas',
+        inputContextHash: 'hash',
+        providerId: 'mock',
+        modelName: 'mock',
+        promptText: 'Suggest a scene.',
+        responseText: 'Give Mara a sharper choice.',
+        userDecision: SuggestionDecision.pending,
+        createdAt: now,
+      ),
+    );
+    await noteRepository.save(
+      ProjectNote(
+        id: 'note-1',
+        projectId: project.id,
+        title: 'Loose thought',
+        body: 'Could become a subplot.',
+        source: 'manual',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await tester.pumpWidget(
+      WritelerApp(
+        projectRepository: projectRepository,
+        chapterRepository: chapterRepository,
+        sceneRepository: sceneRepository,
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: catalogRepository,
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: suggestionRepository,
+        projectNoteRepository: noteRepository,
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Smart Collections');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open AI suggestions'), findsWidgets);
+    expect(find.text('Scenes without text'), findsOneWidget);
+    expect(find.text('Chapters with low conflict'), findsOneWidget);
+    expect(find.text('Notes without target'), findsOneWidget);
+    expect(find.text('POV Mara'), findsOneWidget);
+    expect(find.text('Opening Empty'), findsWidgets);
+
+    await tester.tap(find.text('Notes without target').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Loose thought'), findsOneWidget);
+  });
+
   testWidgets('AI workshop opens with actionable project context',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
@@ -565,8 +671,7 @@ void main() {
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('AI Workshop').first);
-    await tester.pumpAndSettle();
+    await tapNavigationItem(tester, 'AI Workshop');
 
     final sendButton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Send task'),
