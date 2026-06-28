@@ -8,6 +8,8 @@ final class _SubmitAiPromptIntent extends Intent {
 
 enum _AIWorkshopContextKind { project, scene }
 
+enum _AISuggestionInboxFilter { open, accepted, noted, rejected, all }
+
 typedef _AIWorkshopTaskRequest = void Function(
   AITaskKind task, {
   required _AIWorkshopContextKind contextKind,
@@ -714,7 +716,7 @@ final class _LivePromptPreview extends StatelessWidget {
   }
 }
 
-final class _AISuggestionsPanel extends StatelessWidget {
+final class _AISuggestionsPanel extends StatefulWidget {
   const _AISuggestionsPanel({
     required this.copy,
     required this.suggestions,
@@ -732,8 +734,31 @@ final class _AISuggestionsPanel extends StatelessWidget {
   final ValueChanged<AISuggestion> onRejectSuggestion;
 
   @override
+  State<_AISuggestionsPanel> createState() => _AISuggestionsPanelState();
+}
+
+final class _AISuggestionsPanelState extends State<_AISuggestionsPanel> {
+  _AISuggestionInboxFilter _filter = _AISuggestionInboxFilter.open;
+  String? _selectedSuggestionId;
+
+  @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final sortedSuggestions = [...widget.suggestions]..sort((left, right) {
+        final leftPending = left.userDecision == SuggestionDecision.pending;
+        final rightPending = right.userDecision == SuggestionDecision.pending;
+        if (leftPending != rightPending) return leftPending ? -1 : 1;
+        return right.createdAt.compareTo(left.createdAt);
+      });
+    final filteredSuggestions =
+        sortedSuggestions.where((suggestion) => _matchesFilter(suggestion));
+    final visibleSuggestions = filteredSuggestions.toList();
+    final selectedSuggestion = visibleSuggestions
+            .where((suggestion) => suggestion.id == _selectedSuggestionId)
+            .firstOrNull ??
+        visibleSuggestions.firstOrNull;
+    final counts = _AIInboxCounts.from(sortedSuggestions);
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color.surfaceContainerLow,
@@ -745,26 +770,124 @@ final class _AISuggestionsPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(copy.t('suggestions'),
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.inbox_outlined, color: color.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.copy.t('aiInboxTitle'),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        widget.copy.t('aiInboxBody'),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: color.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                _HelpTooltip(message: widget.copy.t('helpAiInbox')),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _AIInboxMetric(
+                  label: widget.copy.t('aiInboxOpen'),
+                  value: counts.open,
+                  icon: Icons.mark_email_unread_outlined,
+                ),
+                _AIInboxMetric(
+                  label: widget.copy.t('aiInboxAccepted'),
+                  value: counts.accepted,
+                  icon: Icons.check_circle_outline,
+                ),
+                _AIInboxMetric(
+                  label: widget.copy.t('aiInboxNoted'),
+                  value: counts.noted,
+                  icon: Icons.sticky_note_2_outlined,
+                ),
+                _AIInboxMetric(
+                  label: widget.copy.t('aiInboxRejected'),
+                  value: counts.rejected,
+                  icon: Icons.close,
+                ),
+                _AIInboxMetric(
+                  label: widget.copy.t('aiInboxTotal'),
+                  value: counts.total,
+                  icon: Icons.all_inbox_outlined,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final filter in _AISuggestionInboxFilter.values) ...[
+                    ChoiceChip(
+                      label: Text(_filterLabel(filter, widget.copy)),
+                      avatar: Icon(_filterIcon(filter), size: 18),
+                      selected: _filter == filter,
+                      onSelected: (_) => setState(() {
+                        _filter = filter;
+                        _selectedSuggestionId = null;
+                      }),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             Expanded(
-              child: suggestions.isEmpty
-                  ? Text(copy.t('noSuggestions'),
-                      style: TextStyle(color: color.onSurfaceVariant))
-                  : ListView.separated(
-                      itemCount: suggestions.length,
-                      separatorBuilder: (context, index) =>
-                          const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final suggestion = suggestions[index];
-                        return _AISuggestionTile(
-                          copy: copy,
-                          suggestion: suggestion,
-                          scenes: scenes,
-                          onAcceptSuggestion: onAcceptSuggestion,
-                          onConvertSuggestion: onConvertSuggestion,
-                          onRejectSuggestion: onRejectSuggestion,
+              child: visibleSuggestions.isEmpty
+                  ? _AIInboxEmpty(copy: widget.copy)
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final list = _AIInboxList(
+                          copy: widget.copy,
+                          suggestions: visibleSuggestions,
+                          scenes: widget.scenes,
+                          selectedSuggestion: selectedSuggestion,
+                          onSelected: (suggestion) => setState(
+                            () => _selectedSuggestionId = suggestion.id,
+                          ),
+                        );
+                        final detail = _AISuggestionDetail(
+                          copy: widget.copy,
+                          suggestion: selectedSuggestion!,
+                          scenes: widget.scenes,
+                          onAcceptSuggestion: widget.onAcceptSuggestion,
+                          onConvertSuggestion: widget.onConvertSuggestion,
+                          onRejectSuggestion: widget.onRejectSuggestion,
+                        );
+                        if (constraints.maxWidth >= 560) {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: constraints.maxWidth * 0.38,
+                                child: list,
+                              ),
+                              const VerticalDivider(width: 24),
+                              Expanded(child: detail),
+                            ],
+                          );
+                        }
+                        return Column(
+                          children: [
+                            Expanded(flex: 2, child: list),
+                            const SizedBox(height: 12),
+                            Expanded(child: detail),
+                          ],
                         );
                       },
                     ),
@@ -774,6 +897,472 @@ final class _AISuggestionsPanel extends StatelessWidget {
       ),
     );
   }
+
+  bool _matchesFilter(AISuggestion suggestion) {
+    return switch (_filter) {
+      _AISuggestionInboxFilter.open =>
+        suggestion.userDecision == SuggestionDecision.pending,
+      _AISuggestionInboxFilter.accepted =>
+        suggestion.userDecision == SuggestionDecision.accepted,
+      _AISuggestionInboxFilter.noted =>
+        suggestion.userDecision == SuggestionDecision.convertedToNote,
+      _AISuggestionInboxFilter.rejected =>
+        suggestion.userDecision == SuggestionDecision.rejected,
+      _AISuggestionInboxFilter.all => true,
+    };
+  }
+}
+
+final class _AIInboxCounts {
+  const _AIInboxCounts({
+    required this.open,
+    required this.accepted,
+    required this.noted,
+    required this.rejected,
+    required this.total,
+  });
+
+  final int open;
+  final int accepted;
+  final int noted;
+  final int rejected;
+  final int total;
+
+  factory _AIInboxCounts.from(List<AISuggestion> suggestions) {
+    int count(SuggestionDecision decision) => suggestions
+        .where((suggestion) => suggestion.userDecision == decision)
+        .length;
+    return _AIInboxCounts(
+      open: count(SuggestionDecision.pending),
+      accepted: count(SuggestionDecision.accepted),
+      noted: count(SuggestionDecision.convertedToNote),
+      rejected: count(SuggestionDecision.rejected),
+      total: suggestions.length,
+    );
+  }
+}
+
+final class _AIInboxMetric extends StatelessWidget {
+  const _AIInboxMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final int value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerHighest.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 17, color: color.primary),
+            const SizedBox(width: 7),
+            Text(
+              '$value',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _AIInboxList extends StatelessWidget {
+  const _AIInboxList({
+    required this.copy,
+    required this.suggestions,
+    required this.scenes,
+    required this.selectedSuggestion,
+    required this.onSelected,
+  });
+
+  final WritelerCopy copy;
+  final List<AISuggestion> suggestions;
+  final List<Scene> scenes;
+  final AISuggestion? selectedSuggestion;
+  final ValueChanged<AISuggestion> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      itemCount: suggestions.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final suggestion = suggestions[index];
+        return _AIInboxListItem(
+          copy: copy,
+          suggestion: suggestion,
+          scenes: scenes,
+          isSelected: selectedSuggestion?.id == suggestion.id,
+          onTap: () => onSelected(suggestion),
+        );
+      },
+    );
+  }
+}
+
+final class _AIInboxListItem extends StatelessWidget {
+  const _AIInboxListItem({
+    required this.copy,
+    required this.suggestion,
+    required this.scenes,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final WritelerCopy copy;
+  final AISuggestion suggestion;
+  final List<Scene> scenes;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final pending = suggestion.userDecision == SuggestionDecision.pending;
+    return Material(
+      color: isSelected
+          ? color.primaryContainer.withValues(alpha: 0.42)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                pending ? Icons.mark_email_unread_outlined : Icons.task_alt,
+                size: 20,
+                color: pending ? design.pencil : color.onSurfaceVariant,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _aiTaskLabel(suggestion.suggestionType, copy),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _suggestionTargetLabel(suggestion, scenes, copy),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: color.primary,
+                          ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${suggestion.modelName} - '
+                      '${_formatLocalDateTime(suggestion.createdAt)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      _compactSuggestionSummary(suggestion.responseText),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _decisionLabel(suggestion.userDecision, copy),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: pending ? design.pencil : color.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _AISuggestionDetail extends StatelessWidget {
+  const _AISuggestionDetail({
+    required this.copy,
+    required this.suggestion,
+    required this.scenes,
+    required this.onAcceptSuggestion,
+    required this.onConvertSuggestion,
+    required this.onRejectSuggestion,
+  });
+
+  final WritelerCopy copy;
+  final AISuggestion suggestion;
+  final List<Scene> scenes;
+  final ValueChanged<AISuggestion> onAcceptSuggestion;
+  final ValueChanged<AISuggestion> onConvertSuggestion;
+  final ValueChanged<AISuggestion> onRejectSuggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final scene = suggestion.target.type == EntityType.scene
+        ? scenes.where((scene) => scene.id == suggestion.target.id).firstOrNull
+        : null;
+    final patch = scene == null
+        ? null
+        : const AIScenePlanningPatchBuilder().build(
+            suggestion: suggestion,
+            scene: scene,
+          );
+    final body = ListView(
+      padding: const EdgeInsets.only(right: 4),
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.auto_awesome_outlined, color: color.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _aiTaskLabel(suggestion.suggestionType, copy),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${_suggestionTargetLabel(suggestion, scenes, copy)} - '
+                    '${suggestion.modelName} - '
+                    '${_formatLocalDateTime(suggestion.createdAt)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            _SuggestionStatusBadge(
+              copy: copy,
+              decision: suggestion.userDecision,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          copy.t('aiResponse'),
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 8),
+        _AIResponseDigest(copy: copy, text: suggestion.responseText),
+        const SizedBox(height: 10),
+        SelectableText(
+          suggestion.responseText,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 16),
+        _ScenePatchPreview(copy: copy, patch: patch),
+        const SizedBox(height: 16),
+        Text(
+          copy.t('sentPrompt'),
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 8),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: color.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SelectableText(
+              suggestion.promptText,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontFamily: 'JetBrains Mono',
+                    fontFamilyFallback: const ['Consolas', 'monospace'],
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+          ),
+        ),
+      ],
+    );
+
+    final detailBody = suggestion.userDecision == SuggestionDecision.pending
+        ? _PencilSuggestionFrame(child: body)
+        : body;
+
+    return Column(
+      children: [
+        Expanded(child: detailBody),
+        const Divider(height: 18),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _HelpTooltip(message: copy.t('helpSuggestionActions')),
+              TextButton.icon(
+                onPressed: () => onConvertSuggestion(suggestion),
+                icon: const Icon(Icons.sticky_note_2_outlined),
+                label: Text(copy.t('convertToNote')),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => onRejectSuggestion(suggestion),
+                icon: const Icon(Icons.close),
+                label: Text(copy.t('reject')),
+              ),
+              FilledButton.icon(
+                onPressed: () => onAcceptSuggestion(suggestion),
+                icon: const Icon(Icons.check),
+                label: Text(copy.t('accept')),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _SuggestionStatusBadge extends StatelessWidget {
+  const _SuggestionStatusBadge({
+    required this.copy,
+    required this.decision,
+  });
+
+  final WritelerCopy copy;
+  final SuggestionDecision decision;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: color.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: Text(
+          _decisionLabel(decision, copy),
+          style: Theme.of(context).textTheme.labelSmall,
+        ),
+      ),
+    );
+  }
+}
+
+final class _AIInboxEmpty extends StatelessWidget {
+  const _AIInboxEmpty({required this.copy});
+
+  final WritelerCopy copy;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined, size: 42, color: color.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text(
+              copy.t('aiInboxEmptyTitle'),
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              copy.t('aiInboxEmptyBody'),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _filterLabel(_AISuggestionInboxFilter filter, WritelerCopy copy) {
+  return switch (filter) {
+    _AISuggestionInboxFilter.open => copy.t('aiInboxOpen'),
+    _AISuggestionInboxFilter.accepted => copy.t('aiInboxAccepted'),
+    _AISuggestionInboxFilter.noted => copy.t('aiInboxNoted'),
+    _AISuggestionInboxFilter.rejected => copy.t('aiInboxRejected'),
+    _AISuggestionInboxFilter.all => copy.t('aiInboxAll'),
+  };
+}
+
+IconData _filterIcon(_AISuggestionInboxFilter filter) {
+  return switch (filter) {
+    _AISuggestionInboxFilter.open => Icons.mark_email_unread_outlined,
+    _AISuggestionInboxFilter.accepted => Icons.check_circle_outline,
+    _AISuggestionInboxFilter.noted => Icons.sticky_note_2_outlined,
+    _AISuggestionInboxFilter.rejected => Icons.close,
+    _AISuggestionInboxFilter.all => Icons.all_inbox_outlined,
+  };
+}
+
+String _suggestionTargetLabel(
+  AISuggestion suggestion,
+  List<Scene> scenes,
+  WritelerCopy copy,
+) {
+  if (suggestion.target.type == EntityType.scene) {
+    final scene = scenes
+        .where((candidate) => candidate.id == suggestion.target.id)
+        .firstOrNull;
+    return scene?.title ?? copy.t('scene');
+  }
+  if (suggestion.target.type == EntityType.project) {
+    return copy.t('project');
+  }
+  return suggestion.target.type.wireName;
+}
+
+String _compactSuggestionSummary(String text) {
+  return text.trim().replaceAll(RegExp(r'\s+'), ' ');
 }
 
 final class _AINotesPanel extends StatelessWidget {
@@ -911,155 +1500,6 @@ final class _AiMenuAnchor extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-final class _AISuggestionTile extends StatelessWidget {
-  const _AISuggestionTile({
-    required this.copy,
-    required this.suggestion,
-    required this.scenes,
-    required this.onAcceptSuggestion,
-    required this.onConvertSuggestion,
-    required this.onRejectSuggestion,
-  });
-
-  final WritelerCopy copy;
-  final AISuggestion suggestion;
-  final List<Scene> scenes;
-  final ValueChanged<AISuggestion> onAcceptSuggestion;
-  final ValueChanged<AISuggestion> onConvertSuggestion;
-  final ValueChanged<AISuggestion> onRejectSuggestion;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
-    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
-    final scene = suggestion.target.type == EntityType.scene
-        ? scenes.where((scene) => scene.id == suggestion.target.id).firstOrNull
-        : null;
-    final patch = scene == null
-        ? null
-        : const AIScenePlanningPatchBuilder().build(
-            suggestion: suggestion,
-            scene: scene,
-          );
-    final pending = suggestion.userDecision == SuggestionDecision.pending;
-    final tile = Material(
-      color: Colors.transparent,
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-        ),
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          childrenPadding: const EdgeInsets.fromLTRB(34, 0, 0, 0),
-          leading: Icon(
-            Icons.edit_outlined,
-            color: pending ? design.pencil : color.onSurfaceVariant,
-          ),
-          title: Text(_aiTaskLabel(suggestion.suggestionType, copy)),
-          subtitle: Text(
-            '${suggestion.modelName} - ${_decisionLabel(suggestion.userDecision, copy)}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    copy.t('aiResponse'),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: pending ? design.pencil : null,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  _AIResponseDigest(copy: copy, text: suggestion.responseText),
-                  const SizedBox(height: 12),
-                  SelectableText(
-                    suggestion.responseText,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  _ScenePatchPreview(
-                    copy: copy,
-                    patch: patch,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    copy.t('sentPrompt'),
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  const SizedBox(height: 6),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: color.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: SelectableText(
-                        suggestion.promptText,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontFamily: 'JetBrains Mono',
-                              fontFamilyFallback: const [
-                                'Consolas',
-                                'monospace'
-                              ],
-                              color: color.onSurfaceVariant,
-                            ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Text(
-                  _formatLocalDateTime(suggestion.createdAt),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: color.onSurfaceVariant,
-                      ),
-                ),
-                const Spacer(),
-                _HelpTooltip(message: copy.t('helpSuggestionActions')),
-                const SizedBox(width: 6),
-                IconButton(
-                  tooltip: copy.t('helpAcceptSuggestion'),
-                  onPressed: () => onAcceptSuggestion(suggestion),
-                  icon: const Icon(Icons.check),
-                ),
-                IconButton(
-                  tooltip: copy.t('helpConvertSuggestion'),
-                  onPressed: () => onConvertSuggestion(suggestion),
-                  icon: const Icon(Icons.sticky_note_2_outlined),
-                ),
-                IconButton(
-                  tooltip: copy.t('helpRejectSuggestion'),
-                  onPressed: () => onRejectSuggestion(suggestion),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-    if (!pending) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: tile,
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: _PencilSuggestionFrame(child: tile),
     );
   }
 }

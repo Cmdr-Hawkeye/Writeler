@@ -684,6 +684,11 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Send task'));
     await tester.pumpAndSettle();
 
+    await tester.drag(find.byType(ListView).first, const Offset(0, -520));
+    await tester.pumpAndSettle();
+
+    expect(find.text('AI inbox'), findsOneWidget);
+    expect(find.text('Open'), findsWidgets);
     expect(find.textContaining('MockProvider'), findsOneWidget);
   });
 

@@ -682,6 +682,18 @@ final class WritelerCopy {
     'aiTaskPlotGapReview': 'Plot-Lücken prüfen',
     'aiTaskDialogueIntentAnalysis': 'Dialogabsicht analysieren',
     'aiTaskWorldContextStarter': 'Kontext-Starthilfe',
+    'aiInboxTitle': 'KI-Inbox',
+    'aiInboxBody':
+        'Zentrale Prüfstelle für KI-Antworten: sichten, übernehmen, als Notiz sichern oder verwerfen.',
+    'aiInboxOpen': 'Offen',
+    'aiInboxAccepted': 'Angenommen',
+    'aiInboxNoted': 'Notizen',
+    'aiInboxRejected': 'Verworfen',
+    'aiInboxAll': 'Alle',
+    'aiInboxTotal': 'Gesamt',
+    'aiInboxEmptyTitle': 'Keine passenden Vorschläge',
+    'aiInboxEmptyBody':
+        'Ändere den Filter oder sende oben einen neuen KI-Auftrag.',
     'suggestions': 'Vorschläge',
     'noSuggestions': 'Noch keine Vorschläge',
     'notes': 'Notizen',
@@ -872,6 +884,8 @@ final class WritelerCopy {
         'Sendet den sichtbaren Auftrag mit dem gewählten Kontext an den aktiven KI-Provider und speichert die Antwort als Vorschlag.',
     'helpAiQuickActions':
         'Diese Aktionen senden sofort spezialisierte Prüf- oder Ideenaufträge an die KI.',
+    'helpAiInbox':
+        'Bündelt alle KI-Antworten des Projekts. Annehmen wendet erkannte Struktur an, Notiz sichert die Antwort, Ablehnen entfernt sie.',
     'helpPromptPreview':
         'Zeigt den vollständigen Prompt, der tatsächlich an das Sprachmodell gesendet wird.',
     'helpSuggestionActions':
@@ -1550,6 +1564,17 @@ final class WritelerCopy {
     'aiTaskPlotGapReview': 'Plot gap review',
     'aiTaskDialogueIntentAnalysis': 'Dialogue intent analysis',
     'aiTaskWorldContextStarter': 'Context starter',
+    'aiInboxTitle': 'AI inbox',
+    'aiInboxBody':
+        'Central review desk for AI answers: inspect, accept, save as a note, or discard.',
+    'aiInboxOpen': 'Open',
+    'aiInboxAccepted': 'Accepted',
+    'aiInboxNoted': 'Notes',
+    'aiInboxRejected': 'Discarded',
+    'aiInboxAll': 'All',
+    'aiInboxTotal': 'Total',
+    'aiInboxEmptyTitle': 'No matching suggestions',
+    'aiInboxEmptyBody': 'Change the filter or send a new AI task above.',
     'suggestions': 'Suggestions',
     'noSuggestions': 'No suggestions yet',
     'notes': 'Notes',
@@ -1736,6 +1761,8 @@ final class WritelerCopy {
         'Sends the visible instruction with the selected context to the active AI provider and stores the answer as a suggestion.',
     'helpAiQuickActions':
         'These actions immediately send specialized idea or review requests to AI.',
+    'helpAiInbox':
+        'Collects all AI answers for this project. Accept applies recognized structure, note stores the answer, reject removes it.',
     'helpPromptPreview':
         'Shows the complete prompt that is actually sent to the language model.',
     'helpSuggestionActions':
