@@ -269,6 +269,13 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.write,
     ),
     _WorkspaceNavItem(
+      index: 1,
+      icon: Icons.edit_note_outlined,
+      selectedIcon: Icons.edit_note,
+      labelBuilder: (copy) => copy.t('editor'),
+      group: _WorkspaceNavGroup.write,
+    ),
+    _WorkspaceNavItem(
       index: 2,
       icon: Icons.account_tree_outlined,
       selectedIcon: Icons.account_tree,
@@ -290,17 +297,17 @@ final class _WritelerShellState extends State<WritelerShell> {
       group: _WorkspaceNavGroup.write,
     ),
     _WorkspaceNavItem(
-      index: 1,
-      icon: Icons.edit_note_outlined,
-      selectedIcon: Icons.edit_note,
-      labelBuilder: (copy) => copy.t('editor'),
-      group: _WorkspaceNavGroup.write,
-    ),
-    _WorkspaceNavItem(
       index: 20,
       icon: Icons.public_outlined,
       selectedIcon: Icons.public,
       labelBuilder: (copy) => copy.t('storyContext'),
+      group: _WorkspaceNavGroup.world,
+    ),
+    _WorkspaceNavItem(
+      index: 19,
+      icon: Icons.travel_explore_outlined,
+      selectedIcon: Icons.travel_explore,
+      labelBuilder: (copy) => copy.t('researchLibrary'),
       group: _WorkspaceNavGroup.world,
     ),
     _WorkspaceNavItem(
@@ -336,13 +343,6 @@ final class _WritelerShellState extends State<WritelerShell> {
       icon: Icons.hub_outlined,
       selectedIcon: Icons.hub,
       labelBuilder: (copy) => copy.t('relationshipGraph'),
-      group: _WorkspaceNavGroup.world,
-    ),
-    _WorkspaceNavItem(
-      index: 19,
-      icon: Icons.travel_explore_outlined,
-      selectedIcon: Icons.travel_explore,
-      labelBuilder: (copy) => copy.t('researchLibrary'),
       group: _WorkspaceNavGroup.world,
     ),
     _WorkspaceNavItem(
@@ -2817,6 +2817,19 @@ final class _WritelerShellState extends State<WritelerShell> {
         _ => Icons.tune_outlined,
       };
 
+  _WorkspaceNavGroup _workspaceGroupForIndex(int index) {
+    final navItem = _navItems.where((item) => item.index == index).firstOrNull;
+    if (navItem != null) return navItem.group;
+    return switch (index) {
+      16 => _WorkspaceNavGroup.output,
+      _ => _WorkspaceNavGroup.output,
+    };
+  }
+
+  String _workspaceGroupTitle(WritelerCopy copy) {
+    return _navGroupLabel(_workspaceGroupForIndex(_selectedRailIndex), copy);
+  }
+
   Future<void> _openCommandPalette(WritelerCopy copy) async {
     final entries = _commandPaletteEntries(copy);
     final selected = await showDialog<_CommandPaletteEntry>(
@@ -2834,10 +2847,19 @@ final class _WritelerShellState extends State<WritelerShell> {
       for (final item in _navItems)
         _CommandPaletteEntry(
           title: item.labelBuilder(copy),
-          subtitle: copy.t('workspace'),
+          subtitle: _navGroupLabel(item.group, copy),
           icon: item.icon,
           run: () => setState(() => _selectedRailIndex = item.index),
         ),
+    ];
+    final secondaryWorkspaceEntries = [
+      _CommandPaletteEntry(
+        title: copy.t('statistics'),
+        subtitle: '${_navGroupLabel(_WorkspaceNavGroup.output, copy)} · '
+            '${copy.t('workspace')}',
+        icon: Icons.bar_chart_outlined,
+        run: () => setState(() => _selectedRailIndex = 16),
+      ),
     ];
     final sceneEntries = [
       for (final scene in _scenes)
@@ -2868,7 +2890,12 @@ final class _WritelerShellState extends State<WritelerShell> {
           ),
         ),
     ];
-    return [...workspaceEntries, ...sceneEntries, ...catalogEntries];
+    return [
+      ...workspaceEntries,
+      ...secondaryWorkspaceEntries,
+      ...sceneEntries,
+      ...catalogEntries,
+    ];
   }
 
   @override
@@ -2927,6 +2954,7 @@ final class _WritelerShellState extends State<WritelerShell> {
                             _StudioTopBar(
                               copy: copy,
                               workspaceTitle: _workspaceTitle(copy),
+                              workspaceGroupLabel: _workspaceGroupTitle(copy),
                               workspaceIcon: _workspaceIcon(),
                               project: _selectedProject,
                               languageCode: widget.languageCode,

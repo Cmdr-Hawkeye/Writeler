@@ -124,9 +124,9 @@ final class _WorkspaceNavigation extends StatelessWidget {
 String _navGroupLabel(_WorkspaceNavGroup group, WritelerCopy copy) =>
     switch (group) {
       _WorkspaceNavGroup.write => copy.t('navGroupWriting'),
-      _WorkspaceNavGroup.world => copy.t('catalog'),
-      _WorkspaceNavGroup.review => copy.t('navGroupAnalysisAi'),
-      _WorkspaceNavGroup.output => copy.t('navGroupAdministration'),
+      _WorkspaceNavGroup.world => copy.t('navGroupWorldResearch'),
+      _WorkspaceNavGroup.review => copy.t('navGroupReview'),
+      _WorkspaceNavGroup.output => copy.t('navGroupOutputSettings'),
     };
 
 final class _NavigationGroupLabel extends StatelessWidget {
@@ -336,6 +336,7 @@ final class _StudioTopBar extends StatelessWidget {
   const _StudioTopBar({
     required this.copy,
     required this.workspaceTitle,
+    required this.workspaceGroupLabel,
     required this.workspaceIcon,
     required this.project,
     required this.languageCode,
@@ -347,6 +348,7 @@ final class _StudioTopBar extends StatelessWidget {
 
   final WritelerCopy copy;
   final String workspaceTitle;
+  final String workspaceGroupLabel;
   final IconData workspaceIcon;
   final Project? project;
   final String languageCode;
@@ -359,6 +361,7 @@ final class _StudioTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
     final projectTitle = project?.title ?? copy.t('selectProject');
+    final contextLabel = '$workspaceGroupLabel · $projectTitle';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -404,7 +407,7 @@ final class _StudioTopBar extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      projectTitle,
+                      contextLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(

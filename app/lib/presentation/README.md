@@ -21,6 +21,19 @@ held in one monolithic file.
 - `editor_workspace.dart`: manuscript editor, scene navigation, autosave, and planning UI.
 - `presentation_helpers.dart`: labels, counters, formatting, and UI-domain adapters.
 
+## Navigation Model
+
+The sidebar is organized by author workflow, not by implementation module:
+
+- Writing: daily writing surfaces and structural scene movement.
+- World & Research: context, catalog entities, relationships, timeline, and sources.
+- Review & AI: analysis, style, smart collections, notes, and AI review queues.
+- Output & Settings: logs, transfer, publishing, and app/project configuration.
+
+Secondary surfaces such as detailed statistics may stay out of the permanent
+sidebar, but must remain reachable through an explicit workspace action or the
+command palette.
+
 ## Refactoring Rule
 
 New presentation code should live with the workspace it belongs to. Shared
