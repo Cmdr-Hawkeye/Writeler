@@ -24,7 +24,7 @@ final class DocumentPackageExporter {
     required bool includeSceneTitles,
     required PublishingStyle style,
   }) {
-    final spec = _PublishingStyleSpec.forStyle(style);
+    final spec = PublishingLayoutProfile.forStyle(style);
     final pages = _pdfPages(
       project: project,
       chapters: chapters,
@@ -97,7 +97,7 @@ final class DocumentPackageExporter {
     required bool includeSceneTitles,
     required PublishingStyle style,
   }) {
-    final spec = _PublishingStyleSpec.forStyle(style);
+    final spec = PublishingLayoutProfile.forStyle(style);
     final zip = StoredZipArchive();
     zip.addText('mimetype', 'application/epub+zip');
     zip.addText(
@@ -138,7 +138,7 @@ final class DocumentPackageExporter {
     required bool includeSceneTitles,
     required PublishingStyle style,
   }) {
-    final spec = _PublishingStyleSpec.forStyle(style);
+    final spec = PublishingLayoutProfile.forStyle(style);
     final zip = StoredZipArchive();
     zip.addText(
         '[Content_Types].xml',
@@ -194,7 +194,7 @@ final class DocumentPackageExporter {
     required List<ProjectNote> notes,
     required bool includeMetadata,
     required bool includeSceneTitles,
-    required _PublishingStyleSpec spec,
+    required PublishingLayoutProfile spec,
   }) {
     const pageWidth = 595.0;
     final left = spec.pdfHorizontalMargin;
@@ -277,13 +277,23 @@ final class DocumentPackageExporter {
       after: 8,
     );
     addLine(
-      'Manuscript export',
+      _publishingSubtitle(project),
       font: 'F3',
       fontSize: 12,
       lineHeight: 18,
-      after: includeMetadata ? 18 : 32,
+      after: 10,
       gray: 0.35,
     );
+    for (final line in _titlePageLines(project)) {
+      addLine(
+        line,
+        font: 'F4',
+        fontSize: 9.5,
+        lineHeight: 14,
+        after: 2,
+        gray: 0.38,
+      );
+    }
     addLine(
       spec.label,
       font: 'F4',
@@ -439,7 +449,9 @@ final class DocumentPackageExporter {
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:identifier id="bookid">${_xml(project.id)}</dc:identifier>
     <dc:title>${_xml(project.title)}</dc:title>
+    <dc:creator>${_xml(_publishingAuthor(project))}</dc:creator>
     <dc:language>${_xml(project.languageCode)}</dc:language>
+    ${_publishingIsbn(project).isEmpty ? '' : '<dc:identifier>${_xml(_publishingIsbn(project))}</dc:identifier>'}
   </metadata>
   <manifest>
     <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
@@ -472,7 +484,7 @@ final class DocumentPackageExporter {
     required List<Chapter> chapters,
     required List<Scene> scenes,
     required bool includeSceneTitles,
-    required _PublishingStyleSpec spec,
+    required PublishingLayoutProfile spec,
   }) {
     final body = StringBuffer('<h1>${_xml(project.title)}</h1>');
     for (final group in _chapterGroups(chapters, scenes)) {
@@ -498,7 +510,7 @@ final class DocumentPackageExporter {
         .trim();
   }
 
-  String _epubStyles(_PublishingStyleSpec spec) => '''
+  String _epubStyles(PublishingLayoutProfile spec) => '''
 body {
   font-family: ${spec.epubFontFamily};
   line-height: ${spec.epubLineHeight};
@@ -524,13 +536,16 @@ p {
     required List<ProjectNote> notes,
     required bool includeMetadata,
     required bool includeSceneTitles,
-    required _PublishingStyleSpec spec,
+    required PublishingLayoutProfile spec,
   }) {
     final words =
         scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
     final body = StringBuffer()
       ..write(_docxParagraph(project.title, style: 'Title'))
-      ..write(_docxParagraph('Manuscript export', style: 'Subtitle'));
+      ..write(_docxParagraph(_publishingSubtitle(project), style: 'Subtitle'));
+    for (final line in _titlePageLines(project)) {
+      body.write(_docxParagraph(line, style: 'BookInfo'));
+    }
     body.write(_docxParagraph(spec.label, style: 'BookInfo'));
     if (includeMetadata) {
       body
@@ -599,7 +614,7 @@ p {
 
   String _docxPageBreak() => '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
 
-  String _docxStyles(_PublishingStyleSpec spec) => '''
+  String _docxStyles(PublishingLayoutProfile spec) => '''
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:docDefaults>
@@ -651,7 +666,7 @@ p {
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <dc:title>${_xml(project.title)}</dc:title>
-  <dc:creator>Writeler</dc:creator>
+  <dc:creator>${_xml(_publishingAuthor(project))}</dc:creator>
   <cp:lastModifiedBy>Writeler</cp:lastModifiedBy>
   <dcterms:created xsi:type="dcterms:W3CDTF">$now</dcterms:created>
   <dcterms:modified xsi:type="dcterms:W3CDTF">$now</dcterms:modified>
@@ -673,6 +688,40 @@ p {
 </Properties>
 '''
       .trim();
+
+  List<String> _titlePageLines(Project project) {
+    final lines = <String>[];
+    final author = _publishingAuthor(project);
+    if (author.isNotEmpty) lines.add(author);
+    final imprint = _metadataText(project, 'publishingImprint');
+    if (imprint.isNotEmpty) lines.add(imprint);
+    final isbn = _publishingIsbn(project);
+    if (isbn.isNotEmpty) lines.add('ISBN $isbn');
+    final copyright = _metadataText(project, 'publishingCopyright');
+    if (copyright.isNotEmpty) lines.add(copyright);
+    final coverCredit = _metadataText(project, 'publishingCoverCredit');
+    if (coverCredit.isNotEmpty) lines.add('Cover: $coverCredit');
+    return lines;
+  }
+
+  String _publishingSubtitle(Project project) {
+    final subtitle = _metadataText(project, 'publishingSubtitle');
+    return subtitle.isEmpty ? 'Manuscript export' : subtitle;
+  }
+
+  String _publishingAuthor(Project project) {
+    final publishingAuthor = _metadataText(project, 'publishingAuthor');
+    if (publishingAuthor.isNotEmpty) return publishingAuthor;
+    return _metadataText(project, 'authorName');
+  }
+
+  String _publishingIsbn(Project project) {
+    return _metadataText(project, 'publishingIsbn');
+  }
+
+  String _metadataText(Project project, String key) {
+    return (project.metadata[key] as String? ?? '').trim();
+  }
 
   String _noteTargetLabel(
     ProjectNote note,
@@ -740,133 +789,6 @@ p {
 
   String _xml(String value) {
     return const HtmlEscape(HtmlEscapeMode.element).convert(value);
-  }
-}
-
-final class _PublishingStyleSpec {
-  const _PublishingStyleSpec({
-    required this.label,
-    required this.pdfHorizontalMargin,
-    required this.pdfBodySize,
-    required this.pdfLineHeight,
-    required this.pdfFirstLineIndent,
-    required this.pdfTitleSize,
-    required this.docxBodyFont,
-    required this.docxBodySizeHalfPoints,
-    required this.docxLineTwips,
-    required this.docxParagraphAfter,
-    required this.docxFirstLineIndent,
-    required this.docxMarginTwips,
-    required this.epubFontFamily,
-    required this.epubHeadingFamily,
-    required this.epubLineHeight,
-    required this.epubMargin,
-    required this.epubParagraphSpacing,
-    required this.epubFirstLineIndent,
-  });
-
-  final String label;
-  final double pdfHorizontalMargin;
-  final double pdfBodySize;
-  final double pdfLineHeight;
-  final double pdfFirstLineIndent;
-  final double pdfTitleSize;
-  final String docxBodyFont;
-  final int docxBodySizeHalfPoints;
-  final int docxLineTwips;
-  final int docxParagraphAfter;
-  final int docxFirstLineIndent;
-  final int docxMarginTwips;
-  final String epubFontFamily;
-  final String epubHeadingFamily;
-  final String epubLineHeight;
-  final String epubMargin;
-  final String epubParagraphSpacing;
-  final String epubFirstLineIndent;
-
-  static _PublishingStyleSpec forStyle(PublishingStyle style) {
-    return switch (style) {
-      PublishingStyle.manuscript => const _PublishingStyleSpec(
-          label: 'Manuscript / editorial review',
-          pdfHorizontalMargin: 72,
-          pdfBodySize: 11.5,
-          pdfLineHeight: 17,
-          pdfFirstLineIndent: 18,
-          pdfTitleSize: 28,
-          docxBodyFont: 'Times New Roman',
-          docxBodySizeHalfPoints: 24,
-          docxLineTwips: 360,
-          docxParagraphAfter: 160,
-          docxFirstLineIndent: 360,
-          docxMarginTwips: 1440,
-          epubFontFamily: 'serif',
-          epubHeadingFamily: 'serif',
-          epubLineHeight: '1.65',
-          epubMargin: '8%',
-          epubParagraphSpacing: '0.8em',
-          epubFirstLineIndent: '1.2em',
-        ),
-      PublishingStyle.paperback => const _PublishingStyleSpec(
-          label: 'Paperback print layout',
-          pdfHorizontalMargin: 54,
-          pdfBodySize: 10.8,
-          pdfLineHeight: 15.2,
-          pdfFirstLineIndent: 14,
-          pdfTitleSize: 25,
-          docxBodyFont: 'Garamond',
-          docxBodySizeHalfPoints: 22,
-          docxLineTwips: 312,
-          docxParagraphAfter: 80,
-          docxFirstLineIndent: 300,
-          docxMarginTwips: 1080,
-          epubFontFamily: 'serif',
-          epubHeadingFamily: 'serif',
-          epubLineHeight: '1.5',
-          epubMargin: '6%',
-          epubParagraphSpacing: '0.35em',
-          epubFirstLineIndent: '1.1em',
-        ),
-      PublishingStyle.ebook => const _PublishingStyleSpec(
-          label: 'E-book reader layout',
-          pdfHorizontalMargin: 64,
-          pdfBodySize: 11.2,
-          pdfLineHeight: 16.5,
-          pdfFirstLineIndent: 16,
-          pdfTitleSize: 26,
-          docxBodyFont: 'Georgia',
-          docxBodySizeHalfPoints: 24,
-          docxLineTwips: 340,
-          docxParagraphAfter: 120,
-          docxFirstLineIndent: 320,
-          docxMarginTwips: 1260,
-          epubFontFamily: 'serif',
-          epubHeadingFamily: 'sans-serif',
-          epubLineHeight: '1.55',
-          epubMargin: '5%',
-          epubParagraphSpacing: '0.55em',
-          epubFirstLineIndent: '1em',
-        ),
-      PublishingStyle.largePrint => const _PublishingStyleSpec(
-          label: 'Large print',
-          pdfHorizontalMargin: 64,
-          pdfBodySize: 14,
-          pdfLineHeight: 21,
-          pdfFirstLineIndent: 18,
-          pdfTitleSize: 30,
-          docxBodyFont: 'Georgia',
-          docxBodySizeHalfPoints: 30,
-          docxLineTwips: 440,
-          docxParagraphAfter: 180,
-          docxFirstLineIndent: 360,
-          docxMarginTwips: 1260,
-          epubFontFamily: 'serif',
-          epubHeadingFamily: 'serif',
-          epubLineHeight: '1.7',
-          epubMargin: '7%',
-          epubParagraphSpacing: '0.9em',
-          epubFirstLineIndent: '1em',
-        ),
-    };
   }
 }
 

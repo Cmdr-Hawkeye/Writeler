@@ -27,6 +27,16 @@ void main() {
     final project = await CreateProject(projectRepository)(
       const CreateProjectCommand(title: 'Exportable Book'),
     );
+    final publishingProject = project.copyWith(
+      metadata: const {
+        'publishingSubtitle': 'A field guide to pressure',
+        'publishingAuthor': 'Mara Vale',
+        'publishingImprint': 'Orbital Press',
+        'publishingIsbn': '978-1-23456-789-0',
+        'publishingCopyright': 'Copyright 2026 Mara Vale',
+        'publishingCoverCredit': 'Cover Atelier',
+      },
+    );
     final chapter = await CreateChapter(chapterRepository)(
       CreateChapterCommand(projectId: project.id, title: 'Opening'),
     );
@@ -68,7 +78,7 @@ void main() {
 
     const exporter = ProjectExporter();
     final markdown = exporter.exportProject(
-      project: project,
+      project: publishingProject,
       chapters: [chapter],
       scenes: [scene],
       catalogItems: [character],
@@ -162,7 +172,7 @@ void main() {
     expect(html, contains('Keep the pressure visible.'));
 
     final pdf = exporter.exportArtifact(
-      project: project,
+      project: publishingProject,
       chapters: [chapter],
       scenes: [scene],
       profile: ExportProfile(
@@ -176,11 +186,13 @@ void main() {
     final pdfText = utf8.decode(pdf.bytes, allowMalformed: true);
     expect(pdfText, startsWith('%PDF'));
     expect(pdfText, contains('/BaseFont /Times-Roman'));
-    expect(pdfText, contains('Manuscript export'));
+    expect(pdf.previewText, contains('Author: Mara Vale'));
+    expect(pdf.previewText, contains('Mara Vale'));
+    expect(pdfText, contains('A field guide to pressure'));
     expect(pdfText, contains('Page 1 of'));
 
     final epub = exporter.exportArtifact(
-      project: project,
+      project: publishingProject,
       chapters: [chapter],
       scenes: [scene],
       profile: ExportProfile(
@@ -194,7 +206,7 @@ void main() {
     expect(epub.bytes.take(2), [0x50, 0x4b]);
 
     final docx = exporter.exportArtifact(
-      project: project,
+      project: publishingProject,
       chapters: [chapter],
       scenes: [scene],
       catalogItems: [character],
@@ -215,10 +227,12 @@ void main() {
     expect(docxPackageText, contains('docProps/core.xml'));
     expect(docxPackageText, contains('w:styleId="Manuscript"'));
     expect(docxPackageText, contains('w:styleId="BookInfo"'));
-    expect(docxPackageText, contains('Manuscript export'));
+    expect(docxPackageText, contains('A field guide to pressure'));
+    expect(docxPackageText, contains('Mara Vale'));
+    expect(docxPackageText, contains('978-1-23456-789-0'));
 
     final paperbackDocx = exporter.exportArtifact(
-      project: project,
+      project: publishingProject,
       chapters: [chapter],
       scenes: [scene],
       profile: ExportProfile(
@@ -231,8 +245,8 @@ void main() {
     );
     final paperbackPackageText =
         utf8.decode(paperbackDocx.bytes, allowMalformed: true);
-    expect(paperbackDocx.previewText, contains('Style: paperback'));
-    expect(paperbackPackageText, contains('Paperback print layout'));
+    expect(paperbackDocx.previewText, contains('Layout profile: Taschenbuch'));
+    expect(paperbackPackageText, contains('Taschenbuch'));
     expect(paperbackPackageText, contains('w:rFonts w:ascii="Garamond"'));
 
     final yWriter = exporter.exportArtifact(

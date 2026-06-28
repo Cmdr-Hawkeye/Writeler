@@ -266,6 +266,7 @@ final class _SelfPublishingCenter extends StatelessWidget {
     required this.onPublishingStyleChanged,
     required this.onIncludeSceneTitlesChanged,
     required this.onIncludeMetadataChanged,
+    required this.onSavePublishingMetadata,
     required this.onDownload,
   });
 
@@ -285,6 +286,7 @@ final class _SelfPublishingCenter extends StatelessWidget {
   final ValueChanged<PublishingStyle> onPublishingStyleChanged;
   final ValueChanged<bool> onIncludeSceneTitlesChanged;
   final ValueChanged<bool> onIncludeMetadataChanged;
+  final ValueChanged<Map<String, String>> onSavePublishingMetadata;
   final VoidCallback onDownload;
 
   @override
@@ -401,6 +403,12 @@ final class _SelfPublishingCenter extends StatelessWidget {
                       onChanged: onIncludeMetadataChanged,
                     ),
                     const SizedBox(height: 12),
+                    _PublishingMetadataForm(
+                      copy: copy,
+                      project: project,
+                      onSave: onSavePublishingMetadata,
+                    ),
+                    const SizedBox(height: 12),
                     _ActionHelp(
                       message: copy.t('helpDownloadManuscript'),
                       child: FilledButton.icon(
@@ -416,9 +424,13 @@ final class _SelfPublishingCenter extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: SelectableText(
-                    preview.isEmpty ? copy.t('nothingToExport') : preview,
-                    style: const TextStyle(fontFamily: 'monospace'),
+                  child: _PublishingPreview(
+                    copy: copy,
+                    project: project,
+                    scenes: scenes,
+                    publishingStyle: publishingStyle,
+                    format: format,
+                    preview: preview,
                   ),
                 ),
               ),
@@ -428,6 +440,467 @@ final class _SelfPublishingCenter extends StatelessWidget {
       ],
     );
   }
+}
+
+final class _PublishingMetadataForm extends StatefulWidget {
+  const _PublishingMetadataForm({
+    required this.copy,
+    required this.project,
+    required this.onSave,
+  });
+
+  final WritelerCopy copy;
+  final Project? project;
+  final ValueChanged<Map<String, String>> onSave;
+
+  @override
+  State<_PublishingMetadataForm> createState() =>
+      _PublishingMetadataFormState();
+}
+
+final class _PublishingMetadataFormState
+    extends State<_PublishingMetadataForm> {
+  late final TextEditingController _subtitleController =
+      TextEditingController();
+  late final TextEditingController _authorController = TextEditingController();
+  late final TextEditingController _imprintController = TextEditingController();
+  late final TextEditingController _isbnController = TextEditingController();
+  late final TextEditingController _copyrightController =
+      TextEditingController();
+  late final TextEditingController _coverCreditController =
+      TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _syncControllers();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PublishingMetadataForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.project?.id != widget.project?.id) {
+      _syncControllers();
+    }
+  }
+
+  @override
+  void dispose() {
+    _subtitleController.dispose();
+    _authorController.dispose();
+    _imprintController.dispose();
+    _isbnController.dispose();
+    _copyrightController.dispose();
+    _coverCreditController.dispose();
+    super.dispose();
+  }
+
+  void _syncControllers() {
+    final project = widget.project;
+    _subtitleController.text = _metadataText(project, 'publishingSubtitle');
+    _authorController.text = _metadataText(
+      project,
+      'publishingAuthor',
+      fallback: _metadataText(project, 'authorName'),
+    );
+    _imprintController.text = _metadataText(project, 'publishingImprint');
+    _isbnController.text = _metadataText(project, 'publishingIsbn');
+    _copyrightController.text = _metadataText(project, 'publishingCopyright');
+    _coverCreditController.text =
+        _metadataText(project, 'publishingCoverCredit');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.project == null) {
+      return _EmptyInlineMessage(message: widget.copy.t('selectProject'));
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _HelpedLabel(
+              label: widget.copy.t('publishingMetadata'),
+              help: widget.copy.t('helpPublishingMetadata'),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 10),
+            _metadataField(_subtitleController, 'publishingSubtitle'),
+            const SizedBox(height: 10),
+            _metadataField(_authorController, 'publishingAuthor'),
+            const SizedBox(height: 10),
+            _metadataField(_imprintController, 'publishingImprint'),
+            const SizedBox(height: 10),
+            _metadataField(_isbnController, 'publishingIsbn'),
+            const SizedBox(height: 10),
+            _metadataField(_copyrightController, 'publishingCopyright'),
+            const SizedBox(height: 10),
+            _metadataField(_coverCreditController, 'publishingCoverCredit'),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: _save,
+                icon: const Icon(Icons.badge_outlined),
+                label: Text(widget.copy.t('savePublishingMetadata')),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _metadataField(TextEditingController controller, String key) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: widget.copy.t(key),
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      textInputAction: TextInputAction.next,
+    );
+  }
+
+  void _save() {
+    widget.onSave({
+      'publishingSubtitle': _subtitleController.text,
+      'publishingAuthor': _authorController.text,
+      'publishingImprint': _imprintController.text,
+      'publishingIsbn': _isbnController.text,
+      'publishingCopyright': _copyrightController.text,
+      'publishingCoverCredit': _coverCreditController.text,
+    });
+  }
+}
+
+final class _PublishingPreview extends StatelessWidget {
+  const _PublishingPreview({
+    required this.copy,
+    required this.project,
+    required this.scenes,
+    required this.publishingStyle,
+    required this.format,
+    required this.preview,
+  });
+
+  final WritelerCopy copy;
+  final Project? project;
+  final List<Scene> scenes;
+  final PublishingStyle publishingStyle;
+  final ExportFormat format;
+  final String preview;
+
+  @override
+  Widget build(BuildContext context) {
+    final project = this.project;
+    if (project == null || preview.isEmpty) {
+      return SelectableText(copy.t('nothingToExport'));
+    }
+    final color = Theme.of(context).colorScheme;
+    final layout = PublishingLayoutProfile.forStyle(publishingStyle);
+    final words =
+        scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
+    final firstParagraph = scenes
+        .expand((scene) => scene.manuscriptText.split(RegExp(r'\n\s*\n')))
+        .map((paragraph) => paragraph.trim())
+        .firstWhere((paragraph) => paragraph.isNotEmpty, orElse: () => '');
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 880;
+        final overview = _PublishingProfileCard(
+          copy: copy,
+          layout: layout,
+          format: format,
+          words: words,
+        );
+        final page = _PublishingPageMockup(
+          project: project,
+          layout: layout,
+          firstParagraph: firstParagraph,
+        );
+        return ListView(
+          children: [
+            if (compact)
+              Column(
+                children: [
+                  overview,
+                  const SizedBox(height: 14),
+                  page,
+                ],
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(width: 310, child: overview),
+                  const SizedBox(width: 18),
+                  Expanded(child: page),
+                ],
+              ),
+            const SizedBox(height: 18),
+            Text(
+              copy.t('technicalPreview'),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: color.surfaceContainerLow,
+                border: Border.all(color: color.outlineVariant),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: SelectableText(
+                  preview,
+                  style: const TextStyle(fontFamily: 'monospace'),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+final class _PublishingProfileCard extends StatelessWidget {
+  const _PublishingProfileCard({
+    required this.copy,
+    required this.layout,
+    required this.format,
+    required this.words,
+  });
+
+  final WritelerCopy copy;
+  final PublishingLayoutProfile layout;
+  final ExportFormat format;
+  final int words;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLow,
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.auto_stories_outlined, color: color.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    layout.label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              layout.description,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: 14),
+            _PublishingSpecRow(
+              label: copy.t('publishingFormat'),
+              value: _exportFormatLabel(format, copy.languageCode),
+            ),
+            _PublishingSpecRow(
+              label: copy.t('pageFormat'),
+              value: '${layout.pageFormat} · ${layout.trimSize}',
+            ),
+            _PublishingSpecRow(
+              label: copy.t('typeSpec'),
+              value:
+                  '${layout.fontFamily}, ${layout.bodySizePt.toStringAsFixed(1)} pt',
+            ),
+            _PublishingSpecRow(
+              label: copy.t('lineSpacing'),
+              value: '${layout.lineHeightPt.toStringAsFixed(1)} pt',
+            ),
+            _PublishingSpecRow(
+              label: copy.t('estimatedPages'),
+              value: '${layout.estimatedPagesForWords(words)}',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _PublishingSpecRow extends StatelessWidget {
+  const _PublishingSpecRow({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 7),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _PublishingPageMockup extends StatelessWidget {
+  const _PublishingPageMockup({
+    required this.project,
+    required this.layout,
+    required this.firstParagraph,
+  });
+
+  final Project project;
+  final PublishingLayoutProfile layout;
+  final String firstParagraph;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final author = _metadataText(
+      project,
+      'publishingAuthor',
+      fallback: _metadataText(project, 'authorName'),
+    );
+    final subtitle = _metadataText(project, 'publishingSubtitle');
+    final paragraph = firstParagraph.isEmpty
+        ? 'Der Manuskripttext erscheint hier als Satzvorschau, sobald Szenen Text enthalten.'
+        : firstParagraph;
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 460),
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: color.surface,
+          border: Border.all(color: color.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: color.shadow.withValues(alpha: 0.10),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: AspectRatio(
+          aspectRatio: layout.style == PublishingStyle.paperback ? 0.64 : 0.70,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: color.outlineVariant),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 34, 28, 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    project.title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontFamily: layout.fontFamily,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      subtitle,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                  if (author.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      author,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  Expanded(
+                    child: Text(
+                      paragraph,
+                      maxLines:
+                          layout.style == PublishingStyle.largePrint ? 8 : 11,
+                      overflow: TextOverflow.fade,
+                      style: TextStyle(
+                        fontFamily: layout.fontFamily,
+                        fontSize: layout.bodySizePt,
+                        height: layout.lineHeightPt / layout.bodySizePt,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    layout.label,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: color.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _metadataText(Project? project, String key, {String fallback = ''}) {
+  final value = (project?.metadata[key] as String? ?? '').trim();
+  return value.isEmpty ? fallback : value;
 }
 
 const _publishingFormats = [

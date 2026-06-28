@@ -709,6 +709,20 @@ final class WritelerCopy {
         'Lesbares Manuskript für Weitergabe, Lektorat oder Veröffentlichung.',
     'publishingFormat': 'Ausgabeformat',
     'publishingStyle': 'Formatvorlage',
+    'publishingMetadata': 'Cover & Titelei',
+    'publishingSubtitle': 'Untertitel',
+    'publishingAuthor': 'Autor für Titelei',
+    'publishingImprint': 'Verlag / Imprint',
+    'publishingIsbn': 'ISBN',
+    'publishingCopyright': 'Copyright-Zeile',
+    'publishingCoverCredit': 'Cover-Credit',
+    'savePublishingMetadata': 'Titelei speichern',
+    'publishingMetadataSaved': 'Titelei gespeichert',
+    'pageFormat': 'Seitenformat',
+    'typeSpec': 'Schrift',
+    'lineSpacing': 'Zeilenabstand',
+    'estimatedPages': 'geschätzte Seiten',
+    'technicalPreview': 'Technische Vorschau',
     'downloadManuscript': 'Manuskript herunterladen',
     'includePublishingMetadata': 'Notizen und Projektinfo einschließen',
     'syncCheckpoint': 'Sync-Checkpoint',
@@ -745,6 +759,8 @@ final class WritelerCopy {
         'Legt fest, in welchem lesbaren Manuskriptformat die Veröffentlichung ausgegeben wird.',
     'helpPublishingStyle':
         'Wählt Satz, Schriftgröße, Einzüge und Abstände für die Manuskriptausgabe. Die Vorlage verändert nicht den gespeicherten Text.',
+    'helpPublishingMetadata':
+        'Speichert Angaben für Cover, Titelblatt, Dokumenteigenschaften und EPUB-Metadaten. Das Manuskript bleibt unverändert.',
     'helpIncludeSceneTitles':
         'Fügt beim Export die Szenentitel vor den jeweiligen Textabschnitten ein.',
     'helpIncludeMetadata':
@@ -1528,6 +1544,20 @@ final class WritelerCopy {
         'Readable manuscript output for sharing, editing, or publishing.',
     'publishingFormat': 'Output format',
     'publishingStyle': 'Style template',
+    'publishingMetadata': 'Cover & title pages',
+    'publishingSubtitle': 'Subtitle',
+    'publishingAuthor': 'Title-page author',
+    'publishingImprint': 'Publisher / imprint',
+    'publishingIsbn': 'ISBN',
+    'publishingCopyright': 'Copyright line',
+    'publishingCoverCredit': 'Cover credit',
+    'savePublishingMetadata': 'Save title pages',
+    'publishingMetadataSaved': 'Title-page metadata saved',
+    'pageFormat': 'Page format',
+    'typeSpec': 'Type',
+    'lineSpacing': 'Line spacing',
+    'estimatedPages': 'estimated pages',
+    'technicalPreview': 'Technical preview',
     'downloadManuscript': 'Download manuscript',
     'includePublishingMetadata': 'Include notes and project info',
     'syncCheckpoint': 'Sync checkpoint',
@@ -1564,6 +1594,8 @@ final class WritelerCopy {
         'Controls which readable manuscript format is used for publishing output.',
     'helpPublishingStyle':
         'Chooses layout, type size, indents, and spacing for manuscript output. The template does not change saved text.',
+    'helpPublishingMetadata':
+        'Stores cover, title-page, document-property, and EPUB metadata. The manuscript stays unchanged.',
     'helpIncludeSceneTitles':
         'Adds scene titles before the matching text sections in the export.',
     'helpIncludeMetadata':

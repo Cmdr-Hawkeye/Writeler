@@ -2411,6 +2411,39 @@ final class _WritelerShellState extends State<WritelerShell> {
     await _downloadArtifact(copy, artifact, eventPrefix: 'publishing');
   }
 
+  Future<void> _savePublishingMetadata(
+    Map<String, String> fields,
+    WritelerCopy copy,
+  ) async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final metadata = Map<String, Object?>.from(project.metadata);
+    for (final entry in fields.entries) {
+      final value = entry.value.trim();
+      if (value.isEmpty) {
+        metadata.remove(entry.key);
+      } else {
+        metadata[entry.key] = value;
+      }
+    }
+    final updated = project.copyWith(metadata: metadata);
+    await widget.projectRepository.save(updated);
+    final projects = await widget.projectRepository.listActive();
+    if (!mounted) return;
+    setState(() {
+      _projects = projects;
+      _selectedProject = updated;
+    });
+    await _recordProjectMetric(
+      eventType: 'publishing.metadata.updated',
+      metadata: {'projectId': updated.id},
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(copy.t('publishingMetadataSaved'))),
+    );
+  }
+
   Future<void> _downloadArtifact(
     WritelerCopy copy,
     ExportArtifact artifact, {
@@ -3270,6 +3303,8 @@ final class _WritelerShellState extends State<WritelerShell> {
               setState(() => _includeSceneTitles = value),
           onIncludeMetadataChanged: (value) =>
               setState(() => _includePublishingMetadata = value),
+          onSavePublishingMetadata: (fields) =>
+              _savePublishingMetadata(fields, copy),
           onDownload: () => _downloadPublishing(copy),
         ),
       16 => _StatisticsWorkspace(

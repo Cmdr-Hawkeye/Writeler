@@ -437,10 +437,31 @@ final class ProjectExporter {
     };
     final words =
         scenes.fold<int>(0, (sum, scene) => sum + scene.actualWordCount);
+    final layout = PublishingLayoutProfile.forStyle(profile.publishingStyle);
+    final estimatedPages = layout.estimatedPagesForWords(words);
+    final author = _publishingAuthor(project);
+    final subtitle = _publishingSubtitle(project);
     final buffer = StringBuffer()
-      ..writeln('$extension export')
+      ..writeln('$extension ${_publishingPreviewTitle(profile)}')
       ..writeln()
       ..writeln('Project: ${project.title}')
+      ..writeln('Subtitle: ${subtitle.isEmpty ? '-' : subtitle}')
+      ..writeln('Author: ${author.isEmpty ? '-' : author}')
+      ..writeln(
+          'Imprint: ${_metadataText(project, 'publishingImprint', fallback: '-')}')
+      ..writeln(
+          'ISBN: ${_metadataText(project, 'publishingIsbn', fallback: '-')}')
+      ..writeln(
+          'Cover: ${_metadataText(project, 'publishingCoverCredit', fallback: '-')}')
+      ..writeln()
+      ..writeln('Layout profile: ${layout.label}')
+      ..writeln('Page format: ${layout.pageFormat} (${layout.trimSize})')
+      ..writeln(
+        'Type: ${layout.fontFamily}, ${layout.bodySizePt.toStringAsFixed(1)} pt / ${layout.lineHeightPt.toStringAsFixed(1)} pt',
+      )
+      ..writeln('Margins: ${layout.marginDescription}')
+      ..writeln('Estimated pages: $estimatedPages')
+      ..writeln()
       ..writeln('Chapters: ${chapters.length}')
       ..writeln('Scenes: ${scenes.length}')
       ..writeln('Words: $words')
@@ -449,9 +470,45 @@ final class ProjectExporter {
       ..writeln('Notes: ${notes.length}')
       ..writeln('Style: ${profile.publishingStyle.name}')
       ..writeln()
+      ..writeln('Preview')
+      ..writeln('-------');
+    final previewScenes = scenes
+        .where((scene) => scene.manuscriptText.trim().isNotEmpty)
+        .take(2)
+        .toList();
+    if (previewScenes.isEmpty) {
+      buffer.writeln('No manuscript text yet.');
+    } else {
+      for (final scene in previewScenes) {
+        if (profile.includeSceneTitles) {
+          buffer
+            ..writeln(scene.title)
+            ..writeln();
+        }
+        final normalized =
+            scene.manuscriptText.trim().replaceAll(RegExp(r'\s+'), ' ');
+        final excerpt = normalized.length <= 420
+            ? normalized
+            : '${normalized.substring(0, 420)}...';
+        buffer
+          ..writeln(excerpt)
+          ..writeln();
+      }
+    }
+    buffer
+      ..writeln()
       ..writeln(
           'Use the download action to save the generated .$extension file.');
     return buffer.toString();
+  }
+
+  String _publishingPreviewTitle(ExportProfile profile) {
+    return switch (profile.format) {
+      ExportFormat.pdf => 'layout preview',
+      ExportFormat.docx => 'Word layout preview',
+      ExportFormat.epub => 'E-book layout preview',
+      _ => 'export',
+    };
   }
 
   void _writeMarkdownMetadata(
@@ -649,6 +706,25 @@ final class ProjectExporter {
         .firstOrNull;
     if (item != null) return '${item.type.name}: ${item.name}';
     return '${target.type.name}: ${target.id}';
+  }
+
+  String _publishingSubtitle(Project project) {
+    return _metadataText(project, 'publishingSubtitle');
+  }
+
+  String _publishingAuthor(Project project) {
+    final publishingAuthor = _metadataText(project, 'publishingAuthor');
+    if (publishingAuthor.isNotEmpty) return publishingAuthor;
+    return _metadataText(project, 'authorName');
+  }
+
+  String _metadataText(
+    Project project,
+    String key, {
+    String fallback = '',
+  }) {
+    final value = (project.metadata[key] as String? ?? '').trim();
+    return value.isEmpty ? fallback : value;
   }
 
   List<_ChapterSceneGroup> _chapterGroups(
