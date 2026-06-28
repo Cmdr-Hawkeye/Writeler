@@ -3526,46 +3526,155 @@ final class _EditorSidePanelTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SegmentedButton<_EditorSidePanelKind>(
-        showSelectedIcon: false,
-        selected: {selected},
-        onSelectionChanged: (selection) => onSelected(selection.first),
-        segments: [
-          ButtonSegment(
-            value: _EditorSidePanelKind.planning,
-            icon: const Icon(Icons.account_tree_outlined, size: 18),
-            label: Text(
-              copy.t('editorPanelPlanning'),
-              key: const ValueKey('editor-panel-planning'),
-            ),
-          ),
-          ButtonSegment(
-            value: _EditorSidePanelKind.context,
-            icon: const Icon(Icons.hub_outlined, size: 18),
-            label: Text(
-              copy.t('editorPanelContext'),
-              key: const ValueKey('editor-panel-context'),
-            ),
-          ),
-          ButtonSegment(
-            value: _EditorSidePanelKind.research,
-            icon: const Icon(Icons.travel_explore_outlined, size: 18),
-            label: Text(
-              copy.t('editorPanelResearch'),
-              key: const ValueKey('editor-panel-research'),
-            ),
-          ),
-          ButtonSegment(
-            value: _EditorSidePanelKind.ai,
-            icon: const Icon(Icons.psychology_alt_outlined, size: 18),
-            label: Text(
-              copy.t('editorPanelAi'),
-              key: const ValueKey('editor-panel-ai'),
-            ),
-          ),
-        ],
+    final options = [
+      _EditorSidePanelOption(
+        kind: _EditorSidePanelKind.planning,
+        icon: Icons.account_tree_outlined,
+        label: copy.t('editorPanelPlanning'),
+        key: const ValueKey('editor-panel-planning'),
+      ),
+      _EditorSidePanelOption(
+        kind: _EditorSidePanelKind.context,
+        icon: Icons.hub_outlined,
+        label: copy.t('editorPanelContext'),
+        key: const ValueKey('editor-panel-context'),
+      ),
+      _EditorSidePanelOption(
+        kind: _EditorSidePanelKind.research,
+        icon: Icons.travel_explore_outlined,
+        label: copy.t('editorPanelResearch'),
+        key: const ValueKey('editor-panel-research'),
+      ),
+      _EditorSidePanelOption(
+        kind: _EditorSidePanelKind.ai,
+        icon: Icons.psychology_alt_outlined,
+        label: copy.t('editorPanelAi'),
+        key: const ValueKey('editor-panel-ai'),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final showLabel = constraints.maxWidth >= 250;
+        final selectedLabel =
+            options.firstWhere((option) => option.kind == selected).label;
+        return Row(
+          children: [
+            if (showLabel) ...[
+              Expanded(
+                child: Text(
+                  selectedLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            for (final option in options)
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: _EditorSidePanelButton(
+                  option: option,
+                  selected: selected == option.kind,
+                  onPressed: () => onSelected(option.kind),
+                  showText: !showLabel,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+final class _EditorSidePanelOption {
+  const _EditorSidePanelOption({
+    required this.kind,
+    required this.icon,
+    required this.label,
+    required this.key,
+  });
+
+  final _EditorSidePanelKind kind;
+  final IconData icon;
+  final String label;
+  final ValueKey<String> key;
+}
+
+final class _EditorSidePanelButton extends StatelessWidget {
+  const _EditorSidePanelButton({
+    required this.option,
+    required this.selected,
+    required this.onPressed,
+    required this.showText,
+  });
+
+  final _EditorSidePanelOption option;
+  final bool selected;
+  final VoidCallback onPressed;
+  final bool showText;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final foreground = selected ? design.ink : color.onSurfaceVariant;
+    final background = selected ? design.inkSoft : color.surfaceContainerLowest;
+    final icon = Icon(option.icon, size: 18, color: foreground);
+    return Tooltip(
+      message: option.label,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: option.label,
+        child: showText
+            ? SizedBox(
+                width: 118,
+                child: OutlinedButton.icon(
+                  key: option.key,
+                  onPressed: onPressed,
+                  icon: icon,
+                  label: Text(
+                    option.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    alignment: Alignment.centerLeft,
+                    foregroundColor: foreground,
+                    backgroundColor: background,
+                    side: BorderSide(
+                      color: selected
+                          ? design.ink.withValues(alpha: 0.34)
+                          : color.outlineVariant,
+                    ),
+                    minimumSize: const Size(0, 38),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    textStyle:
+                        Theme.of(context).textTheme.labelMedium?.copyWith(
+                              fontWeight:
+                                  selected ? FontWeight.w800 : FontWeight.w700,
+                            ),
+                  ),
+                ),
+              )
+            : SizedBox.square(
+                dimension: 38,
+                child: selected
+                    ? IconButton.filledTonal(
+                        key: option.key,
+                        onPressed: onPressed,
+                        icon: icon,
+                      )
+                    : IconButton.outlined(
+                        key: option.key,
+                        onPressed: onPressed,
+                        icon: icon,
+                      ),
+              ),
       ),
     );
   }
@@ -4433,32 +4542,12 @@ final class _SceneContextLinks extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            PopupMenuButton<EntityType>(
-              tooltip: copy.t('addSceneContext'),
-              onSelected: onCreateItem,
-              itemBuilder: (context) => [
-                for (final type in const [
-                  EntityType.character,
-                  EntityType.location,
-                  EntityType.object,
-                ])
-                  PopupMenuItem(
-                    value: type,
-                    child: Row(
-                      children: [
-                        Icon(_catalogIcon(type), size: 18),
-                        const SizedBox(width: 10),
-                        Text(copy.t(_newCatalogKey(type))),
-                      ],
-                    ),
-                  ),
-              ],
-              child: IgnorePointer(
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.add),
-                  label: Text(copy.t('newSceneContextItem')),
-                ),
+            Builder(
+              builder: (buttonContext) => OutlinedButton.icon(
+                key: const ValueKey('new-scene-context-menu'),
+                onPressed: () => _showNewContextMenu(buttonContext),
+                icon: const Icon(Icons.add),
+                label: Text(copy.t('newSceneContextItem')),
               ),
             ),
             OutlinedButton.icon(
@@ -4500,6 +4589,42 @@ final class _SceneContextLinks extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  Future<void> _showNewContextMenu(BuildContext context) async {
+    final button = context.findRenderObject() as RenderBox;
+    final overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final topLeft = button.localToGlobal(Offset.zero, ancestor: overlay);
+    final bottomRight = button.localToGlobal(
+      button.size.bottomRight(Offset.zero),
+      ancestor: overlay,
+    );
+    final selected = await showMenu<EntityType>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(topLeft, bottomRight),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        for (final type in const [
+          EntityType.character,
+          EntityType.location,
+          EntityType.object,
+        ])
+          PopupMenuItem(
+            value: type,
+            child: Row(
+              children: [
+                Icon(_catalogIcon(type), size: 18),
+                const SizedBox(width: 10),
+                Text(copy.t(_newCatalogKey(type))),
+              ],
+            ),
+          ),
+      ],
+    );
+    if (selected != null) onCreateItem(selected);
   }
 
   Future<void> _showExistingContextDialog(

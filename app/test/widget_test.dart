@@ -744,14 +744,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Save Scene'));
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
 
     final savedScene = (await sceneRepository.listByProject(project.id)).single;
     expect(savedScene.manuscriptText, 'Plain words**text**');
 
     expect(find.text('Scene meta'), findsOneWidget);
-    expect(find.text('Planning'), findsWidgets);
-    expect(find.text('Research'), findsWidgets);
-    expect(find.text('AI'), findsWidgets);
+    expect(find.byKey(const ValueKey('editor-panel-planning')), findsOneWidget);
+    expect(find.byKey(const ValueKey('editor-panel-context')), findsOneWidget);
+    expect(find.byKey(const ValueKey('editor-panel-research')), findsOneWidget);
+    expect(find.byKey(const ValueKey('editor-panel-ai')), findsOneWidget);
 
     final contextPanelTab = find.byKey(const ValueKey('editor-panel-context'));
     await tester.ensureVisible(contextPanelTab);
@@ -759,9 +762,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Scene context'), findsOneWidget);
 
-    final addSceneContextButton = find.byTooltip(
-      'Add character, location, or object to this scene',
-    );
+    final addSceneContextButton =
+        find.byKey(const ValueKey('new-scene-context-menu'));
     await tester.ensureVisible(addSceneContextButton);
     await tester.tap(addSceneContextButton);
     await tester.pumpAndSettle();
