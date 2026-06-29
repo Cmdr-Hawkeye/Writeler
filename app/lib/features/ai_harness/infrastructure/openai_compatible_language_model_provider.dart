@@ -133,7 +133,7 @@ final class OpenAICompatibleLanguageModelProvider
             (current.host == '127.0.0.1' || current.host == 'localhost');
     if (!isLocalWeb) return null;
     return current.replace(
-      path: '/.writeler-ai/openrouter/chat/completions',
+      path: '/.writeller-ai/openrouter/chat/completions',
       query: '',
       fragment: '',
     );
@@ -168,8 +168,8 @@ final class OpenAICompatibleLanguageModelProvider
   static Map<String, String> _defaultHeadersFor(AIProviderKind kind) {
     return switch (kind) {
       AIProviderKind.openRouter => const {
-          'HTTP-Referer': 'https://github.com/Cmdr-Hawkeye/Writeler',
-          'X-OpenRouter-Title': 'Writeler',
+          'HTTP-Referer': 'https://github.com/Cmdr-Hawkeye/Writeller',
+          'X-OpenRouter-Title': 'Writeller',
         },
       _ => const {},
     };

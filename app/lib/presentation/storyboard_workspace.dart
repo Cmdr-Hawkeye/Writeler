@@ -20,7 +20,7 @@ final class _StoryboardWorkspace extends StatefulWidget {
     required this.onReorderScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
@@ -406,7 +406,7 @@ final class _StoryboardToolbar extends StatelessWidget {
     required this.onClearConnections,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final int nodeCount;
   final int connectionCount;
   final bool connectMode;
@@ -497,7 +497,7 @@ final class _StoryboardCanvas extends StatefulWidget {
     required this.onTapNode,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<_StoryboardNode> nodes;
   final Size canvasSize;
   final Map<String, Offset> positions;
@@ -662,7 +662,7 @@ final class _StoryboardNodeCard extends StatelessWidget {
     required this.onDrag,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _StoryboardNode node;
   final Color tone;
   final bool selected;
@@ -784,7 +784,7 @@ final class _StoryboardConnectionStrip extends StatelessWidget {
     required this.onRemoveConnection,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Set<String> connections;
   final Map<String, _StoryboardNode> nodesById;
   final ValueChanged<String> onRemoveConnection;
@@ -895,7 +895,7 @@ final class _StoryboardTimeRail extends StatelessWidget {
     required this.onReorder,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<_StoryboardNode> nodes;
   final void Function(String sourceNodeId, String targetNodeId) onReorder;
 
@@ -1206,7 +1206,7 @@ final class _StoryboardLegend extends StatelessWidget {
     required this.nodeById,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Map<String, _StoryboardNode> nodeById;
 
   @override
@@ -1278,7 +1278,7 @@ final class _StoryboardLegendDot extends StatelessWidget {
 final class _StoryboardEmptyState extends StatelessWidget {
   const _StoryboardEmptyState({required this.copy});
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
 
   @override
   Widget build(BuildContext context) {
@@ -1442,7 +1442,7 @@ final class _StoryboardNode {
 
 Color _toneForNode(BuildContext context, _StoryboardNodeKind kind) {
   final color = Theme.of(context).colorScheme;
-  final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+  final design = Theme.of(context).extension<WritellerDesignTokens>()!;
   return switch (kind) {
     _StoryboardNodeKind.scene => color.primary,
     _StoryboardNodeKind.character => design.statusProgress,
@@ -1452,7 +1452,7 @@ Color _toneForNode(BuildContext context, _StoryboardNodeKind kind) {
   };
 }
 
-String _labelForKind(WritelerCopy copy, _StoryboardNodeKind kind) {
+String _labelForKind(WritellerCopy copy, _StoryboardNodeKind kind) {
   return switch (kind) {
     _StoryboardNodeKind.scene => copy.t('scenes'),
     _StoryboardNodeKind.character => copy.t('characters'),

@@ -1,6 +1,6 @@
 # Sync Strategy
 
-Writeler is offline-first. Local use must work without an account, backend, or network.
+Writeller is offline-first. Local use must work without an account, backend, or network.
 
 ## Principles
 
@@ -17,12 +17,12 @@ Writeler is offline-first. Local use must work without an account, backend, or n
 
 ## Implemented Baseline
 
-Writeler includes a manual archive sync adapter:
+Writeller includes a manual archive sync adapter:
 
-- It wraps the complete Writeler project archive in a `writeler.sync.v1` envelope.
+- It wraps the complete Writeller project archive in a `writeller.sync.v1` envelope and still reads legacy `writeler.sync.v1` envelopes.
 - The envelope records adapter name, creation timestamp, byte length, and a stable fingerprint.
 - Users can copy the checkpoint from the Export workspace and paste it back into the import field.
-- The import flow accepts both raw `writeler.project.v2` archives and sync envelopes.
+- The import flow accepts both raw `writeller.project.v2` archives and sync envelopes.
 - Sync events are recorded in local metrics.
 
 This baseline is intentionally cloud-free. WebDAV, Supabase/Postgres, or CRDT-capable backends can implement the same adapter boundary later without making local writing depend on network availability.

@@ -35,7 +35,7 @@ const _projectTypeOptions = [
   _ProjectTypeOption(value: 'other', labelKey: 'projectTypeOther'),
 ];
 
-String _projectTypeLabel(String projectType, WritelerCopy copy) {
+String _projectTypeLabel(String projectType, WritellerCopy copy) {
   final option = _projectTypeOptions
       .where((candidate) => candidate.value == projectType)
       .firstOrNull;
@@ -45,7 +45,7 @@ String _projectTypeLabel(String projectType, WritelerCopy copy) {
 String _projectTargetProgressLabel(
   Project? project,
   int words,
-  WritelerCopy copy,
+  WritellerCopy copy,
 ) {
   final wordTarget = project?.wordTarget;
   if (project == null || wordTarget == null || wordTarget <= 0) {
@@ -161,19 +161,19 @@ String _providerKindLabel(AIProviderKind kind, String languageCode) {
   };
 }
 
-String _designThemeLabel(WritelerDesignTheme theme, WritelerCopy copy) {
+String _designThemeLabel(WritellerDesignTheme theme, WritellerCopy copy) {
   return switch (theme) {
-    WritelerDesignTheme.system => copy.t('designThemeSystem'),
-    WritelerDesignTheme.paper => copy.t('designThemePaper'),
-    WritelerDesignTheme.dusk => copy.t('designThemeDusk'),
-    WritelerDesignTheme.sapphire => copy.t('designThemeSapphire'),
-    WritelerDesignTheme.sage => copy.t('designThemeSage'),
-    WritelerDesignTheme.copper => copy.t('designThemeCopper'),
-    WritelerDesignTheme.ink => copy.t('designThemeInk'),
+    WritellerDesignTheme.system => copy.t('designThemeSystem'),
+    WritellerDesignTheme.paper => copy.t('designThemePaper'),
+    WritellerDesignTheme.dusk => copy.t('designThemeDusk'),
+    WritellerDesignTheme.sapphire => copy.t('designThemeSapphire'),
+    WritellerDesignTheme.sage => copy.t('designThemeSage'),
+    WritellerDesignTheme.copper => copy.t('designThemeCopper'),
+    WritellerDesignTheme.ink => copy.t('designThemeInk'),
   };
 }
 
-String _aiTaskLabel(String taskName, WritelerCopy copy) {
+String _aiTaskLabel(String taskName, WritellerCopy copy) {
   if (taskName.startsWith('worldContextStarter')) {
     return copy.t('aiTaskWorldContextStarter');
   }
@@ -199,7 +199,7 @@ String _aiTaskLabel(String taskName, WritelerCopy copy) {
   };
 }
 
-String _decisionLabel(SuggestionDecision decision, WritelerCopy copy) {
+String _decisionLabel(SuggestionDecision decision, WritellerCopy copy) {
   return switch (decision) {
     SuggestionDecision.pending => copy.t('suggestionPending'),
     SuggestionDecision.accepted => copy.t('suggestionAccepted'),
@@ -210,7 +210,7 @@ String _decisionLabel(SuggestionDecision decision, WritelerCopy copy) {
 
 String _suggestionDecisionFeedback(
   SuggestionDecision decision,
-  WritelerCopy copy, {
+  WritellerCopy copy, {
   bool applied = false,
 }) {
   return switch (decision) {
@@ -223,7 +223,7 @@ String _suggestionDecisionFeedback(
   };
 }
 
-String _planningFieldLabel(String fieldKey, WritelerCopy copy) {
+String _planningFieldLabel(String fieldKey, WritellerCopy copy) {
   return switch (fieldKey) {
     'summary' => copy.t('summary'),
     'goal' => copy.t('goal'),
@@ -274,7 +274,7 @@ String _noteTargetDisplay(
   return item == null ? target.id : item.name;
 }
 
-String _entityTypeLabel(EntityType type, WritelerCopy copy) {
+String _entityTypeLabel(EntityType type, WritellerCopy copy) {
   return switch (type) {
     EntityType.project => copy.t('project'),
     EntityType.chapter => copy.t('chapter'),
@@ -306,7 +306,7 @@ Map<String, Object?> _worldSuggestionItem(AISuggestion suggestion) {
   return const {};
 }
 
-String _worldSuggestionTitle(AISuggestion suggestion, WritelerCopy copy) {
+String _worldSuggestionTitle(AISuggestion suggestion, WritellerCopy copy) {
   final item = _worldSuggestionItem(suggestion);
   final name = item['name'] as String? ??
       item['label'] as String? ??
@@ -329,7 +329,7 @@ String _worldSuggestionBody(AISuggestion suggestion) {
   return fields.isEmpty ? suggestion.responseText : fields.join('\n');
 }
 
-String _worldSuggestionKindLabel(String kind, WritelerCopy copy) {
+String _worldSuggestionKindLabel(String kind, WritellerCopy copy) {
   return switch (kind) {
     'persona' => copy.t('worldSuggestionPersona'),
     'relationship' => copy.t('worldSuggestionRelationship'),
@@ -351,7 +351,7 @@ IconData _worldSuggestionKindIcon(String kind) {
   };
 }
 
-String _noteFilterLabel(_NoteFilter filter, WritelerCopy copy) {
+String _noteFilterLabel(_NoteFilter filter, WritellerCopy copy) {
   return switch (filter) {
     _NoteFilter.all => copy.t('allNotes'),
     _NoteFilter.project => copy.t('projectNotes'),
@@ -373,7 +373,7 @@ IconData _noteFilterIcon(_NoteFilter filter) {
   };
 }
 
-List<String> _missingScenePlanningLabels(Scene scene, WritelerCopy copy) {
+List<String> _missingScenePlanningLabels(Scene scene, WritellerCopy copy) {
   return [
     if (scene.summary.trim().isEmpty) copy.t('summary'),
     if (scene.goal?.trim().isEmpty != false) copy.t('goal'),
@@ -413,7 +413,7 @@ String _exportFormatLabel(ExportFormat format, String languageCode) {
     ExportFormat.outline =>
       german ? 'Outline / Struktur' : 'Outline / structure',
     ExportFormat.json =>
-      german ? 'Writeler-Archiv JSON' : 'Writeler archive JSON',
+      german ? 'Writeller-Archiv JSON' : 'Writeller archive JSON',
     ExportFormat.yWriter => 'yWriter (.yw7)',
     ExportFormat.scrivener => 'Scrivener (.scrivx)',
     ExportFormat.pdf => 'PDF',

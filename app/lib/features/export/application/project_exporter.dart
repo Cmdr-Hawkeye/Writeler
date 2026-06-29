@@ -141,7 +141,7 @@ final class ProjectExporter {
         return _textArtifact(
             '$slug-outline.md', 'text/markdown; charset=utf-8', previewText);
       case ExportFormat.json:
-        return _textArtifact('$slug.writeler.json',
+        return _textArtifact('$slug.writeller.json',
             'application/json; charset=utf-8', previewText);
       case ExportFormat.yWriter:
         return _textArtifact(
@@ -767,7 +767,7 @@ final class ProjectExporter {
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
-    return slug.isEmpty ? 'writeler-export' : slug;
+    return slug.isEmpty ? 'writeller-export' : slug;
   }
 
   String _xml(String value) {

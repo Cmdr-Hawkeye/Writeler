@@ -28,7 +28,7 @@ enum _ProjectTargetUnit { words, pages }
 final class _ProjectWizardDialog extends StatefulWidget {
   const _ProjectWizardDialog({required this.copy});
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
 
   @override
   State<_ProjectWizardDialog> createState() => _ProjectWizardDialogState();
@@ -44,7 +44,7 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
   var _step = 0;
   var _projectType = 'novel';
   var _targetUnit = _ProjectTargetUnit.words;
-  late var _languageCode = WritelerCopy.normalizeLanguageCode(
+  late var _languageCode = WritellerCopy.normalizeLanguageCode(
     Localizations.localeOf(context).languageCode,
   );
 
@@ -108,7 +108,7 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
                 border: const OutlineInputBorder(),
               ),
               items: [
-                for (final language in WritelerCopy.supportedLanguages)
+                for (final language in WritellerCopy.supportedLanguages)
                   DropdownMenuItem(
                     value: language.code,
                     child: Text(language.nativeName),
@@ -264,7 +264,7 @@ final class _ProjectWizardProgress extends StatelessWidget {
 
   final int step;
   final int stepCount;
-  final WritelerCopy copy;
+  final WritellerCopy copy;
 
   @override
   Widget build(BuildContext context) {
@@ -290,8 +290,8 @@ final class _ProjectWizardProgress extends StatelessWidget {
   }
 }
 
-extension _WritelerShellDialogs on _WritelerShellState {
-  Future<void> _showCreateProjectDialog(WritelerCopy copy) async {
+extension _WritellerShellDialogs on _WritellerShellState {
+  Future<void> _showCreateProjectDialog(WritellerCopy copy) async {
     final result = await showDialog<_ProjectWizardResult>(
       context: context,
       builder: (context) => _ProjectWizardDialog(copy: copy),
@@ -345,7 +345,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
     );
   }
 
-  Future<void> _showCreateSceneDialog(WritelerCopy copy) async {
+  Future<void> _showCreateSceneDialog(WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
 
@@ -406,7 +406,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
     );
   }
 
-  Future<void> _showCreateChapterDialog(WritelerCopy copy) async {
+  Future<void> _showCreateChapterDialog(WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
 
@@ -479,7 +479,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
   }
 
   Future<CatalogItem?> _showCreateCatalogItemDialog(
-    WritelerCopy copy,
+    WritellerCopy copy,
     EntityType type,
   ) async {
     final project = _selectedProject;
@@ -554,7 +554,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
   }
 
   Future<void> _showEditCatalogItemDialog(
-    WritelerCopy copy,
+    WritellerCopy copy,
     CatalogItem item,
   ) async {
     final project = _selectedProject;
@@ -658,7 +658,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
   }
 
   Future<void> _showRelationshipDialog(
-    WritelerCopy copy, {
+    WritellerCopy copy, {
     Relationship? existing,
     EntityRef? initialSource,
   }) async {
@@ -936,7 +936,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
 
   Future<void> _deleteRelationship(
     Relationship relationship,
-    WritelerCopy copy,
+    WritellerCopy copy,
   ) async {
     final project = _selectedProject;
     if (project == null) return;
@@ -962,7 +962,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
     );
   }
 
-  List<_RelationshipEndpoint> _relationshipEndpoints(WritelerCopy copy) {
+  List<_RelationshipEndpoint> _relationshipEndpoints(WritellerCopy copy) {
     return [
       for (final scene in _scenes)
         _RelationshipEndpoint(
@@ -983,7 +983,7 @@ extension _WritelerShellDialogs on _WritelerShellState {
   }
 
   Future<bool> _confirmDelete({
-    required WritelerCopy copy,
+    required WritellerCopy copy,
     required String title,
     required String body,
   }) async {

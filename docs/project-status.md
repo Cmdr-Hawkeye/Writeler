@@ -16,7 +16,7 @@ Last updated: 2026-06-17
 - Accepted structure suggestions can update scene planning fields while manuscript text stays under author control.
 - Provider settings with secure API key storage.
 - Provider adapters for mock, OpenAI-compatible APIs, OpenRouter, Anthropic, Gemini, and Ollama.
-- Import/export for Markdown, HTML, TXT manuscript, outline, Writeler JSON archives, PDF, EPUB, and DOCX, including readable notes in project-oriented formats.
+- Import/export for Markdown, HTML, TXT manuscript, outline, Writeller JSON archives, PDF, EPUB, and DOCX, including readable notes in project-oriented formats.
 - Manual sync checkpoints with envelope metadata, fingerprint validation, clipboard handoff, import support, and local sync metrics.
 - Native app identity metadata, app icons, web manifest, platform bundle IDs, release scripts, and release checklist.
 - Local metrics for project, scene, chapter, catalog, relationship, AI, import, and export events.
@@ -45,4 +45,4 @@ Current local native build note: Android APK and AAB builds succeed on the Windo
 
 ## Source Brief
 
-The original product prompt is archived at `docs/spec/writeler_prompt.html` for traceability.
+The original product prompt is archived at `docs/spec/writeller_prompt.html` for traceability.

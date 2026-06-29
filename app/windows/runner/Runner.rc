@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "Writeler" "\0"
-            VALUE "FileDescription", "Writeler" "\0"
+            VALUE "CompanyName", "Writeller" "\0"
+            VALUE "FileDescription", "Writeller" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "Writeler" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 Writeler. All rights reserved." "\0"
-            VALUE "OriginalFilename", "writeler.exe" "\0"
-            VALUE "ProductName", "Writeler" "\0"
+            VALUE "InternalName", "Writeller" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Writeller. All rights reserved." "\0"
+            VALUE "OriginalFilename", "writeller.exe" "\0"
+            VALUE "ProductName", "Writeller" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -1,6 +1,6 @@
-# Writeler App
+# Writeller App
 
-Flutter client for Writeler, an offline-first writing project harness.
+Flutter client for Writeller, an offline-first writing project harness.
 
 ## Platforms
 

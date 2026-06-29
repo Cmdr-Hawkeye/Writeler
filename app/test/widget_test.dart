@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:writeler/core/domain/draft_status.dart';
-import 'package:writeler/core/domain/entity_ref.dart';
-import 'package:writeler/core/domain/entity_type.dart';
-import 'package:writeler/features/ai_harness/domain/ai_suggestion.dart';
-import 'package:writeler/features/ai_harness/infrastructure/in_memory_ai_suggestion_repository.dart';
-import 'package:writeler/features/catalog/application/create_catalog_item.dart';
-import 'package:writeler/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
-import 'package:writeler/features/catalog/infrastructure/in_memory_relationship_repository.dart';
-import 'package:writeler/features/metrics/application/in_memory_metric_repository.dart';
-import 'package:writeler/features/notes/domain/project_note.dart';
-import 'package:writeler/features/notes/infrastructure/in_memory_project_note_repository.dart';
-import 'package:writeler/features/projects/application/create_project.dart';
-import 'package:writeler/features/research/infrastructure/in_memory_research_item_repository.dart';
-import 'package:writeler/features/projects/infrastructure/in_memory_project_repository.dart';
-import 'package:writeler/features/settings/infrastructure/in_memory_ai_provider_config_repository.dart';
-import 'package:writeler/features/settings/infrastructure/in_memory_app_preference_repository.dart';
-import 'package:writeler/features/settings/infrastructure/in_memory_secret_vault.dart';
-import 'package:writeler/features/structure/application/create_chapter.dart';
-import 'package:writeler/features/structure/application/create_scene.dart';
-import 'package:writeler/features/structure/application/in_memory_chapter_repository.dart';
-import 'package:writeler/features/structure/application/in_memory_scene_repository.dart';
-import 'package:writeler/features/structure/application/in_memory_scene_snapshot_repository.dart';
-import 'package:writeler/main.dart';
+import 'package:writeller/core/domain/draft_status.dart';
+import 'package:writeller/core/domain/entity_ref.dart';
+import 'package:writeller/core/domain/entity_type.dart';
+import 'package:writeller/features/ai_harness/domain/ai_suggestion.dart';
+import 'package:writeller/features/ai_harness/infrastructure/in_memory_ai_suggestion_repository.dart';
+import 'package:writeller/features/catalog/application/create_catalog_item.dart';
+import 'package:writeller/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
+import 'package:writeller/features/catalog/infrastructure/in_memory_relationship_repository.dart';
+import 'package:writeller/features/metrics/application/in_memory_metric_repository.dart';
+import 'package:writeller/features/notes/domain/project_note.dart';
+import 'package:writeller/features/notes/infrastructure/in_memory_project_note_repository.dart';
+import 'package:writeller/features/projects/application/create_project.dart';
+import 'package:writeller/features/research/infrastructure/in_memory_research_item_repository.dart';
+import 'package:writeller/features/projects/infrastructure/in_memory_project_repository.dart';
+import 'package:writeller/features/settings/infrastructure/in_memory_ai_provider_config_repository.dart';
+import 'package:writeller/features/settings/infrastructure/in_memory_app_preference_repository.dart';
+import 'package:writeller/features/settings/infrastructure/in_memory_secret_vault.dart';
+import 'package:writeller/features/structure/application/create_chapter.dart';
+import 'package:writeller/features/structure/application/create_scene.dart';
+import 'package:writeller/features/structure/application/in_memory_chapter_repository.dart';
+import 'package:writeller/features/structure/application/in_memory_scene_repository.dart';
+import 'package:writeller/features/structure/application/in_memory_scene_snapshot_repository.dart';
+import 'package:writeller/main.dart';
 
 Future<void> tapNavigationItem(WidgetTester tester, String label) async {
   final finder = find.text(label).first;
@@ -33,12 +33,13 @@ Future<void> tapNavigationItem(WidgetTester tester, String label) async {
 }
 
 void main() {
-  testWidgets('Writeler shell shows core workspace navigation', (tester) async {
+  testWidgets('Writeller shell shows core workspace navigation',
+      (tester) async {
     final appPreferenceRepository = InMemoryAppPreferenceRepository();
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -55,7 +56,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('writeler'), findsOneWidget);
+    expect(find.text('writeller'), findsOneWidget);
     expect(find.text('Dashboard'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
     expect(find.text('Project structure'), findsOneWidget);
@@ -73,7 +74,7 @@ void main() {
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -129,7 +130,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: sceneRepository,
@@ -186,7 +187,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -242,7 +243,7 @@ void main() {
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -282,7 +283,7 @@ void main() {
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -358,7 +359,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: chapterRepository,
         sceneRepository: sceneRepository,
@@ -403,7 +404,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: sceneRepository,
@@ -480,7 +481,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: chapterRepository,
         sceneRepository: sceneRepository,
@@ -607,7 +608,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: chapterRepository,
         sceneRepository: sceneRepository,
@@ -647,7 +648,7 @@ void main() {
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -705,7 +706,7 @@ void main() {
     final relationshipRepository = InMemoryRelationshipRepository();
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: chapterRepository,
         sceneRepository: sceneRepository,
@@ -921,7 +922,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: projectRepository,
         chapterRepository: chapterRepository,
         sceneRepository: sceneRepository,
@@ -973,7 +974,7 @@ void main() {
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -1022,7 +1023,7 @@ void main() {
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -1058,7 +1059,7 @@ void main() {
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -1096,7 +1097,7 @@ void main() {
     await appPreferenceRepository.write('app.language', 'en');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -1142,7 +1143,7 @@ void main() {
     await appPreferenceRepository.write('design.theme', 'sapphire');
 
     await tester.pumpWidget(
-      WritelerApp(
+      WritellerApp(
         projectRepository: InMemoryProjectRepository(),
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
@@ -1159,7 +1160,7 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    final context = tester.element(find.text('writeler'));
+    final context = tester.element(find.text('writeller'));
 
     expect(
       Theme.of(context).colorScheme.primary,

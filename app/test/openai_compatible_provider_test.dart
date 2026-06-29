@@ -1,14 +1,14 @@
 import 'package:test/test.dart';
-import 'package:writeler/core/domain/domain_failure.dart';
-import 'package:writeler/core/domain/json_map.dart';
-import 'package:writeler/features/ai_harness/domain/model_http_transport.dart';
-import 'package:writeler/features/ai_harness/domain/model_request.dart';
-import 'package:writeler/features/ai_harness/infrastructure/anthropic_language_model_provider.dart';
-import 'package:writeler/features/ai_harness/infrastructure/gemini_language_model_provider.dart';
-import 'package:writeler/features/ai_harness/infrastructure/ollama_language_model_provider.dart';
-import 'package:writeler/features/ai_harness/infrastructure/openai_compatible_language_model_provider.dart';
-import 'package:writeler/features/settings/domain/ai_provider_config.dart';
-import 'package:writeler/features/settings/domain/ai_provider_preset.dart';
+import 'package:writeller/core/domain/domain_failure.dart';
+import 'package:writeller/core/domain/json_map.dart';
+import 'package:writeller/features/ai_harness/domain/model_http_transport.dart';
+import 'package:writeller/features/ai_harness/domain/model_request.dart';
+import 'package:writeller/features/ai_harness/infrastructure/anthropic_language_model_provider.dart';
+import 'package:writeller/features/ai_harness/infrastructure/gemini_language_model_provider.dart';
+import 'package:writeller/features/ai_harness/infrastructure/ollama_language_model_provider.dart';
+import 'package:writeller/features/ai_harness/infrastructure/openai_compatible_language_model_provider.dart';
+import 'package:writeller/features/settings/domain/ai_provider_config.dart';
+import 'package:writeller/features/settings/domain/ai_provider_preset.dart';
 
 void main() {
   test('provider presets include base URLs and economical example models', () {
@@ -209,9 +209,9 @@ void main() {
     );
     expect(
       transport.headers['HTTP-Referer'],
-      'https://github.com/Cmdr-Hawkeye/Writeler',
+      'https://github.com/Cmdr-Hawkeye/Writeller',
     );
-    expect(transport.headers['X-OpenRouter-Title'], 'Writeler');
+    expect(transport.headers['X-OpenRouter-Title'], 'Writeller');
     expect(transport.headers['Authorization'], 'Bearer test-key');
     expect(transport.headers['X-Api-Key'], 'test-key');
     expect(transport.headers.containsKey('authorization'), isFalse);

@@ -1,6 +1,6 @@
 # AI Boundaries
 
-Writeler treats AI as an assistant, not a ghostwriter.
+Writeller treats AI as an assistant, not a ghostwriter.
 
 ## Allowed
 

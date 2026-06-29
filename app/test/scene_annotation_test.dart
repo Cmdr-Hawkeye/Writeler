@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:writeler/features/structure/domain/scene_annotation.dart';
+import 'package:writeller/features/structure/domain/scene_annotation.dart';
 
 void main() {
   test('scene annotations roundtrip through metadata and sort open first', () {

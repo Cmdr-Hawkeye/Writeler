@@ -16,7 +16,7 @@ Use the catalog for characters, locations, and objects. Catalog entries can be l
 
 ## Notes
 
-Project notes can belong to the whole project, a scene, or a catalog entry. AI suggestions can also be turned into notes. Notes are stored locally and included in project-oriented exports such as Writeler JSON archives, outline, Markdown or HTML with metadata, and DOCX with metadata.
+Project notes can belong to the whole project, a scene, or a catalog entry. AI suggestions can also be turned into notes. Notes are stored locally and included in project-oriented exports such as Writeller JSON archives, outline, Markdown or HTML with metadata, and DOCX with metadata.
 
 ## Editor
 
@@ -30,8 +30,8 @@ Suggestions can be accepted, rejected, or turned into notes. Accepted structure 
 
 ## Export
 
-Export manuscript and project data to Markdown, HTML, TXT manuscript, outline, Writeler JSON archive, PDF, EPUB, or DOCX. Manuscript-only formats stay focused on the text. Project-oriented formats can include metadata, structure, relationships, and notes.
+Export manuscript and project data to Markdown, HTML, TXT manuscript, outline, Writeller JSON archive, PDF, EPUB, or DOCX. Manuscript-only formats stay focused on the text. Project-oriented formats can include metadata, structure, relationships, and notes.
 
 ## Local Web Preview
 
-Run `start_writeler_web.cmd` from the repository root to build and serve the web app locally. The starter chooses a local port, opens the browser, disables stale service-worker caching, and starts the local OpenRouter proxy used by the web build.
+Run `start_writeller_web.cmd` from the repository root to build and serve the web app locally. The starter chooses a local port, opens the browser, disables stale service-worker caching, and starts the local OpenRouter proxy used by the web build.

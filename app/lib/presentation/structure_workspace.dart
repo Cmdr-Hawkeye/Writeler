@@ -24,7 +24,7 @@ final class _SceneBoard extends StatelessWidget {
     required this.onDeleteRelationship,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Chapter> chapters;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
@@ -268,7 +268,7 @@ final class _SceneStatusBoard extends StatelessWidget {
     required this.onChangeSceneStatus,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final ValueChanged<Scene> onOpenScene;
   final VoidCallback onCreateScene;
@@ -362,7 +362,7 @@ final class _SceneStatusColumn extends StatelessWidget {
     required this.onChangeSceneStatus,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final String title;
   final List<Scene> scenes;
   final List<DraftStatus> statuses;
@@ -469,7 +469,7 @@ final class _TimelineWorkspace extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
   final ValueChanged<Scene> onOpenScene;
@@ -529,7 +529,7 @@ final class _TimelineEventRow extends StatelessWidget {
     required this.item,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final CatalogItem item;
 
   @override
@@ -566,7 +566,7 @@ final class _TimelineRow extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final ValueChanged<Scene> onOpenScene;
 
@@ -602,7 +602,7 @@ final class _RelationshipGraphWorkspace extends StatelessWidget {
     required this.onDeleteRelationship,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Relationship> relationships;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
@@ -681,7 +681,7 @@ final class _RelationshipGraphRow extends StatelessWidget {
     required this.onDelete,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Relationship relationship;
   final String sourceLabel;
   final String targetLabel;
@@ -722,7 +722,7 @@ String _entityLabel(
   EntityRef ref,
   List<Scene> scenes,
   List<CatalogItem> catalogItems,
-  WritelerCopy copy,
+  WritellerCopy copy,
 ) {
   if (ref.type == EntityType.scene) {
     return scenes.where((scene) => scene.id == ref.id).firstOrNull?.title ??
@@ -745,7 +745,7 @@ final class _StructureCockpitSummary extends StatelessWidget {
     required this.relationships,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final List<Chapter> chapters;
   final int planningGaps;
@@ -904,7 +904,7 @@ final class _SceneStructureColumn extends StatelessWidget {
     required this.onDeleteScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _SceneStructureGroup group;
   final List<Chapter> chapters;
   final Scene? selectedScene;
@@ -1057,7 +1057,7 @@ final class _StatusSceneDropTarget extends StatelessWidget {
     required this.child,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<DraftStatus> statuses;
   final void Function(Scene scene, DraftStatus status) onChangeSceneStatus;
   final Widget child;
@@ -1121,7 +1121,7 @@ final class _StructureInspector extends StatelessWidget {
     required this.onDeleteRelationship,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final List<Scene> planningGapScenes;
   final List<Scene> openConflictScenes;
@@ -1244,7 +1244,7 @@ final class _StructureSceneSection extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final String title;
   final String emptyText;
   final IconData icon;
@@ -1310,7 +1310,7 @@ final class _StructureTimelineSection extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final ValueChanged<Scene> onOpenScene;
 
@@ -1367,7 +1367,7 @@ final class _StructureEntitySection extends StatelessWidget {
     required this.onDeleteRelationship,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
   final List<_CatalogPresenceRow> rows;
@@ -1439,7 +1439,7 @@ final class _StructureEntityDetailTile extends StatelessWidget {
     required this.onDeleteRelationship,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _CatalogPresenceRow row;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
@@ -1526,7 +1526,7 @@ final class _StructureMotifSection extends StatelessWidget {
     required this.rows,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<_StructureMotifRow> rows;
 
   @override
@@ -1589,7 +1589,7 @@ final class _StructureRelationshipSection extends StatelessWidget {
     required this.onDeleteRelationship,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
@@ -1640,7 +1640,7 @@ final class _RelationshipMiniList extends StatelessWidget {
     this.catalogItems = const [],
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Relationship> relationships;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
@@ -1754,7 +1754,7 @@ final class _SceneStructureTile extends StatelessWidget {
     required this.onDeleteScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final bool selected;
   final List<Chapter> chapters;
@@ -1867,7 +1867,7 @@ final class _SceneStructureMenu extends StatelessWidget {
     required this.onDelete,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final List<Chapter> chapters;
   final VoidCallback onMoveUp;
@@ -1957,7 +1957,7 @@ bool _relationshipTouchesRef(Relationship relationship, EntityRef ref) {
           relationship.target.id == ref.id);
 }
 
-String _relationshipTitle(Relationship relationship, WritelerCopy copy) {
+String _relationshipTitle(Relationship relationship, WritellerCopy copy) {
   final label = relationship.label?.trim();
   if (label != null && label.isNotEmpty) return label;
   return _relationshipTypeLabel(relationship.relationshipType, copy);
@@ -1965,7 +1965,7 @@ String _relationshipTitle(Relationship relationship, WritelerCopy copy) {
 
 String _relationshipSubtitle(
   Relationship relationship,
-  WritelerCopy copy, {
+  WritellerCopy copy, {
   List<Scene> scenes = const [],
   List<CatalogItem> catalogItems = const [],
 }) {
@@ -1982,7 +1982,7 @@ String _relationshipSubtitle(
 
 String _entityRefDisplay(
   EntityRef ref,
-  WritelerCopy copy,
+  WritellerCopy copy,
   List<Scene> scenes,
   List<CatalogItem> catalogItems,
 ) {
@@ -1998,7 +1998,7 @@ String _entityRefDisplay(
       : item.name;
 }
 
-String _relationshipTypeLabel(String value, WritelerCopy copy) {
+String _relationshipTypeLabel(String value, WritellerCopy copy) {
   return switch (value) {
     'appearsIn' => copy.t('relationTypeAppearsIn'),
     'ally' => copy.t('relationTypeAlly'),

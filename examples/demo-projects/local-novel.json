@@ -1,5 +1,5 @@
 {
-  "schema": "writeler.project.v1",
+  "schema": "writeller.project.v1",
   "project": {
     "id": "project-demo-local-novel",
     "title": "The Clockmaker's Map",

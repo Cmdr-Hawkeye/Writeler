@@ -11,7 +11,7 @@ function Ensure-Directory([string] $path) {
   }
 }
 
-function New-WritelerBitmap([int] $size) {
+function New-WritellerBitmap([int] $size) {
   $bitmap = [System.Drawing.Bitmap]::new($size, $size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
   $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
   $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
@@ -69,7 +69,7 @@ function New-WritelerBitmap([int] $size) {
 
 function Save-Png([string] $path, [int] $size) {
   Ensure-Directory (Split-Path -Parent $path)
-  $bitmap = New-WritelerBitmap $size
+  $bitmap = New-WritellerBitmap $size
   try {
     $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
   } finally {
@@ -78,7 +78,7 @@ function Save-Png([string] $path, [int] $size) {
 }
 
 function New-PngBytes([int] $size) {
-  $bitmap = New-WritelerBitmap $size
+  $bitmap = New-WritellerBitmap $size
   $stream = [System.IO.MemoryStream]::new()
   try {
     $bitmap.Save($stream, [System.Drawing.Imaging.ImageFormat]::Png)
@@ -124,7 +124,7 @@ function Save-Ico([string] $path, [int[]] $sizes) {
   }
 }
 
-Save-Png (Join-Path $app "assets\brand\writeler_icon_1024.png") 1024
+Save-Png (Join-Path $app "assets\brand\writeller_icon_1024.png") 1024
 
 Save-Png (Join-Path $app "web\favicon.png") 32
 Save-Png (Join-Path $app "web\icons\Icon-192.png") 192
@@ -179,4 +179,4 @@ foreach ($entry in $macIcons.GetEnumerator()) {
 
 Save-Ico (Join-Path $app "windows\runner\resources\app_icon.ico") @(16, 32, 48, 64, 128, 256)
 
-Write-Host "Generated Writeler brand assets."
+Write-Host "Generated Writeller brand assets."

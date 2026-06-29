@@ -1,14 +1,14 @@
 import 'package:test/test.dart';
-import 'package:writeler/core/domain/domain_failure.dart';
-import 'package:writeler/features/ai_harness/application/request_ai_suggestion.dart';
-import 'package:writeler/features/ai_harness/domain/ai_policy.dart';
-import 'package:writeler/features/ai_harness/domain/ai_suggestion.dart';
-import 'package:writeler/features/ai_harness/infrastructure/in_memory_ai_suggestion_repository.dart';
-import 'package:writeler/features/ai_harness/infrastructure/mock_language_model_provider.dart';
-import 'package:writeler/features/projects/application/create_project.dart';
-import 'package:writeler/features/projects/infrastructure/in_memory_project_repository.dart';
-import 'package:writeler/features/structure/application/create_scene.dart';
-import 'package:writeler/features/structure/application/in_memory_scene_repository.dart';
+import 'package:writeller/core/domain/domain_failure.dart';
+import 'package:writeller/features/ai_harness/application/request_ai_suggestion.dart';
+import 'package:writeller/features/ai_harness/domain/ai_policy.dart';
+import 'package:writeller/features/ai_harness/domain/ai_suggestion.dart';
+import 'package:writeller/features/ai_harness/infrastructure/in_memory_ai_suggestion_repository.dart';
+import 'package:writeller/features/ai_harness/infrastructure/mock_language_model_provider.dart';
+import 'package:writeller/features/projects/application/create_project.dart';
+import 'package:writeller/features/projects/infrastructure/in_memory_project_repository.dart';
+import 'package:writeller/features/structure/application/create_scene.dart';
+import 'package:writeller/features/structure/application/in_memory_scene_repository.dart';
 
 void main() {
   test('AI suggestions are saved separately and do not change manuscript text',

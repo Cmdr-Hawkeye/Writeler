@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
-const proxyPath = '/.writeler-ai/openrouter/chat/completions';
+const proxyPath = '/.writeller-ai/openrouter/chat/completions';
 
 Future<void> main(List<String> args) async {
   final options = _parseArgs(args);
@@ -17,7 +17,7 @@ Future<void> main(List<String> args) async {
   }
 
   final server = await HttpServer.bind(bind, port);
-  stdout.writeln('Writeler web server listening on http://$bind:$port');
+  stdout.writeln('Writeller web server listening on http://$bind:$port');
   stdout.writeln('Serving ${directory.absolute.path}');
   stdout.writeln('Proxying $proxyPath -> $openRouterUrl');
 
@@ -137,9 +137,9 @@ Map<String, String> _proxyHeaders(HttpRequest request) {
   headers.putIfAbsent(HttpHeaders.acceptHeader, () => 'application/json');
   headers.putIfAbsent(
     'HTTP-Referer',
-    () => 'https://github.com/Cmdr-Hawkeye/Writeler',
+    () => 'https://github.com/Cmdr-Hawkeye/Writeller',
   );
-  headers.putIfAbsent('X-OpenRouter-Title', () => 'Writeler');
+  headers.putIfAbsent('X-OpenRouter-Title', () => 'Writeller');
   return headers;
 }
 

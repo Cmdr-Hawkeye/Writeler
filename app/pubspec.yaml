@@ -1,4 +1,4 @@
-name: writeler
+name: writeller
 description: Offline-first writing project harness for authors.
 publish_to: "none"
 version: 0.3.0+3

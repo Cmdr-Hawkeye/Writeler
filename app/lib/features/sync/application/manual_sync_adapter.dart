@@ -11,7 +11,8 @@ final class ManualSyncAdapter implements SyncAdapter {
     this.archiveCodec = const ProjectArchiveCodec(),
   });
 
-  static const syncSchema = 'writeler.sync.v1';
+  static const syncSchema = 'writeller.sync.v1';
+  static const legacySyncSchema = 'writeler.sync.v1';
 
   final ProjectArchiveCodec archiveCodec;
 
@@ -57,7 +58,7 @@ final class ManualSyncAdapter implements SyncAdapter {
     }
 
     final json = Map<String, Object?>.from(decoded);
-    if (json['schema'] != syncSchema) {
+    if (json['schema'] != syncSchema && json['schema'] != legacySyncSchema) {
       return SyncPayloadInspection(archiveSource: source);
     }
 

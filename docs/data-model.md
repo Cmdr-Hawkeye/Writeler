@@ -53,4 +53,4 @@ Persistence uses Drift with `AppDatabase.schemaVersion == 1`. Every future migra
 
 Native platforms should use SQLite through Drift. Web should use an IndexedDB or SQLite-WASM adapter behind the same repository contracts.
 
-The first implementation uses `drift_flutter.driftDatabase(name: 'writeler')` for runtime database opening. Tests use `NativeDatabase.memory()` to keep repository tests fast and deterministic.
+The runtime database still uses `drift_flutter.driftDatabase(name: 'writeler')` as a legacy storage identifier so local projects created before the Writeller rename remain visible. Tests use `NativeDatabase.memory()` to keep repository tests fast and deterministic.

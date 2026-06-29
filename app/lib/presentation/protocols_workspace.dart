@@ -9,7 +9,7 @@ final class _ProtocolsWorkspace extends StatelessWidget {
     required this.metrics,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<MetricEvent> metrics;
 
@@ -97,7 +97,7 @@ final class _ProtocolEventRow extends StatelessWidget {
     required this.event,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final MetricEvent event;
 
   @override

@@ -1,18 +1,18 @@
 # Native Release Guide
 
-Writeler is configured as a local-first Flutter app for Web, Android, iOS, Windows, and macOS. This guide tracks the platform metadata, release commands, and signing tasks that should be checked before distributing builds.
+Writeller is configured as a local-first Flutter app for Web, Android, iOS, Windows, and macOS. This guide tracks the platform metadata, release commands, and signing tasks that should be checked before distributing builds.
 
 ## Product Identity
 
-- App name: `Writeler`
+- App name: `Writeller`
 - Version source: `app/pubspec.yaml`
-- Android application ID: `com.writeler.app`
-- iOS bundle ID: `com.writeler.app`
-- macOS bundle ID: `com.writeler.app.macos`
-- Windows executable: `writeler.exe`
-- Web/PWA title: `Writeler`
+- Android application ID: `com.writeller.app`
+- iOS bundle ID: `com.writeller.app`
+- macOS bundle ID: `com.writeller.app.macos`
+- Windows executable: `writeller.exe`
+- Web/PWA title: `Writeller`
 
-The checked-in icon source is `app/assets/brand/writeler_icon.svg`. Regenerate platform icons with:
+The checked-in icon source is `app/assets/brand/writeller_icon.svg`. Regenerate platform icons with:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\generate_brand_assets.ps1
@@ -52,7 +52,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_windows.ps
 ### iOS
 
 - Bundle metadata is in `app/ios/Runner/Info.plist` and `app/ios/Runner.xcodeproj/project.pbxproj`.
-- The bundle ID is `com.writeler.app`.
+- The bundle ID is `com.writeller.app`.
 - `ITSAppUsesNonExemptEncryption` is set to `false` for standard exempt platform/network encryption disclosure.
 - App Store release requires an Apple Developer Team, signing profile, and archive from macOS/Xcode.
 

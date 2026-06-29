@@ -40,7 +40,7 @@ final class ProjectArchivePreview {
     required this.relationshipCount,
     required this.noteCount,
     required this.researchItemCount,
-    this.sourceFormat = 'Writeler',
+    this.sourceFormat = 'Writeller',
     this.sourceName,
   });
 
@@ -59,9 +59,11 @@ final class ProjectArchivePreview {
 final class ProjectArchiveCodec {
   const ProjectArchiveCodec();
 
+  static const currentSchema = 'writeller.project.v3';
+
   String encode(ProjectArchive archive) {
     return const JsonEncoder.withIndent('  ').convert({
-      'schema': 'writeler.project.v3',
+      'schema': currentSchema,
       'project': archive.project.toJson(),
       'chapters': archive.chapters.map((chapter) => chapter.toJson()).toList(),
       'scenes': archive.scenes.map((scene) => scene.toJson()).toList(),
@@ -140,7 +142,10 @@ final class ProjectArchiveCodec {
   }
 
   bool _supportedSchema(String? schema) {
-    return schema == 'writeler.project.v1' ||
+    return schema == 'writeller.project.v1' ||
+        schema == 'writeller.project.v2' ||
+        schema == currentSchema ||
+        schema == 'writeler.project.v1' ||
         schema == 'writeler.project.v2' ||
         schema == 'writeler.project.v3';
   }

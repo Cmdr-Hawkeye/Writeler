@@ -25,7 +25,7 @@ final class _SmartCollectionsWorkspace extends StatefulWidget {
     required this.onOpenStructure,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<Chapter> chapters;
   final List<Scene> scenes;
@@ -336,7 +336,7 @@ final class _SmartCollectionList extends StatelessWidget {
     required this.onRemove,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<_SmartCollection> savedCollections;
   final List<_SmartCollection> suggestedCollections;
   final String? selectedId;
@@ -406,7 +406,7 @@ final class _SmartCollectionTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _SmartCollection collection;
   final bool selected;
   final Widget trailing;
@@ -463,7 +463,7 @@ final class _SmartCollectionDetail extends StatelessWidget {
     required this.onOpenStructure,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _SmartCollection? collection;
   final ValueChanged<Scene> onOpenScene;
   final VoidCallback onOpenAiWorkshop;
@@ -565,7 +565,7 @@ final class _SmartCollectionResultTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _SmartCollectionItem item;
   final VoidCallback onTap;
 

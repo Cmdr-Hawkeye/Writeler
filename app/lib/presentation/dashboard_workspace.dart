@@ -49,7 +49,7 @@ final class _WorkspaceView extends StatelessWidget {
     required this.onOpenContext,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Project> projects;
   final Project? selectedProject;
   final List<Chapter> chapters;
@@ -170,7 +170,7 @@ final class _WorkspaceView extends StatelessWidget {
 final class _EmptyWorkspace extends StatelessWidget {
   const _EmptyWorkspace({required this.copy});
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +245,7 @@ final class _ProjectOverview extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Project> projects;
   final Project? selectedProject;
   final List<Chapter> chapters;
@@ -607,7 +607,7 @@ final class _DashboardPulse extends StatelessWidget {
     required this.todaySaves,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final String targetProgressLabel;
   final double? wordProgress;
   final int scenes;
@@ -706,7 +706,7 @@ final class _StatisticsWorkspace extends StatelessWidget {
     required this.metrics,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<Chapter> chapters;
   final List<Scene> scenes;
@@ -1001,7 +1001,7 @@ final class _DashboardSceneRow extends StatelessWidget {
     required this.onTap,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final VoidCallback onTap;
 
@@ -1187,7 +1187,7 @@ final class _StructureMotifRow {
 
 List<_StructureMotifRow> _structureMotifRows(
   List<Scene> scenes,
-  WritelerCopy copy,
+  WritellerCopy copy,
 ) {
   final counts = <String, int>{};
   for (final scene in scenes) {

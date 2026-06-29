@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:writeler/features/spellcheck/domain/spell_check_settings.dart';
-import 'package:writeler/features/spellcheck/infrastructure/language_tool_spell_checker.dart';
+import 'package:writeller/features/spellcheck/domain/spell_check_settings.dart';
+import 'package:writeller/features/spellcheck/infrastructure/language_tool_spell_checker.dart';
 
 void main() {
   test('LanguageTool spell checker parses matches and replacements', () async {

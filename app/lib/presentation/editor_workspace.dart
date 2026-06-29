@@ -46,7 +46,7 @@ final class _ProjectWorkspace extends StatefulWidget {
     required this.onOpenContext,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
@@ -392,7 +392,7 @@ final class _FullManuscriptEditor extends StatefulWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Chapter> chapters;
   final List<Scene> scenes;
   final double fontSize;
@@ -663,7 +663,7 @@ final class _FullManuscriptSceneSection extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final TextEditingController controller;
   final double fontSize;
@@ -819,7 +819,7 @@ final class _NoScenes extends StatelessWidget {
     required this.onCreateScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final VoidCallback onCreateScene;
 
   @override
@@ -862,7 +862,7 @@ final class _CompactSceneSelector extends StatelessWidget {
     required this.onSelectScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final Scene? selectedScene;
   final ValueChanged<Scene> onSelectScene;
@@ -943,7 +943,7 @@ final class _SceneNavigator extends StatelessWidget {
     required this.onDeleteScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Chapter> chapters;
   final List<Scene> scenes;
   final Scene? selectedScene;
@@ -1073,7 +1073,7 @@ final class _SceneNavigatorTile extends StatelessWidget {
     required this.onDelete,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final bool selected;
   final VoidCallback onSelect;
@@ -1264,7 +1264,7 @@ final class _SceneEditor extends StatefulWidget {
     required this.onSaveScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
@@ -1889,7 +1889,7 @@ final class _ManuscriptField extends StatelessWidget {
     required this.fontSize,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final TextEditingController controller;
   final FocusNode focusNode;
   final ScrollController scrollController;
@@ -1979,7 +1979,7 @@ final class _SceneAnnotationsPanel extends StatelessWidget {
     required this.onDelete,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<SceneAnnotation> annotations;
   final String manuscriptText;
   final ValueChanged<SceneAnnotation> onSelectText;
@@ -2071,7 +2071,7 @@ final class _SceneAnnotationTile extends StatelessWidget {
     required this.onDelete,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final SceneAnnotation annotation;
   final String manuscriptText;
   final ValueChanged<SceneAnnotation> onSelectText;
@@ -2182,7 +2182,7 @@ final class _SpellCheckResultsPanel extends StatelessWidget {
     required this.onDismiss,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<SpellCheckIssue> issues;
   final String? error;
   final void Function(SpellCheckIssue issue, String replacement)
@@ -2317,7 +2317,7 @@ final class _SceneSnapshotsPanel extends StatelessWidget {
     required this.onDeleteSnapshot,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene currentScene;
   final List<SceneSnapshot> snapshots;
   final SceneSnapshot? selectedSnapshot;
@@ -2427,7 +2427,7 @@ final class _SnapshotList extends StatelessWidget {
     required this.onDeleteSnapshot,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<SceneSnapshot> snapshots;
   final SceneSnapshot? selectedSnapshot;
   final ValueChanged<SceneSnapshot> onSelectSnapshot;
@@ -2480,7 +2480,7 @@ final class _SnapshotList extends StatelessWidget {
 final class _SnapshotDiffPlaceholder extends StatelessWidget {
   const _SnapshotDiffPlaceholder({required this.copy});
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
 
   @override
   Widget build(BuildContext context) {
@@ -2513,7 +2513,7 @@ final class _SceneSnapshotDiff extends StatelessWidget {
     required this.snapshot,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene currentScene;
   final SceneSnapshot snapshot;
 
@@ -2646,7 +2646,7 @@ final class _SnapshotDiffData {
 List<_SnapshotDiffData> _snapshotDiffRows(
   Scene current,
   Scene snapshot,
-  WritelerCopy copy,
+  WritellerCopy copy,
 ) {
   final rows = <_SnapshotDiffData>[];
   void addIfChanged(String label, String before, String after) {
@@ -2683,7 +2683,7 @@ String _shortPreview(String value) {
   return [...lines.take(8), '...'].join('\n');
 }
 
-String _snapshotReasonLabel(SceneSnapshotReason reason, WritelerCopy copy) {
+String _snapshotReasonLabel(SceneSnapshotReason reason, WritellerCopy copy) {
   return switch (reason) {
     SceneSnapshotReason.manual => copy.t('snapshotReasonManual'),
     SceneSnapshotReason.majorEdit => copy.t('snapshotReasonMajorEdit'),
@@ -2708,7 +2708,7 @@ final class _FocusModeButton extends StatelessWidget {
     required this.onPressed,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final bool focusMode;
   final VoidCallback onPressed;
 
@@ -2811,7 +2811,7 @@ final class _ManuscriptFormatToolbar extends StatelessWidget {
     required this.controller,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final TextEditingController controller;
 
   @override
@@ -3241,7 +3241,7 @@ final class _SaveStatePill extends StatelessWidget {
     required this.savedAt,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _SceneSaveState state;
   final DateTime? savedAt;
 
@@ -3271,7 +3271,7 @@ final class _SaveStatePill extends StatelessWidget {
     );
   }
 
-  static String _savedLabel(WritelerCopy copy, DateTime? savedAt) {
+  static String _savedLabel(WritellerCopy copy, DateTime? savedAt) {
     if (savedAt == null) return copy.t('autosaveSaved');
     final local = savedAt.toLocal();
     final hour = local.hour.toString().padLeft(2, '0');
@@ -3307,7 +3307,7 @@ final class _SceneInspector extends StatelessWidget {
     required this.onRequestSceneAiHelp,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
@@ -3459,7 +3459,7 @@ final class _SceneInspectorHeader extends StatelessWidget {
     required this.showMeta,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
@@ -3520,7 +3520,7 @@ final class _EditorSidePanelTabs extends StatelessWidget {
     required this.onSelected,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _EditorSidePanelKind selected;
   final ValueChanged<_EditorSidePanelKind> onSelected;
 
@@ -3620,7 +3620,7 @@ final class _EditorSidePanelButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final design = Theme.of(context).extension<WritellerDesignTokens>()!;
     final foreground = selected ? design.ink : color.onSurfaceVariant;
     final background = selected ? design.inkSoft : color.surfaceContainerLowest;
     final icon = Icon(option.icon, size: 18, color: foreground);
@@ -3691,7 +3691,7 @@ final class _SceneMetaOverview extends StatelessWidget {
     required this.targetText,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
@@ -3890,7 +3890,7 @@ final class _SceneAiHelpBox extends StatefulWidget {
     required this.onRequest,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final bool isRequesting;
   final AISuggestion? latestSuggestion;
@@ -4039,7 +4039,7 @@ final class _ManuscriptToolbar extends StatelessWidget {
     required this.targetText,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final String text;
   final String targetText;
 
@@ -4186,7 +4186,7 @@ final class _ManuscriptSearchBar extends StatelessWidget {
     required this.onChanged,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final TextEditingController manuscriptController;
   final TextEditingController searchController;
   final TextEditingController replaceController;
@@ -4341,7 +4341,7 @@ final class _ScenePlanningFields extends StatelessWidget {
     required this.onSceneStatusChanged,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final TextEditingController summaryController;
   final TextEditingController goalController;
   final TextEditingController conflictController;
@@ -4507,7 +4507,7 @@ final class _SceneContextLinks extends StatelessWidget {
     required this.onCreateItem,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final List<CatalogItem> catalogItems;
   final List<Relationship> relationships;
@@ -4660,7 +4660,7 @@ final class _ExistingSceneContextDialog extends StatefulWidget {
     required this.availableItems,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<CatalogItem> availableItems;
 
   @override

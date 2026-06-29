@@ -1,12 +1,12 @@
-# Writeler
+# Writeller
 
-Writeler is an offline-first writing project harness for authors. It models books as connected projects made of parts, chapters, scenes, characters, locations, objects, arcs, notes, research items, AI suggestions, metrics, and export profiles.
+Writeller is an offline-first writing project harness for authors. It models books as connected projects made of parts, chapters, scenes, characters, locations, objects, arcs, notes, research items, AI suggestions, metrics, and export profiles.
 
 The first implementation target is Flutter with a Clean Architecture layout so one codebase can support Web, Android, iOS, Windows, and macOS. Local storage is the default. Cloud sync and AI providers are adapter-based and optional.
 
 ## Current State
 
-This repository contains a working Flutter implementation of the local-first Writeler foundation:
+This repository contains a working Flutter implementation of the local-first Writeller foundation:
 
 - persisted projects, chapters, scenes, catalog items, relationships, project notes, AI suggestions, provider settings, and local metrics
 - a manuscript editor with planning fields, scene context links, live word/character counts, focus mode, and find/replace
@@ -15,7 +15,7 @@ This repository contains a working Flutter implementation of the local-first Wri
 - AI provider adapters for OpenAI-compatible APIs, OpenRouter, Anthropic, Gemini, Ollama, and a local mock provider
 - secure API key storage through a vault abstraction backed by `flutter_secure_storage`
 - prompt-transparent AI suggestions with accept/reject/note decisions and scene planning updates for structure suggestions
-- import/export for Markdown, HTML, TXT manuscript, outline, full Writeler JSON archives, PDF, EPUB, and DOCX, including readable notes in project-oriented formats
+- import/export for Markdown, HTML, TXT manuscript, outline, full Writeller JSON archives, PDF, EPUB, and DOCX, including readable notes in project-oriented formats
 - manual sync checkpoints that wrap full project archives with adapter metadata and fingerprint validation
 - German and English UI copy
 - Drift/SQLite local persistence for native and web, including SQLite WASM assets
@@ -65,7 +65,7 @@ flutter build web --no-pub --no-web-resources-cdn --pwa-strategy=none
 7. Serve the web build locally:
 
 ```powershell
-.\start_writeler_web.cmd
+.\start_writeller_web.cmd
 ```
 
 Then open the printed `http://127.0.0.1:<port>` URL.
@@ -78,12 +78,12 @@ For non-interactive checks or browser-controlled QA, the underlying script also 
 .\scripts\start_web_server.ps1 -Port 8095
 ```
 
-On Windows, you can also double-click `start_writeler_web.cmd` in the
+On Windows, you can also double-click `start_writeller_web.cmd` in the
 repository root. It builds the web app if needed, starts a local Dart server,
 picks the next free port starting at `8090`, and opens the browser. Local web
 builds use `--pwa-strategy=none` so browsers do not keep an outdated Flutter
 service worker while you test provider and UI changes. The starter also runs a
-tiny local OpenRouter proxy at `/.writeler-ai/openrouter/chat/completions`,
+tiny local OpenRouter proxy at `/.writeller-ai/openrouter/chat/completions`,
 avoiding browser/provider CORS and authentication-header quirks while keeping
 the API key on the local machine.
 
@@ -119,4 +119,4 @@ See:
 - [Export Formats](docs/export-formats.md)
 - [Native Release Guide](docs/native-release.md)
 - [Testing](docs/testing.md)
-- [Original Product Prompt](docs/spec/writeler_prompt.html)
+- [Original Product Prompt](docs/spec/writeller_prompt.html)

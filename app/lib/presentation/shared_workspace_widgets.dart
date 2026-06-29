@@ -131,7 +131,7 @@ final class _InkThreadMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final design = Theme.of(context).extension<WritellerDesignTokens>()!;
     return SizedBox(
       width: size,
       height: size,
@@ -243,7 +243,7 @@ final class _StatusChip extends StatelessWidget {
 }
 
 Color _statusTone(BuildContext context, DraftStatus status) {
-  final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+  final design = Theme.of(context).extension<WritellerDesignTokens>()!;
   return switch (status) {
     DraftStatus.idea || DraftStatus.planned => design.statusPlanned,
     DraftStatus.outlined ||
@@ -276,7 +276,7 @@ final class _PencilSuggestionFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final design = Theme.of(context).extension<WritellerDesignTokens>()!;
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: design.pencilBackground,
@@ -415,7 +415,7 @@ final class _ProjectLibrary extends StatelessWidget {
     required this.onDelete,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Project> projects;
   final Project? selectedProject;
   final ValueChanged<Project> onSelect;

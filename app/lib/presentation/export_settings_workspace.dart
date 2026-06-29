@@ -31,7 +31,7 @@ final class _ExportCenter extends StatelessWidget {
     required this.onImportArchive,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<Chapter> chapters;
   final List<Scene> scenes;
@@ -270,7 +270,7 @@ final class _SelfPublishingCenter extends StatelessWidget {
     required this.onDownload,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<Chapter> chapters;
   final List<Scene> scenes;
@@ -449,7 +449,7 @@ final class _PublishingMetadataForm extends StatefulWidget {
     required this.onSave,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final ValueChanged<Map<String, String>> onSave;
 
@@ -591,7 +591,7 @@ final class _PublishingPreview extends StatelessWidget {
     required this.preview,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<Scene> scenes;
   final PublishingStyle publishingStyle;
@@ -680,7 +680,7 @@ final class _PublishingProfileCard extends StatelessWidget {
     required this.words,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final PublishingLayoutProfile layout;
   final ExportFormat format;
   final int words;
@@ -929,7 +929,7 @@ final class _SyncStatusPanel extends StatelessWidget {
     required this.checkpoint,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final SyncCheckpoint checkpoint;
 
   @override
@@ -969,7 +969,7 @@ final class _SyncEnvelopePanel extends StatelessWidget {
     required this.preview,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final SyncEnvelopePreview preview;
 
   @override
@@ -1014,7 +1014,7 @@ final class _ImportDropZone extends StatelessWidget {
     required this.onPickFile,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final String? sourceName;
   final ProjectArchivePreview? preview;
   final bool isDragging;
@@ -1104,7 +1104,7 @@ final class _ImportArchivePreview extends StatelessWidget {
     required this.error,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final ProjectArchivePreview? preview;
   final String? error;
 
@@ -1197,7 +1197,7 @@ final class _SettingsWorkspace extends StatelessWidget {
     required this.syncAdapterName,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final bool aiEnabled;
   final bool cloudSyncEnabled;
@@ -1210,8 +1210,8 @@ final class _SettingsWorkspace extends StatelessWidget {
   final bool providerEnabled;
   final bool providerHasStoredApiKey;
   final AIProviderConfig? activeProviderConfig;
-  final WritelerDesignTheme designTheme;
-  final ValueChanged<WritelerDesignTheme> onDesignThemeChanged;
+  final WritellerDesignTheme designTheme;
+  final ValueChanged<WritellerDesignTheme> onDesignThemeChanged;
   final ValueChanged<AIProviderKind> onProviderKindChanged;
   final ValueChanged<bool> onProviderEnabledChanged;
   final VoidCallback onSaveProviderConfig;
@@ -1535,7 +1535,7 @@ final class _ProjectMetadataSettings extends StatefulWidget {
     required this.onSave,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final ValueChanged<_ProjectMetadataUpdate> onSave;
 
@@ -1699,7 +1699,7 @@ final class _SpellCheckSettingsPanel extends StatelessWidget {
     required this.onChanged,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final SpellCheckSettings settings;
   final bool onlineBlocked;
   final ValueChanged<SpellCheckSettings> onChanged;
@@ -1766,9 +1766,9 @@ final class _DesignThemeSelector extends StatelessWidget {
     required this.onChanged,
   });
 
-  final WritelerCopy copy;
-  final WritelerDesignTheme value;
-  final ValueChanged<WritelerDesignTheme> onChanged;
+  final WritellerCopy copy;
+  final WritellerDesignTheme value;
+  final ValueChanged<WritellerDesignTheme> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1776,7 +1776,7 @@ final class _DesignThemeSelector extends StatelessWidget {
       spacing: 10,
       runSpacing: 10,
       children: [
-        for (final theme in WritelerDesignTheme.values)
+        for (final theme in WritellerDesignTheme.values)
           _DesignThemeSwatch(
             copy: copy,
             theme: theme,
@@ -1796,8 +1796,8 @@ final class _DesignThemeSwatch extends StatelessWidget {
     required this.onTap,
   });
 
-  final WritelerCopy copy;
-  final WritelerDesignTheme theme;
+  final WritellerCopy copy;
+  final WritellerDesignTheme theme;
   final bool selected;
   final VoidCallback onTap;
 
@@ -1852,7 +1852,7 @@ final class _DesignThemeSwatch extends StatelessWidget {
 final class _ThemeMiniature extends StatelessWidget {
   const _ThemeMiniature({required this.tokens});
 
-  final _WritelerThemeTokens tokens;
+  final _WritellerThemeTokens tokens;
 
   @override
   Widget build(BuildContext context) {

@@ -11,7 +11,7 @@ final class _StyleCockpit extends StatefulWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Chapter> chapters;
   final List<Scene> scenes;
   final Scene? selectedScene;
@@ -141,7 +141,7 @@ final class _StyleOverview extends StatelessWidget {
     required this.analysis,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final StyleScopeAnalysis analysis;
 
   @override
@@ -199,7 +199,7 @@ final class _StyleNavigator extends StatelessWidget {
     required this.onSelected,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final StyleAnalysisResult result;
   final String selectedId;
   final ValueChanged<StyleScopeAnalysis> onSelected;
@@ -264,7 +264,7 @@ final class _StyleScopeTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final StyleScopeAnalysis analysis;
   final bool selected;
   final VoidCallback onTap;
@@ -272,7 +272,7 @@ final class _StyleScopeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final design = Theme.of(context).extension<WritellerDesignTokens>()!;
     final scoreColor = _scoreColor(context, analysis.readabilityScore);
     return ListTile(
       selected: selected,
@@ -324,7 +324,7 @@ final class _StyleDetailPane extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final StyleScopeAnalysis analysis;
   final VoidCallback? onOpenScene;
 
@@ -393,7 +393,7 @@ final class _StyleMetricStrip extends StatelessWidget {
     required this.analysis,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final StyleScopeAnalysis analysis;
 
   @override
@@ -550,7 +550,7 @@ final class _StyleIssueCard extends StatelessWidget {
     required this.issue,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final StyleIssue issue;
 
   @override
@@ -633,7 +633,7 @@ IconData _issueIcon(StyleIssueKind kind) => switch (kind) {
 
 Color _severityColor(BuildContext context, StyleSeverity severity) {
   final color = Theme.of(context).colorScheme;
-  final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+  final design = Theme.of(context).extension<WritellerDesignTokens>()!;
   return switch (severity) {
     StyleSeverity.info => color.primary,
     StyleSeverity.notice => design.statusProgress,
@@ -642,7 +642,7 @@ Color _severityColor(BuildContext context, StyleSeverity severity) {
 }
 
 Color _scoreColor(BuildContext context, double score) {
-  final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+  final design = Theme.of(context).extension<WritellerDesignTokens>()!;
   final color = Theme.of(context).colorScheme;
   if (score >= 65) return design.statusDone;
   if (score >= 42) return design.statusProgress;
@@ -651,7 +651,7 @@ Color _scoreColor(BuildContext context, double score) {
 
 String _formatPercent(double value) => '${(value * 100).round()}%';
 
-String _readabilityLabel(WritelerCopy copy, double score) {
+String _readabilityLabel(WritellerCopy copy, double score) {
   if (score >= 70) return copy.t('readabilityEasy');
   if (score >= 50) return copy.t('readabilityBalanced');
   if (score > 0) return copy.t('readabilityDense');

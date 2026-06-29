@@ -8,7 +8,7 @@ $root = Resolve-Path "$PSScriptRoot\.."
 $app = Join-Path $root "app"
 $version = (Select-String -Path (Join-Path $app "pubspec.yaml") -Pattern '^version:\s*(.+)$').Matches[0].Groups[1].Value.Trim()
 $artifactDir = Join-Path $root "artifacts"
-$zipPath = Join-Path $artifactDir "Writeler-$version-windows-x64.zip"
+$zipPath = Join-Path $artifactDir "Writeller-$version-windows-x64.zip"
 
 Push-Location $app
 try {

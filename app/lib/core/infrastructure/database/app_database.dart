@@ -247,6 +247,8 @@ final class AppDatabase extends _$AppDatabase {
       : super(
           executor ??
               driftDatabase(
+                // Keep the original storage name so existing local projects
+                // remain visible after the Writeller product rename.
                 name: 'writeler',
                 web: DriftWebOptions(
                   sqlite3Wasm: Uri.parse('sqlite3.wasm'),

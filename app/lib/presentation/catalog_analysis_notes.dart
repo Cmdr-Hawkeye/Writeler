@@ -15,7 +15,7 @@ final class _ContextWorkspace extends StatefulWidget {
     required this.onRejectSuggestion,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<AISuggestion> suggestions;
   final bool isRequestingAi;
@@ -139,7 +139,7 @@ final class _StoryContextEditor extends StatelessWidget {
     required this.onRequestStarter,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final TextEditingController controller;
   final bool isRequestingAi;
   final String? lastAiError;
@@ -237,7 +237,7 @@ final class _WorldStarterReview extends StatelessWidget {
     required this.onRejectSuggestion,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<AISuggestion> suggestions;
   final ValueChanged<AISuggestion> onAcceptSuggestion;
   final ValueChanged<AISuggestion> onRejectSuggestion;
@@ -291,7 +291,7 @@ final class _WorldStarterSuggestionTile extends StatelessWidget {
     required this.onReject,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final AISuggestion suggestion;
   final String kind;
   final VoidCallback onAccept;
@@ -383,7 +383,7 @@ final class _CatalogWorkspace extends StatelessWidget {
     required this.onDeleteItem,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final EntityType type;
   final List<CatalogItem> items;
   final VoidCallback onCreateItem;
@@ -466,7 +466,7 @@ final class _AnalysisWorkspace extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Chapter> chapters;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
@@ -675,7 +675,7 @@ final class _NotesCockpit extends StatefulWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<ProjectNote> notes;
   final List<Scene> scenes;
@@ -915,7 +915,7 @@ final class _NotesListPane extends StatelessWidget {
     required this.onSelectNote,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<ProjectNote> notes;
   final String? selectedNoteId;
   final TextEditingController searchController;
@@ -1023,7 +1023,7 @@ final class _NoteEditorPane extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final ProjectNote? note;
   final TextEditingController titleController;
@@ -1204,7 +1204,7 @@ final class _StorylineIssueList extends StatelessWidget {
     required this.onOpenScene,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> planningGapScenes;
   final List<Scene> povMissingScenes;
   final List<Scene> dateMissingScenes;
@@ -1273,7 +1273,7 @@ final class _ChapterBalanceList extends StatelessWidget {
     required this.rows,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<_ChapterAnalysisRow> rows;
 
   @override
@@ -1310,7 +1310,7 @@ final class _ChapterBalanceTile extends StatelessWidget {
     required this.progress,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _ChapterAnalysisRow row;
   final double progress;
 
@@ -1350,7 +1350,7 @@ final class _StatusSpreadList extends StatelessWidget {
     required this.scenes,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
 
   @override
@@ -1424,7 +1424,7 @@ final class _CatalogPresenceList extends StatelessWidget {
     required this.rows,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<_CatalogPresenceRow> rows;
 
   @override

@@ -12,7 +12,7 @@ $webDir = Join-Path $appDir "build\web"
 $indexFile = Join-Path $webDir "index.html"
 $mainJsFile = Join-Path $webDir "main.dart.js"
 $builtWorkerFile = Join-Path $webDir "drift_worker.js"
-$webServerScript = Join-Path $repoRoot "scripts\writeler_web_server.dart"
+$webServerScript = Join-Path $repoRoot "scripts\writeller_web_server.dart"
 
 function Find-DartCommand {
   $dart = Get-Command dart -ErrorAction SilentlyContinue
@@ -87,7 +87,7 @@ function Test-WebBuildStale {
 }
 
 if (Test-WebBuildStale) {
-  Write-Host "Web build missing or stale. Building Writeler web assets..."
+  Write-Host "Web build missing or stale. Building Writeller web assets..."
   & (Join-Path $repoRoot "scripts\build_web_assets.ps1")
   Push-Location $appDir
   try {
@@ -102,7 +102,7 @@ $selectedPort = Find-AvailablePort $Port
 $url = "http://127.0.0.1:$selectedPort"
 
 Write-Host ""
-Write-Host "Writeler web server"
+Write-Host "Writeller web server"
 Write-Host "URL: $url"
 Write-Host "Directory: $webDir"
 

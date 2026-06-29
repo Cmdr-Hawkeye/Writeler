@@ -1,5 +1,5 @@
-final class WritelerLanguage {
-  const WritelerLanguage({
+final class WritellerLanguage {
+  const WritellerLanguage({
     required this.code,
     required this.nativeName,
     required this.englishName,
@@ -10,21 +10,21 @@ final class WritelerLanguage {
   final String englishName;
 }
 
-final class WritelerCopy {
-  WritelerCopy(String languageCode)
-      : languageCode = WritelerCopy.normalizeLanguageCode(languageCode);
+final class WritellerCopy {
+  WritellerCopy(String languageCode)
+      : languageCode = WritellerCopy.normalizeLanguageCode(languageCode);
 
   final String languageCode;
 
   static const fallbackLanguageCode = 'de';
 
   static const supportedLanguages = [
-    WritelerLanguage(
+    WritellerLanguage(
       code: 'de',
       nativeName: 'Deutsch',
       englishName: 'German',
     ),
-    WritelerLanguage(
+    WritellerLanguage(
       code: 'en',
       nativeName: 'English',
       englishName: 'English',
@@ -39,7 +39,7 @@ final class WritelerCopy {
     return fallbackLanguageCode;
   }
 
-  static WritelerLanguage languageFor(String languageCode) {
+  static WritellerLanguage languageFor(String languageCode) {
     final normalized = normalizeLanguageCode(languageCode);
     return supportedLanguages.firstWhere(
       (language) => language.code == normalized,
@@ -48,7 +48,7 @@ final class WritelerCopy {
   }
 
   static const _de = {
-    'appTitle': 'Writeler',
+    'appTitle': 'Writeller',
     'dashboard': 'Dashboard',
     'projects': 'Projekte',
     'project': 'Projekt',
@@ -104,7 +104,7 @@ final class WritelerCopy {
     'spellCheckEnabled': 'Rechtschreibprüfung aktivieren',
     'spellCheckLanguage': 'Wörterbuchsprache',
     'spellCheckPrivacyHint':
-        'Aktuell nutzt Writeler LanguageTool online nur nach manuellem Klick im Editor.',
+        'Aktuell nutzt Writeller LanguageTool online nur nach manuellem Klick im Editor.',
     'spellCheckBlockedByLocalMode':
         'Im Modus „Keine KI/keine Cloud“ bleibt die Online-Rechtschreibprüfung deaktiviert.',
     'spellCheckProviderLanguageTool': 'LanguageTool Public API',
@@ -580,7 +580,7 @@ final class WritelerCopy {
         'Lokale Stilhinweise für Rhythmus, Verständlichkeit und sprachliche Muster. Kein Urteil, sondern ein Arbeitsradar.',
     'styleCockpitEmptyTitle': 'Noch kein Manuskripttext',
     'styleCockpitEmptyBody':
-        'Sobald Szenen Text enthalten, zeigt Writeler hier Lesbarkeit, Satzrhythmus und Stilhinweise.',
+        'Sobald Szenen Text enthalten, zeigt Writeller hier Lesbarkeit, Satzrhythmus und Stilhinweise.',
     'styleOverview': 'Stilüberblick',
     'styleMap': 'Projektkarte',
     'styleSignals': 'Hinweise',
@@ -788,7 +788,7 @@ final class WritelerCopy {
     'chooseImportFile': 'Importdatei wählen',
     'dropImportFile': 'Datei hier ablegen',
     'dropImportFileBody':
-        'Writeler JSON, yWriter (.yw5/.yw6/.yw7), Scrivener (.scrivx), Markdown oder TXT',
+        'Writeller JSON, yWriter (.yw5/.yw6/.yw7), Scrivener (.scrivx), Markdown oder TXT',
     'selectedImportFile': 'Ausgewählte Datei',
     'importSourceType': 'Importtyp',
     'archivePreviewInvalid': 'Archivvorschau nicht möglich',
@@ -798,9 +798,9 @@ final class WritelerCopy {
     'helpCopyExport':
         'Kopiert die aktuell angezeigte Exportvorschau mit den gewählten Einstellungen in die Zwischenablage.',
     'helpExportFormat':
-        'Der Export ist ein vollständiges Writeler-Archiv mit allen Projektdaten für den späteren Import.',
+        'Der Export ist ein vollständiges Writeller-Archiv mit allen Projektdaten für den späteren Import.',
     'helpMigrationExportFormat':
-        'Wählt das Zielformat. Writeler JSON bewahrt alle Daten; yWriter, Scrivener, Markdown und TXT sind freundliche Wechsel- und Austauschformate.',
+        'Wählt das Zielformat. Writeller JSON bewahrt alle Daten; yWriter, Scrivener, Markdown und TXT sind freundliche Wechsel- und Austauschformate.',
     'helpPublishingFormat':
         'Legt fest, in welchem lesbaren Manuskriptformat die Veröffentlichung ausgegeben wird.',
     'helpPublishingStyle':
@@ -820,7 +820,7 @@ final class WritelerCopy {
     'helpCopySyncCheckpoint':
         'Kopiert ein vollständiges lokales Sync-Paket, das später wieder importiert werden kann.',
     'helpImportFile':
-        'Lädt eine Datei und erkennt automatisch Writeler, yWriter, Scrivener, Markdown oder Text.',
+        'Lädt eine Datei und erkennt automatisch Writeller, yWriter, Scrivener, Markdown oder Text.',
     'helpPasteImport':
         'Prüft eingefügten Inhalt und zeigt vor dem Import eine Vorschau des erkannten Projekts.',
     'helpImportProject':
@@ -938,7 +938,7 @@ final class WritelerCopy {
   };
 
   static const _en = {
-    'appTitle': 'Writeler',
+    'appTitle': 'Writeller',
     'dashboard': 'Dashboard',
     'projects': 'Projects',
     'project': 'Project',
@@ -995,7 +995,7 @@ final class WritelerCopy {
     'spellCheckEnabled': 'Enable spell checking',
     'spellCheckLanguage': 'Dictionary language',
     'spellCheckPrivacyHint':
-        'Writeler currently uses LanguageTool online only after a manual editor action.',
+        'Writeller currently uses LanguageTool online only after a manual editor action.',
     'spellCheckBlockedByLocalMode':
         'Online spell checking stays disabled while "No AI/no cloud" mode is active.',
     'spellCheckProviderLanguageTool': 'LanguageTool Public API',
@@ -1464,7 +1464,7 @@ final class WritelerCopy {
         'Local style notes for rhythm, clarity, and language patterns. Not a verdict, but a working radar.',
     'styleCockpitEmptyTitle': 'No manuscript text yet',
     'styleCockpitEmptyBody':
-        'Once scenes contain text, Writeler shows readability, sentence rhythm, and style signals here.',
+        'Once scenes contain text, Writeller shows readability, sentence rhythm, and style signals here.',
     'styleOverview': 'Style overview',
     'styleMap': 'Project map',
     'styleSignals': 'Signals',
@@ -1668,7 +1668,7 @@ final class WritelerCopy {
     'chooseImportFile': 'Choose import file',
     'dropImportFile': 'Drop file here',
     'dropImportFileBody':
-        'Writeler JSON, yWriter (.yw5/.yw6/.yw7), Scrivener (.scrivx), Markdown, or TXT',
+        'Writeller JSON, yWriter (.yw5/.yw6/.yw7), Scrivener (.scrivx), Markdown, or TXT',
     'selectedImportFile': 'Selected file',
     'importSourceType': 'Import type',
     'archivePreviewInvalid': 'Archive preview unavailable',
@@ -1678,9 +1678,9 @@ final class WritelerCopy {
     'helpCopyExport':
         'Copies the current export preview with the selected options to the clipboard.',
     'helpExportFormat':
-        'Export creates a complete Writeler archive with all project data for later import.',
+        'Export creates a complete Writeller archive with all project data for later import.',
     'helpMigrationExportFormat':
-        'Chooses the target format. Writeler JSON preserves all data; yWriter, Scrivener, Markdown, and TXT are friendly exchange formats.',
+        'Chooses the target format. Writeller JSON preserves all data; yWriter, Scrivener, Markdown, and TXT are friendly exchange formats.',
     'helpPublishingFormat':
         'Controls which readable manuscript format is used for publishing output.',
     'helpPublishingStyle':
@@ -1700,7 +1700,7 @@ final class WritelerCopy {
     'helpCopySyncCheckpoint':
         'Copies a complete local sync package that can be imported again later.',
     'helpImportFile':
-        'Loads a file and automatically detects Writeler, yWriter, Scrivener, Markdown, or text.',
+        'Loads a file and automatically detects Writeller, yWriter, Scrivener, Markdown, or text.',
     'helpPasteImport':
         'Checks pasted content and shows a preview of the detected project before import.',
     'helpImportProject':

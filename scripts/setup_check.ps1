@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "Checking Writeler local toolchain..."
+Write-Host "Checking Writeller local toolchain..."
 
 if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
   Write-Host "Flutter was not found in PATH."

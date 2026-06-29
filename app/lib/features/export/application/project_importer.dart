@@ -15,8 +15,8 @@ import '../../sync/domain/sync_checkpoint.dart';
 import 'project_archive_codec.dart';
 
 enum ProjectImportKind {
-  writelerArchive,
-  writelerSyncCheckpoint,
+  writellerArchive,
+  writellerSyncCheckpoint,
   yWriter,
   scrivenerOutline,
   plainText,
@@ -57,7 +57,7 @@ final class ProjectImporter {
     }
 
     if (trimmed.startsWith('{')) {
-      return _inspectWritelerJson(source, sourceName: sourceName);
+      return _inspectWritellerJson(source, sourceName: sourceName);
     }
 
     final extension = _extension(sourceName);
@@ -71,24 +71,25 @@ final class ProjectImporter {
     return _inspectPlainText(source, sourceName: sourceName);
   }
 
-  ProjectImportInspection _inspectWritelerJson(
+  ProjectImportInspection _inspectWritellerJson(
     String source, {
     String? sourceName,
   }) {
     final inspection = syncAdapter.inspectPayload(source);
     final archive = archiveCodec.decode(inspection.archiveSource);
+    final archivePreview = archiveCodec.preview(inspection.archiveSource);
     final preview = _previewForArchive(
       archive,
       schema: inspection.isEnvelope
           ? ManualSyncAdapter.syncSchema
-          : 'writeler.project.v3',
-      sourceFormat: inspection.isEnvelope ? 'Writeler Sync' : 'Writeler JSON',
+          : archivePreview.schema,
+      sourceFormat: inspection.isEnvelope ? 'Writeller Sync' : 'Writeller JSON',
       sourceName: sourceName,
     );
     return ProjectImportInspection(
       kind: inspection.isEnvelope
-          ? ProjectImportKind.writelerSyncCheckpoint
-          : ProjectImportKind.writelerArchive,
+          ? ProjectImportKind.writellerSyncCheckpoint
+          : ProjectImportKind.writellerArchive,
       archive: archive,
       preview: preview,
       syncEnvelope: inspection.envelope,

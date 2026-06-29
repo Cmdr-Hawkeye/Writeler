@@ -1,22 +1,22 @@
 import 'dart:convert';
 
 import 'package:test/test.dart';
-import 'package:writeler/core/domain/entity_ref.dart';
-import 'package:writeler/core/domain/entity_type.dart';
-import 'package:writeler/features/catalog/application/create_catalog_item.dart';
-import 'package:writeler/features/catalog/domain/relationship.dart';
-import 'package:writeler/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
-import 'package:writeler/features/export/application/project_archive_codec.dart';
-import 'package:writeler/features/export/application/project_exporter.dart';
-import 'package:writeler/features/export/application/project_importer.dart';
-import 'package:writeler/features/export/domain/export_profile.dart';
-import 'package:writeler/features/notes/domain/project_note.dart';
-import 'package:writeler/features/projects/application/create_project.dart';
-import 'package:writeler/features/projects/infrastructure/in_memory_project_repository.dart';
-import 'package:writeler/features/structure/application/create_chapter.dart';
-import 'package:writeler/features/structure/application/create_scene.dart';
-import 'package:writeler/features/structure/application/in_memory_chapter_repository.dart';
-import 'package:writeler/features/structure/application/in_memory_scene_repository.dart';
+import 'package:writeller/core/domain/entity_ref.dart';
+import 'package:writeller/core/domain/entity_type.dart';
+import 'package:writeller/features/catalog/application/create_catalog_item.dart';
+import 'package:writeller/features/catalog/domain/relationship.dart';
+import 'package:writeller/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
+import 'package:writeller/features/export/application/project_archive_codec.dart';
+import 'package:writeller/features/export/application/project_exporter.dart';
+import 'package:writeller/features/export/application/project_importer.dart';
+import 'package:writeller/features/export/domain/export_profile.dart';
+import 'package:writeller/features/notes/domain/project_note.dart';
+import 'package:writeller/features/projects/application/create_project.dart';
+import 'package:writeller/features/projects/infrastructure/in_memory_project_repository.dart';
+import 'package:writeller/features/structure/application/create_chapter.dart';
+import 'package:writeller/features/structure/application/create_scene.dart';
+import 'package:writeller/features/structure/application/in_memory_chapter_repository.dart';
+import 'package:writeller/features/structure/application/in_memory_scene_repository.dart';
 
 void main() {
   test('project can be exported as markdown and structured json', () async {
@@ -296,7 +296,15 @@ void main() {
         contains('A short authored paragraph.'));
 
     final json = jsonDecode(jsonText) as Map<String, Object?>;
-    expect(json['schema'], 'writeler.project.v3');
+    expect(json['schema'], 'writeller.project.v3');
+    final legacyJson = {
+      ...json,
+      'schema': 'writeler.project.v3',
+    };
+    final legacyArchive = const ProjectArchiveCodec().decode(
+      const JsonEncoder().convert(legacyJson),
+    );
+    expect(legacyArchive.project.title, 'Exportable Book');
 
     final archive = const ProjectArchiveCodec().decode(jsonText);
     final preview = const ProjectArchiveCodec().preview(jsonText);
@@ -312,7 +320,7 @@ void main() {
     expect(preview.noteCount, 1);
   });
 
-  test('yWriter xml can be inspected as a Writeler project archive', () {
+  test('yWriter xml can be inspected as a Writeller project archive', () {
     const source = '''
 <YWRITER7>
   <Title>Orbitale Schatten</Title>

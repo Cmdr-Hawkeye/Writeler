@@ -97,7 +97,7 @@ import 'features/structure/infrastructure/drift_scene_snapshot_repository.dart';
 import 'features/structure/infrastructure/lazy_chapter_repository.dart';
 import 'features/structure/infrastructure/lazy_scene_repository.dart';
 import 'features/structure/infrastructure/lazy_scene_snapshot_repository.dart';
-import 'shared/writeler_copy.dart';
+import 'shared/writeller_copy.dart';
 
 part 'presentation/app_root.dart';
 part 'presentation/ai_provider_runtime.dart';
@@ -123,7 +123,7 @@ void main() {
   AppDatabase getDatabase() => database ??= AppDatabase();
 
   runApp(
-    WritelerApp(
+    WritellerApp(
       projectRepository: LazyProjectRepository(
         () => DriftProjectRepository(getDatabase()),
       ),

@@ -26,7 +26,7 @@ final class _CommandPaletteDialog extends StatefulWidget {
     required this.entries,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<_CommandPaletteEntry> entries;
 
   @override
@@ -119,8 +119,8 @@ final class _CommandPaletteDialogState extends State<_CommandPaletteDialog> {
   }
 }
 
-final class WritelerShell extends StatefulWidget {
-  const WritelerShell({
+final class WritellerShell extends StatefulWidget {
+  const WritellerShell({
     required this.projectRepository,
     required this.sceneRepository,
     required this.sceneSnapshotRepository,
@@ -159,8 +159,8 @@ final class WritelerShell extends StatefulWidget {
   final ResearchItemRepository researchItemRepository;
   final AIProviderConfigRepository aiProviderConfigRepository;
   final SecretVault secretVault;
-  final WritelerDesignTheme designTheme;
-  final ValueChanged<WritelerDesignTheme> onDesignThemeChanged;
+  final WritellerDesignTheme designTheme;
+  final ValueChanged<WritellerDesignTheme> onDesignThemeChanged;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
   final bool globalAiEnabled;
@@ -176,10 +176,10 @@ final class WritelerShell extends StatefulWidget {
   final ValueChanged<SpellCheckSettings> onSpellCheckSettingsChanged;
 
   @override
-  State<WritelerShell> createState() => _WritelerShellState();
+  State<WritellerShell> createState() => _WritellerShellState();
 }
 
-final class _WritelerShellState extends State<WritelerShell> {
+final class _WritellerShellState extends State<WritellerShell> {
   late final CreateProject _createProject =
       CreateProject(widget.projectRepository);
   late final CreateChapter _createChapter =
@@ -468,7 +468,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     if (!mounted || _selectedScene == null || _selectedProject == null) return;
     setState(() => _sceneSaveState = _SceneSaveState.saving);
     try {
-      final copy = WritelerCopy(Localizations.localeOf(context).languageCode);
+      final copy = WritellerCopy(Localizations.localeOf(context).languageCode);
       await _saveSelectedScene(
         copy,
         showSnackBar: false,
@@ -592,7 +592,8 @@ final class _WritelerShellState extends State<WritelerShell> {
     if (_selectedScene?.id == scene.id) return;
     if (_sceneSaveState == _SceneSaveState.unsaved) {
       try {
-        final copy = WritelerCopy(Localizations.localeOf(context).languageCode);
+        final copy =
+            WritellerCopy(Localizations.localeOf(context).languageCode);
         await _saveSelectedScene(
           copy,
           showSnackBar: false,
@@ -650,7 +651,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _saveSelectedScene(
-    WritelerCopy copy, {
+    WritellerCopy copy, {
     bool showSnackBar = true,
     bool recordMetric = true,
   }) async {
@@ -698,7 +699,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   Future<void> _saveSceneManuscriptText(
     Scene scene,
     String manuscriptText,
-    WritelerCopy copy,
+    WritellerCopy copy,
   ) async {
     final project = _selectedProject;
     if (project == null) return;
@@ -853,7 +854,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _createManualSceneSnapshot(WritelerCopy copy) async {
+  Future<void> _createManualSceneSnapshot(WritellerCopy copy) async {
     final scene = _selectedScene;
     if (scene == null) return;
     if (_sceneSaveState == _SceneSaveState.unsaved) {
@@ -872,7 +873,7 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   Future<void> _deleteSceneSnapshot(
     SceneSnapshot snapshot,
-    WritelerCopy copy,
+    WritellerCopy copy,
   ) async {
     await widget.sceneSnapshotRepository.delete(snapshot.id);
     final snapshots =
@@ -886,7 +887,7 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   Future<void> _restoreSceneSnapshot(
     SceneSnapshot snapshot,
-    WritelerCopy copy,
+    WritellerCopy copy,
   ) async {
     var current =
         _scenes.where((scene) => scene.id == snapshot.sceneId).firstOrNull;
@@ -929,7 +930,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _deleteProject(Project project, WritelerCopy copy) async {
+  Future<void> _deleteProject(Project project, WritellerCopy copy) async {
     final confirmed = await _confirmDelete(
       copy: copy,
       title: copy.t('deleteProject'),
@@ -962,7 +963,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _deleteChapter(Chapter chapter, WritelerCopy copy) async {
+  Future<void> _deleteChapter(Chapter chapter, WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
     final confirmed = await _confirmDelete(
@@ -1003,7 +1004,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _deleteScene(Scene scene, WritelerCopy copy) async {
+  Future<void> _deleteScene(Scene scene, WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
     final confirmed = await _confirmDelete(
@@ -1046,7 +1047,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _deleteCatalogItem(CatalogItem item, WritelerCopy copy) async {
+  Future<void> _deleteCatalogItem(CatalogItem item, WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
     final confirmed = await _confirmDelete(
@@ -1215,7 +1216,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _createSceneCatalogItem(
-    WritelerCopy copy,
+    WritellerCopy copy,
     EntityType type,
   ) async {
     final scene = _selectedScene;
@@ -1415,7 +1416,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(
-              WritelerCopy(Localizations.localeOf(context).languageCode)
+              WritellerCopy(Localizations.localeOf(context).languageCode)
                   .t('storyContextSaved'))),
     );
   }
@@ -1493,7 +1494,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     return nodeId.substring(prefix.length);
   }
 
-  Future<void> _requestWorldStarter(WritelerCopy copy) async {
+  Future<void> _requestWorldStarter(WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null || _isRequestingAi) return;
     setState(() {
@@ -1698,7 +1699,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _requestAiSuggestion(
-    WritelerCopy copy,
+    WritellerCopy copy,
     AITaskKind task, {
     required _AIWorkshopContextKind contextKind,
     Scene? scene,
@@ -1772,7 +1773,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _requestEditorSceneAiHelp(
-    WritelerCopy copy,
+    WritellerCopy copy,
     AITaskKind task,
     String prompt,
   ) async {
@@ -1830,7 +1831,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   String _providerErrorMessage(Object error) {
     if (error is DomainFailure) {
       if (error.message == 'AI_API_KEY_MISSING') {
-        return WritelerCopy(Localizations.localeOf(context).languageCode)
+        return WritellerCopy(Localizations.localeOf(context).languageCode)
             .t('aiApiKeyMissing');
       }
       return error.message;
@@ -1858,7 +1859,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _decideSuggestion(
-    WritelerCopy copy,
+    WritellerCopy copy,
     AISuggestion suggestion,
     SuggestionDecision decision,
   ) async {
@@ -2221,7 +2222,7 @@ final class _WritelerShellState extends State<WritelerShell> {
         .firstOrNull;
   }
 
-  Future<void> _deleteNote(ProjectNote note, WritelerCopy copy) async {
+  Future<void> _deleteNote(ProjectNote note, WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
 
@@ -2235,7 +2236,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<ProjectNote?> _saveNote(
-    WritelerCopy copy, {
+    WritellerCopy copy, {
     ProjectNote? existing,
     required String title,
     required String body,
@@ -2281,7 +2282,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _saveResearchItem(
-    WritelerCopy copy, {
+    WritellerCopy copy, {
     ResearchItem? existing,
     required ResearchItemKind kind,
     required String title,
@@ -2342,7 +2343,7 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   Future<void> _deleteResearchItem(
     ResearchItem item,
-    WritelerCopy copy,
+    WritellerCopy copy,
   ) async {
     final project = _selectedProject;
     if (project == null) return;
@@ -2362,7 +2363,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _downloadExport(WritelerCopy copy) async {
+  Future<void> _downloadExport(WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
 
@@ -2386,7 +2387,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     await _downloadArtifact(copy, artifact, eventPrefix: 'export');
   }
 
-  Future<void> _downloadPublishing(WritelerCopy copy) async {
+  Future<void> _downloadPublishing(WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
 
@@ -2413,7 +2414,7 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   Future<void> _savePublishingMetadata(
     Map<String, String> fields,
-    WritelerCopy copy,
+    WritellerCopy copy,
   ) async {
     final project = _selectedProject;
     if (project == null) return;
@@ -2465,7 +2466,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _downloadArtifact(
-    WritelerCopy copy,
+    WritellerCopy copy,
     ExportArtifact artifact, {
     required String eventPrefix,
   }) async {
@@ -2489,7 +2490,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _copySyncCheckpoint(WritelerCopy copy) async {
+  Future<void> _copySyncCheckpoint(WritellerCopy copy) async {
     final project = _selectedProject;
     if (project == null) return;
 
@@ -2553,7 +2554,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     _refreshImportPreview();
   }
 
-  Future<void> _importArchive(WritelerCopy copy) async {
+  Future<void> _importArchive(WritellerCopy copy) async {
     final source = _importArchiveController.text.trim();
     final inspection = _importInspection;
     if (source.isEmpty || inspection == null) return;
@@ -2644,7 +2645,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     }
   }
 
-  Future<void> _pickImportFile(WritelerCopy copy) async {
+  Future<void> _pickImportFile(WritellerCopy copy) async {
     final result = await FilePicker.pickFiles(
       dialogTitle: copy.t('chooseImportFile'),
       type: FileType.custom,
@@ -2671,7 +2672,7 @@ final class _WritelerShellState extends State<WritelerShell> {
   }
 
   Future<void> _handleImportDrop(
-    WritelerCopy copy,
+    WritellerCopy copy,
     DropDoneDetails details,
   ) async {
     final file = details.files.firstOrNull;
@@ -2701,15 +2702,15 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   String _importEventType(ProjectImportKind kind) {
     return switch (kind) {
-      ProjectImportKind.writelerSyncCheckpoint => 'sync.checkpoint.imported',
-      ProjectImportKind.writelerArchive => 'project.imported',
+      ProjectImportKind.writellerSyncCheckpoint => 'sync.checkpoint.imported',
+      ProjectImportKind.writellerArchive => 'project.imported',
       ProjectImportKind.yWriter => 'project.imported.ywriter',
       ProjectImportKind.scrivenerOutline => 'project.imported.scrivener',
       ProjectImportKind.plainText => 'project.imported.text',
     };
   }
 
-  Future<void> _saveProviderConfig(WritelerCopy copy) async {
+  Future<void> _saveProviderConfig(WritellerCopy copy) async {
     const providerId = 'default';
     final apiKeyInput =
         _aiProviderRuntime.normalizeApiKey(_apiKeyRefController.text);
@@ -2744,7 +2745,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Future<void> _deleteProviderApiKey(WritelerCopy copy) async {
+  Future<void> _deleteProviderApiKey(WritellerCopy copy) async {
     final config = _activeProviderConfig;
     final ref = config?.encryptedApiKeyRef;
     if (config == null || ref == null) return;
@@ -2767,7 +2768,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  String _workspaceTitle(WritelerCopy copy) => switch (_selectedRailIndex) {
+  String _workspaceTitle(WritellerCopy copy) => switch (_selectedRailIndex) {
         0 => copy.t('dashboard'),
         1 => copy.t('manuscript'),
         2 => copy.t('structureCockpit'),
@@ -2826,11 +2827,11 @@ final class _WritelerShellState extends State<WritelerShell> {
     };
   }
 
-  String _workspaceGroupTitle(WritelerCopy copy) {
+  String _workspaceGroupTitle(WritellerCopy copy) {
     return _navGroupLabel(_workspaceGroupForIndex(_selectedRailIndex), copy);
   }
 
-  Future<void> _openCommandPalette(WritelerCopy copy) async {
+  Future<void> _openCommandPalette(WritellerCopy copy) async {
     final entries = _commandPaletteEntries(copy);
     final selected = await showDialog<_CommandPaletteEntry>(
       context: context,
@@ -2842,7 +2843,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     selected?.run();
   }
 
-  List<_CommandPaletteEntry> _commandPaletteEntries(WritelerCopy copy) {
+  List<_CommandPaletteEntry> _commandPaletteEntries(WritellerCopy copy) {
     final workspaceEntries = [
       for (final item in _navItems)
         _CommandPaletteEntry(
@@ -2900,7 +2901,7 @@ final class _WritelerShellState extends State<WritelerShell> {
 
   @override
   Widget build(BuildContext context) {
-    final copy = WritelerCopy(Localizations.localeOf(context).languageCode);
+    final copy = WritellerCopy(Localizations.localeOf(context).languageCode);
     final color = Theme.of(context).colorScheme;
 
     return Shortcuts(
@@ -2984,7 +2985,7 @@ final class _WritelerShellState extends State<WritelerShell> {
     );
   }
 
-  Widget _buildSelectedWorkspace(WritelerCopy copy) {
+  Widget _buildSelectedWorkspace(WritellerCopy copy) {
     if (_projects.isEmpty && !_isGlobalWorkspace(_selectedRailIndex)) {
       return _EmptyWorkspace(copy: copy);
     }

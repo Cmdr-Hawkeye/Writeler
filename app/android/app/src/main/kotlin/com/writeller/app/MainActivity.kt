@@ -1,4 +1,4 @@
-package com.writeler.app
+package com.writeller.app
 
 import io.flutter.embedding.android.FlutterActivity
 

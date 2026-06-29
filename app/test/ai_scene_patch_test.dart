@@ -1,10 +1,10 @@
 import 'package:test/test.dart';
-import 'package:writeler/core/domain/draft_status.dart';
-import 'package:writeler/core/domain/entity_ref.dart';
-import 'package:writeler/core/domain/entity_type.dart';
-import 'package:writeler/features/ai_harness/application/apply_ai_suggestion_to_scene.dart';
-import 'package:writeler/features/ai_harness/domain/ai_suggestion.dart';
-import 'package:writeler/features/structure/domain/scene.dart';
+import 'package:writeller/core/domain/draft_status.dart';
+import 'package:writeller/core/domain/entity_ref.dart';
+import 'package:writeller/core/domain/entity_type.dart';
+import 'package:writeller/features/ai_harness/application/apply_ai_suggestion_to_scene.dart';
+import 'package:writeller/features/ai_harness/domain/ai_suggestion.dart';
+import 'package:writeller/features/structure/domain/scene.dart';
 
 void main() {
   test('builds scene planning patch from structured provider response', () {

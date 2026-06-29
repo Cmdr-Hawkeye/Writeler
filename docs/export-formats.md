@@ -1,6 +1,6 @@
 # Export Formats
 
-Writeler separates manuscript handoff formats from full project archives.
+Writeller separates manuscript handoff formats from full project archives.
 
 ## Implemented Formats
 
@@ -8,7 +8,7 @@ Writeler separates manuscript handoff formats from full project archives.
 - `HTML`: standalone semantic HTML with project title, optional metadata, chapter/scene headings, paragraph markup, and readable project notes when metadata is enabled.
 - `TXT / manuscript`: plain manuscript text with optional scene headings.
 - `Outline / structure`: chapter and scene structure including summary, goal, conflict, outcome, status, word counts, and project notes.
-- `Writeler archive JSON`: complete local-first project archive for round-trip import/export.
+- `Writeller archive JSON`: complete local-first project archive for round-trip import/export.
 - `PDF`: downloadable manuscript PDF generated locally from the selected project.
 - `EPUB`: downloadable EPUB 3 package with OPF metadata, navigation document, and XHTML manuscript.
 - `DOCX`: downloadable WordprocessingML package with title, headings, manuscript text, optional metadata, and readable project notes when metadata is enabled.
@@ -21,7 +21,7 @@ The current archive schema is:
 
 ```json
 {
-  "schema": "writeler.project.v3",
+  "schema": "writeller.project.v3",
   "project": {},
   "chapters": [],
   "scenes": [],
@@ -31,7 +31,7 @@ The current archive schema is:
 }
 ```
 
-The importer accepts `writeler.project.v1`, `writeler.project.v2`, and `writeler.project.v3`. Future versions should keep the top-level `schema` field stable and add new arrays or objects in a backward-compatible way.
+The importer accepts current `writeller.project.v3` archives and legacy `writeler.project.v1`, `writeler.project.v2`, and `writeler.project.v3` archives. Future versions should keep the top-level `schema` field stable and add new arrays or objects in a backward-compatible way.
 
 ## Planned Adapters
 

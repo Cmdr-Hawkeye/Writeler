@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:test/test.dart';
-import 'package:writeler/core/domain/domain_failure.dart';
-import 'package:writeler/features/ai_harness/infrastructure/http_model_http_transport.dart';
+import 'package:writeller/core/domain/domain_failure.dart';
+import 'package:writeller/features/ai_harness/infrastructure/http_model_http_transport.dart';
 
 void main() {
   test('HTTP transport retries temporary provider failures', () async {

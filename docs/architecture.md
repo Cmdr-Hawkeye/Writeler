@@ -2,7 +2,7 @@
 
 ## Decision
 
-Writeler uses Flutter as the primary client technology and Clean Architecture with feature-first modules.
+Writeller uses Flutter as the primary client technology and Clean Architecture with feature-first modules.
 
 The first code slice implements domain and application logic without tying it to Drift, Supabase, WebDAV, or a concrete AI vendor. Those integrations must be adapters behind repository or provider interfaces.
 

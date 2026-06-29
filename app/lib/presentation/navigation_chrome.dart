@@ -16,7 +16,7 @@ final class _WorkspaceNavItem {
   final int index;
   final IconData icon;
   final IconData selectedIcon;
-  final String Function(WritelerCopy copy) labelBuilder;
+  final String Function(WritellerCopy copy) labelBuilder;
   final _WorkspaceNavGroup group;
 }
 
@@ -30,7 +30,7 @@ final class _WorkspaceNavigation extends StatelessWidget {
     required this.onSelected,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<_WorkspaceNavItem> items;
   final int selectedIndex;
   final bool collapsed;
@@ -121,7 +121,7 @@ final class _WorkspaceNavigation extends StatelessWidget {
   }
 }
 
-String _navGroupLabel(_WorkspaceNavGroup group, WritelerCopy copy) =>
+String _navGroupLabel(_WorkspaceNavGroup group, WritellerCopy copy) =>
     switch (group) {
       _WorkspaceNavGroup.write => copy.t('navGroupWriting'),
       _WorkspaceNavGroup.world => copy.t('navGroupWorldResearch'),
@@ -177,7 +177,7 @@ final class _WorkspaceNavButtonState extends State<_WorkspaceNavButton> {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final design = Theme.of(context).extension<WritellerDesignTokens>()!;
     final active = widget.selected || _hovered;
     final foreground =
         widget.selected ? design.ink : color.onSurface.withValues(alpha: 0.86);
@@ -291,11 +291,11 @@ final class _BrandMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final design = Theme.of(context).extension<WritellerDesignTokens>()!;
     return Tooltip(
-      message: 'Writeler',
+      message: 'Writeller',
       child: Semantics(
-        label: 'Writeler',
+        label: 'Writeller',
         child: Row(
           mainAxisAlignment:
               collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
@@ -315,7 +315,7 @@ final class _BrandMark extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'writeler',
+                  'writeller',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -346,7 +346,7 @@ final class _StudioTopBar extends StatelessWidget {
     required this.onOpenCommandPalette,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final String workspaceTitle;
   final String workspaceGroupLabel;
   final IconData workspaceIcon;
@@ -421,7 +421,7 @@ final class _StudioTopBar extends StatelessWidget {
                 tooltip: copy.t('language'),
                 onSelected: onLanguageChanged,
                 itemBuilder: (context) => [
-                  for (final language in WritelerCopy.supportedLanguages)
+                  for (final language in WritellerCopy.supportedLanguages)
                     PopupMenuItem(
                       value: language.code,
                       child: Row(
@@ -488,13 +488,13 @@ final class _LanguageMenuAnchor extends StatelessWidget {
     required this.languageCode,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final String languageCode;
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final language = WritelerCopy.languageFor(languageCode);
+    final language = WritellerCopy.languageFor(languageCode);
     return Semantics(
       button: true,
       label: copy.t('language'),

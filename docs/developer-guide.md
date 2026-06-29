@@ -60,7 +60,7 @@ HTTP providers use `HttpModelHttpTransport`, which centralizes JSON POST request
 - UI copy must be localized.
 - AI features must save suggestions instead of mutating manuscript text.
 - Every schema migration needs tests.
-- Export/import changes should preserve backward compatibility for `writeler.project.v1`, `writeler.project.v2`, and `writeler.project.v3` archives.
+- Export/import changes should preserve backward compatibility for `writeller.project.v3` and legacy `writeler.project.v1`, `writeler.project.v2`, and `writeler.project.v3` archives.
 - New local data should have repository contracts, in-memory test adapters, and Drift-backed adapters where persistence is required.
 
 ## Local Toolchain Notes
@@ -75,7 +75,7 @@ Validated locally:
 For manual web QA, use the repository starter from the root directory:
 
 ```powershell
-.\start_writeler_web.cmd
+.\start_writeller_web.cmd
 ```
 
 The starter builds missing web assets, serves `app/build/web` on the next free local port starting at `8090`, disables the Flutter service worker for fresh local QA, and starts the local OpenRouter proxy used by the web build. Use `scripts\start_web_server.ps1 -CheckOnly` to inspect the resolved URL without opening a browser, or `-NoBrowser` when another tool controls the browser.

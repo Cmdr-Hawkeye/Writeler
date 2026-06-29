@@ -2,8 +2,8 @@ part of '../main.dart';
 
 // Application root, design-theme persistence, and theme token definitions.
 
-final class WritelerApp extends StatefulWidget {
-  const WritelerApp({
+final class WritellerApp extends StatefulWidget {
+  const WritellerApp({
     required this.projectRepository,
     required this.sceneRepository,
     required this.sceneSnapshotRepository,
@@ -35,10 +35,10 @@ final class WritelerApp extends StatefulWidget {
   final SecretVault secretVault;
 
   @override
-  State<WritelerApp> createState() => _WritelerAppState();
+  State<WritellerApp> createState() => _WritellerAppState();
 }
 
-final class _WritelerAppState extends State<WritelerApp> {
+final class _WritellerAppState extends State<WritellerApp> {
   static const _designThemePreferenceKey = 'design.theme';
   static const _languagePreferenceKey = 'app.language';
   static const _globalAiEnabledPreferenceKey = 'profile.aiEnabled';
@@ -49,8 +49,8 @@ final class _WritelerAppState extends State<WritelerApp> {
   static const _spellCheckLanguagePreferenceKey = 'spellcheck.language';
   static const _spellCheckProviderPreferenceKey = 'spellcheck.provider';
 
-  WritelerDesignTheme _designTheme = WritelerDesignTheme.paper;
-  String _languageCode = WritelerCopy.fallbackLanguageCode;
+  WritellerDesignTheme _designTheme = WritellerDesignTheme.paper;
+  String _languageCode = WritellerCopy.fallbackLanguageCode;
   bool _globalAiEnabled = true;
   bool _globalCloudSyncEnabled = false;
   bool _globalNoAiNoCloud = false;
@@ -70,12 +70,12 @@ final class _WritelerAppState extends State<WritelerApp> {
     final value =
         await widget.appPreferenceRepository.read(_designThemePreferenceKey);
     if (!mounted || value == null) return;
-    final theme = WritelerDesignThemeWire.tryParse(value);
+    final theme = WritellerDesignThemeWire.tryParse(value);
     if (theme == null || theme == _designTheme) return;
     setState(() => _designTheme = theme);
   }
 
-  void _changeDesignTheme(WritelerDesignTheme theme) {
+  void _changeDesignTheme(WritellerDesignTheme theme) {
     if (theme == _designTheme) return;
     setState(() => _designTheme = theme);
     unawaited(
@@ -90,13 +90,13 @@ final class _WritelerAppState extends State<WritelerApp> {
     final value =
         await widget.appPreferenceRepository.read(_languagePreferenceKey);
     if (!mounted || value == null) return;
-    final languageCode = WritelerCopy.normalizeLanguageCode(value);
+    final languageCode = WritellerCopy.normalizeLanguageCode(value);
     if (languageCode == _languageCode) return;
     setState(() => _languageCode = languageCode);
   }
 
   void _changeLanguage(String languageCode) {
-    final normalized = WritelerCopy.normalizeLanguageCode(languageCode);
+    final normalized = WritellerCopy.normalizeLanguageCode(languageCode);
     if (normalized == _languageCode) return;
     setState(() => _languageCode = normalized);
     unawaited(
@@ -216,9 +216,9 @@ final class _WritelerAppState extends State<WritelerApp> {
 
   @override
   Widget build(BuildContext context) {
-    final followsSystem = _designTheme == WritelerDesignTheme.system;
+    final followsSystem = _designTheme == WritellerDesignTheme.system;
     return MaterialApp(
-      title: 'Writeler',
+      title: 'Writeller',
       debugShowCheckedModeBanner: false,
       locale: Locale(_languageCode),
       localizationsDelegates: const [
@@ -230,14 +230,14 @@ final class _WritelerAppState extends State<WritelerApp> {
         Locale('de'),
         Locale('en'),
       ],
-      theme: _buildWritelerTheme(
-        followsSystem ? WritelerDesignTheme.paper : _designTheme,
+      theme: _buildWritellerTheme(
+        followsSystem ? WritellerDesignTheme.paper : _designTheme,
       ),
-      darkTheme: _buildWritelerTheme(
-        followsSystem ? WritelerDesignTheme.dusk : _designTheme,
+      darkTheme: _buildWritellerTheme(
+        followsSystem ? WritellerDesignTheme.dusk : _designTheme,
       ),
       themeMode: followsSystem ? ThemeMode.system : ThemeMode.light,
-      home: WritelerShell(
+      home: WritellerShell(
         projectRepository: widget.projectRepository,
         sceneRepository: widget.sceneRepository,
         sceneSnapshotRepository: widget.sceneSnapshotRepository,
@@ -267,7 +267,7 @@ final class _WritelerAppState extends State<WritelerApp> {
   }
 }
 
-enum WritelerDesignTheme {
+enum WritellerDesignTheme {
   system,
   paper,
   dusk,
@@ -277,28 +277,28 @@ enum WritelerDesignTheme {
   ink,
 }
 
-extension WritelerDesignThemeWire on WritelerDesignTheme {
+extension WritellerDesignThemeWire on WritellerDesignTheme {
   String get wireName {
     return switch (this) {
-      WritelerDesignTheme.paper => 'paper',
-      WritelerDesignTheme.system => 'system',
-      WritelerDesignTheme.dusk => 'dusk',
-      WritelerDesignTheme.sapphire => 'sapphire',
-      WritelerDesignTheme.sage => 'sage',
-      WritelerDesignTheme.copper => 'copper',
-      WritelerDesignTheme.ink => 'ink',
+      WritellerDesignTheme.paper => 'paper',
+      WritellerDesignTheme.system => 'system',
+      WritellerDesignTheme.dusk => 'dusk',
+      WritellerDesignTheme.sapphire => 'sapphire',
+      WritellerDesignTheme.sage => 'sage',
+      WritellerDesignTheme.copper => 'copper',
+      WritellerDesignTheme.ink => 'ink',
     };
   }
 
-  static WritelerDesignTheme? tryParse(String value) {
+  static WritellerDesignTheme? tryParse(String value) {
     return switch (value) {
-      'paper' => WritelerDesignTheme.paper,
-      'system' => WritelerDesignTheme.system,
-      'dusk' => WritelerDesignTheme.dusk,
-      'sapphire' => WritelerDesignTheme.sapphire,
-      'sage' => WritelerDesignTheme.sage,
-      'copper' => WritelerDesignTheme.copper,
-      'ink' => WritelerDesignTheme.ink,
+      'paper' => WritellerDesignTheme.paper,
+      'system' => WritellerDesignTheme.system,
+      'dusk' => WritellerDesignTheme.dusk,
+      'sapphire' => WritellerDesignTheme.sapphire,
+      'sage' => WritellerDesignTheme.sage,
+      'copper' => WritellerDesignTheme.copper,
+      'ink' => WritellerDesignTheme.ink,
       _ => null,
     };
   }
@@ -311,8 +311,8 @@ enum _SceneSaveState {
   error,
 }
 
-final class _WritelerThemeTokens {
-  const _WritelerThemeTokens({
+final class _WritellerThemeTokens {
+  const _WritellerThemeTokens({
     required this.brightness,
     required this.seed,
     required this.primary,
@@ -347,8 +347,9 @@ final class _WritelerThemeTokens {
   final Color error;
 }
 
-final class WritelerDesignTokens extends ThemeExtension<WritelerDesignTokens> {
-  const WritelerDesignTokens({
+final class WritellerDesignTokens
+    extends ThemeExtension<WritellerDesignTokens> {
+  const WritellerDesignTokens({
     required this.ink,
     required this.inkSoft,
     required this.inkContrast,
@@ -379,7 +380,7 @@ final class WritelerDesignTokens extends ThemeExtension<WritelerDesignTokens> {
   final BoxShadow panelShadow;
 
   @override
-  WritelerDesignTokens copyWith({
+  WritellerDesignTokens copyWith({
     Color? ink,
     Color? inkSoft,
     Color? inkContrast,
@@ -394,7 +395,7 @@ final class WritelerDesignTokens extends ThemeExtension<WritelerDesignTokens> {
     Color? statusArchived,
     BoxShadow? panelShadow,
   }) {
-    return WritelerDesignTokens(
+    return WritellerDesignTokens(
       ink: ink ?? this.ink,
       inkSoft: inkSoft ?? this.inkSoft,
       inkContrast: inkContrast ?? this.inkContrast,
@@ -412,12 +413,12 @@ final class WritelerDesignTokens extends ThemeExtension<WritelerDesignTokens> {
   }
 
   @override
-  WritelerDesignTokens lerp(
-    covariant ThemeExtension<WritelerDesignTokens>? other,
+  WritellerDesignTokens lerp(
+    covariant ThemeExtension<WritellerDesignTokens>? other,
     double t,
   ) {
-    if (other is! WritelerDesignTokens) return this;
-    return WritelerDesignTokens(
+    if (other is! WritellerDesignTokens) return this;
+    return WritellerDesignTokens(
       ink: Color.lerp(ink, other.ink, t)!,
       inkSoft: Color.lerp(inkSoft, other.inkSoft, t)!,
       inkContrast: Color.lerp(inkContrast, other.inkContrast, t)!,
@@ -436,10 +437,10 @@ final class WritelerDesignTokens extends ThemeExtension<WritelerDesignTokens> {
   }
 }
 
-WritelerDesignTokens _semanticTokensFor(_WritelerThemeTokens tokens) {
+WritellerDesignTokens _semanticTokensFor(_WritellerThemeTokens tokens) {
   final dark = tokens.brightness == Brightness.dark;
   if (dark) {
-    return const WritelerDesignTokens(
+    return const WritellerDesignTokens(
       ink: Color(0xFF4FB3AD),
       inkSoft: Color(0x244FB3AD),
       inkContrast: Color(0xFF06201D),
@@ -459,7 +460,7 @@ WritelerDesignTokens _semanticTokensFor(_WritelerThemeTokens tokens) {
       ),
     );
   }
-  return const WritelerDesignTokens(
+  return const WritellerDesignTokens(
     ink: Color(0xFF1F7F78),
     inkSoft: Color(0x1A1F7F78),
     inkContrast: Color(0xFFEAFBF8),
@@ -480,10 +481,10 @@ WritelerDesignTokens _semanticTokensFor(_WritelerThemeTokens tokens) {
   );
 }
 
-_WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
+_WritellerThemeTokens _tokensFor(WritellerDesignTheme theme) {
   return switch (theme) {
-    WritelerDesignTheme.system => _tokensFor(WritelerDesignTheme.paper),
-    WritelerDesignTheme.paper => const _WritelerThemeTokens(
+    WritellerDesignTheme.system => _tokensFor(WritellerDesignTheme.paper),
+    WritellerDesignTheme.paper => const _WritellerThemeTokens(
         brightness: Brightness.light,
         seed: Color(0xFF1F7F78),
         primary: Color(0xFF1F7F78),
@@ -500,7 +501,7 @@ _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
         outlineVariant: Color(0xFFDCDAD2),
         error: Color(0xFFC5453D),
       ),
-    WritelerDesignTheme.dusk => const _WritelerThemeTokens(
+    WritellerDesignTheme.dusk => const _WritellerThemeTokens(
         brightness: Brightness.dark,
         seed: Color(0xFF4FB3AD),
         primary: Color(0xFF4FB3AD),
@@ -517,7 +518,7 @@ _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
         outlineVariant: Color(0xFF262E38),
         error: Color(0xFFE2675F),
       ),
-    WritelerDesignTheme.sapphire => const _WritelerThemeTokens(
+    WritellerDesignTheme.sapphire => const _WritellerThemeTokens(
         brightness: Brightness.dark,
         seed: Color(0xFF7FB8FF),
         primary: Color(0xFF8FC4FF),
@@ -534,7 +535,7 @@ _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
         outlineVariant: Color(0xFF273E59),
         error: Color(0xFFFFA0A8),
       ),
-    WritelerDesignTheme.sage => const _WritelerThemeTokens(
+    WritellerDesignTheme.sage => const _WritellerThemeTokens(
         brightness: Brightness.light,
         seed: Color(0xFF73956F),
         primary: Color(0xFF3F6E44),
@@ -551,7 +552,7 @@ _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
         outlineVariant: Color(0xFFD0D8C1),
         error: Color(0xFFBA1A1A),
       ),
-    WritelerDesignTheme.copper => const _WritelerThemeTokens(
+    WritellerDesignTheme.copper => const _WritellerThemeTokens(
         brightness: Brightness.light,
         seed: Color(0xFFB86F45),
         primary: Color(0xFF9C4F2B),
@@ -568,7 +569,7 @@ _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
         outlineVariant: Color(0xFFD9C9BE),
         error: Color(0xFFBA1A1A),
       ),
-    WritelerDesignTheme.ink => const _WritelerThemeTokens(
+    WritellerDesignTheme.ink => const _WritellerThemeTokens(
         brightness: Brightness.dark,
         seed: Color(0xFFD8D1FF),
         primary: Color(0xFFD6D0FF),
@@ -588,7 +589,7 @@ _WritelerThemeTokens _tokensFor(WritelerDesignTheme theme) {
   };
 }
 
-ThemeData _buildWritelerTheme(WritelerDesignTheme designTheme) {
+ThemeData _buildWritellerTheme(WritellerDesignTheme designTheme) {
   final tokens = _tokensFor(designTheme);
   final design = _semanticTokensFor(tokens);
   final dark = tokens.brightness == Brightness.dark;

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:writeler/core/domain/draft_status.dart';
-import 'package:writeler/features/structure/domain/chapter.dart';
-import 'package:writeler/features/structure/domain/scene.dart';
-import 'package:writeler/features/style_analysis/application/style_analyzer.dart';
-import 'package:writeler/features/style_analysis/domain/style_analysis_result.dart';
+import 'package:writeller/core/domain/draft_status.dart';
+import 'package:writeller/features/structure/domain/chapter.dart';
+import 'package:writeller/features/structure/domain/scene.dart';
+import 'package:writeller/features/style_analysis/application/style_analyzer.dart';
+import 'package:writeller/features/style_analysis/domain/style_analysis_result.dart';
 
 void main() {
   test('detects style signals for a German scene', () {

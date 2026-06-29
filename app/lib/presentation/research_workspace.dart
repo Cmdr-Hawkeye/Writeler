@@ -13,7 +13,7 @@ final class _ResearchWorkspace extends StatefulWidget {
     required this.onDeleteItem,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final List<ResearchItem> items;
   final List<Scene> scenes;
@@ -211,7 +211,7 @@ final class _ResearchFilterBar extends StatelessWidget {
     required this.onChanged,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final ResearchItemKind? selectedKind;
   final ValueChanged<ResearchItemKind?> onChanged;
 
@@ -246,7 +246,7 @@ final class _ResearchList extends StatelessWidget {
     required this.onSelect,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<ResearchItem> items;
   final ResearchItem? selectedItem;
   final ValueChanged<ResearchItem> onSelect;
@@ -307,7 +307,7 @@ final class _ResearchDetail extends StatelessWidget {
     required this.onDelete,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final ResearchItem? item;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
@@ -442,7 +442,7 @@ final class _ResearchEditDialog extends StatefulWidget {
     this.item,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<Scene> scenes;
   final List<CatalogItem> catalogItems;
   final ResearchItem? item;
@@ -626,7 +626,7 @@ final class _ResearchEditDialogState extends State<_ResearchEditDialog> {
     );
   }
 
-  List<DropdownMenuItem<String>> _targetItems(WritelerCopy copy) {
+  List<DropdownMenuItem<String>> _targetItems(WritellerCopy copy) {
     return [
       DropdownMenuItem(value: '', child: Text(copy.t('targetProject'))),
       for (final scene in widget.scenes)
@@ -650,7 +650,7 @@ final class _SceneResearchViewer extends StatelessWidget {
     required this.items,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Scene scene;
   final List<ResearchItem> items;
 
@@ -716,7 +716,7 @@ final class _SceneResearchViewer extends StatelessWidget {
   }
 }
 
-String _researchKindLabel(ResearchItemKind kind, WritelerCopy copy) =>
+String _researchKindLabel(ResearchItemKind kind, WritellerCopy copy) =>
     switch (kind) {
       ResearchItemKind.link => copy.t('researchKindLink'),
       ResearchItemKind.file => copy.t('researchKindFile'),
@@ -759,7 +759,7 @@ String _researchTargetLabel(
   EntityRef target,
   List<Scene> scenes,
   List<CatalogItem> catalogItems,
-  WritelerCopy copy,
+  WritellerCopy copy,
 ) {
   if (target.type == EntityType.scene) {
     final scene = scenes.where((scene) => scene.id == target.id).firstOrNull;

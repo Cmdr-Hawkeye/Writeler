@@ -1,4 +1,4 @@
-# Writeler Presentation Layer
+# Writeller Presentation Layer
 
 The presentation layer is split by responsibility while still sharing one Dart
 library through `part` files. This keeps the refactor behavior-neutral: private

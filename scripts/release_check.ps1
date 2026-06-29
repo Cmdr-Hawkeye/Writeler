@@ -10,7 +10,7 @@ $ErrorActionPreference = "Stop"
 $root = Resolve-Path "$PSScriptRoot\.."
 $app = Join-Path $root "app"
 
-Write-Host "Writeler release check"
+Write-Host "Writeller release check"
 Write-Host "Workspace: $root"
 
 Push-Location $app
@@ -43,4 +43,4 @@ try {
   Pop-Location
 }
 
-Write-Host "Writeler release check completed."
+Write-Host "Writeller release check completed."

@@ -37,7 +37,7 @@ final class _AIWorkshop extends StatefulWidget {
     required this.onDeleteNote,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final Scene? selectedScene;
   final List<Chapter> chapters;
@@ -302,7 +302,7 @@ final class _AIPromptConsole extends StatefulWidget {
     required this.onRequestTask,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final _AIWorkshopContextKind contextKind;
   final Scene? scene;
@@ -540,7 +540,7 @@ final class _AIContextPicker extends StatelessWidget {
     required this.onSceneChanged,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final _AIWorkshopContextKind contextKind;
   final List<Scene> scenes;
   final Scene? selectedScene;
@@ -638,7 +638,7 @@ final class _LivePromptPreview extends StatelessWidget {
     required this.task,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final Project? project;
   final _AIWorkshopContextKind contextKind;
   final Scene? scene;
@@ -726,7 +726,7 @@ final class _AISuggestionsPanel extends StatefulWidget {
     required this.onRejectSuggestion,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<AISuggestion> suggestions;
   final List<Scene> scenes;
   final ValueChanged<AISuggestion> onAcceptSuggestion;
@@ -996,7 +996,7 @@ final class _AIInboxList extends StatelessWidget {
     required this.onSelected,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<AISuggestion> suggestions;
   final List<Scene> scenes;
   final AISuggestion? selectedSuggestion;
@@ -1030,7 +1030,7 @@ final class _AIInboxListItem extends StatelessWidget {
     required this.onTap,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final AISuggestion suggestion;
   final List<Scene> scenes;
   final bool isSelected;
@@ -1039,7 +1039,7 @@ final class _AIInboxListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final design = Theme.of(context).extension<WritelerDesignTokens>()!;
+    final design = Theme.of(context).extension<WritellerDesignTokens>()!;
     final pending = suggestion.userDecision == SuggestionDecision.pending;
     return Material(
       color: isSelected
@@ -1126,7 +1126,7 @@ final class _AISuggestionDetail extends StatelessWidget {
     required this.onRejectSuggestion,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final AISuggestion suggestion;
   final List<Scene> scenes;
   final ValueChanged<AISuggestion> onAcceptSuggestion;
@@ -1265,7 +1265,7 @@ final class _SuggestionStatusBadge extends StatelessWidget {
     required this.decision,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final SuggestionDecision decision;
 
   @override
@@ -1291,7 +1291,7 @@ final class _SuggestionStatusBadge extends StatelessWidget {
 final class _AIInboxEmpty extends StatelessWidget {
   const _AIInboxEmpty({required this.copy});
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
 
   @override
   Widget build(BuildContext context) {
@@ -1324,7 +1324,7 @@ final class _AIInboxEmpty extends StatelessWidget {
   }
 }
 
-String _filterLabel(_AISuggestionInboxFilter filter, WritelerCopy copy) {
+String _filterLabel(_AISuggestionInboxFilter filter, WritellerCopy copy) {
   return switch (filter) {
     _AISuggestionInboxFilter.open => copy.t('aiInboxOpen'),
     _AISuggestionInboxFilter.accepted => copy.t('aiInboxAccepted'),
@@ -1347,7 +1347,7 @@ IconData _filterIcon(_AISuggestionInboxFilter filter) {
 String _suggestionTargetLabel(
   AISuggestion suggestion,
   List<Scene> scenes,
-  WritelerCopy copy,
+  WritellerCopy copy,
 ) {
   if (suggestion.target.type == EntityType.scene) {
     final scene = scenes
@@ -1373,7 +1373,7 @@ final class _AINotesPanel extends StatelessWidget {
     required this.onDeleteNote,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final List<ProjectNote> notes;
   final List<Scene> scenes;
   final ValueChanged<ProjectNote> onDeleteNote;
@@ -1474,7 +1474,7 @@ final class _AiWorkshopAction {
 final class _AiMenuAnchor extends StatelessWidget {
   const _AiMenuAnchor({required this.copy});
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
 
   @override
   Widget build(BuildContext context) {
@@ -1510,7 +1510,7 @@ final class _AIResponseDigest extends StatelessWidget {
     required this.text,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final String text;
 
   @override
@@ -1567,7 +1567,7 @@ final class _ScenePatchPreview extends StatelessWidget {
     required this.patch,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final ScenePlanningPatch? patch;
 
   @override
@@ -1629,7 +1629,7 @@ final class _ScenePatchPreview extends StatelessWidget {
   }
 }
 
-String _promptTemplateFor(AITaskKind task, WritelerCopy copy) {
+String _promptTemplateFor(AITaskKind task, WritellerCopy copy) {
   return switch (task) {
     AITaskKind.sceneIdeas => copy.t('promptTemplateSceneIdeas'),
     AITaskKind.sceneGoalConflictOutcome =>
@@ -1669,7 +1669,7 @@ final class _AIProviderStatusLine extends StatelessWidget {
     required this.config,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final AIProviderConfig config;
 
   @override
@@ -1719,7 +1719,7 @@ final class _AIRequestStatus extends StatelessWidget {
     required this.message,
   });
 
-  final WritelerCopy copy;
+  final WritellerCopy copy;
   final bool isRequesting;
   final String? message;
 
