@@ -64,7 +64,8 @@ void main() {
     expect(find.text('AI Workshop'), findsOneWidget);
     expect(find.text('Logs'), findsOneWidget);
     expect(find.text('Self-publishing'), findsOneWidget);
-    expect(find.text('New Project'), findsOneWidget);
+    expect(find.byTooltip('New Project'), findsOneWidget);
+    expect(find.byType(Switch), findsOneWidget);
   });
 
   testWidgets('new project action creates a local project row', (tester) async {
@@ -1083,6 +1084,7 @@ void main() {
     await tester.drag(find.byType(ListView).last, const Offset(0, -520));
     await tester.pumpAndSettle();
     expect(find.text('Provider configuration'), findsOneWidget);
+    expect(find.text('Context and model-training notice'), findsOneWidget);
 
     await tapNavigationItem(tester, 'Export/Import');
 

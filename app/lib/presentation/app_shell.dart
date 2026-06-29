@@ -2960,6 +2960,15 @@ final class _WritellerShellState extends State<WritellerShell> {
                               project: _selectedProject,
                               languageCode: widget.languageCode,
                               onLanguageChanged: widget.onLanguageChanged,
+                              globalAiEnabled: widget.globalAiEnabled,
+                              noAiNoCloud: widget.globalNoAiNoCloud,
+                              onGlobalAiChanged: (enabled) =>
+                                  widget.onGlobalProfileSettingsChanged(
+                                aiEnabled: enabled,
+                                cloudSyncEnabled: widget.globalCloudSyncEnabled,
+                                noAiNoCloud:
+                                    enabled ? false : widget.globalNoAiNoCloud,
+                              ),
                               showCreateProject:
                                   _selectedRailIndex == 0 || _projects.isEmpty,
                               onCreateProject: () =>

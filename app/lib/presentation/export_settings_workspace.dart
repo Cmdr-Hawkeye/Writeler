@@ -1332,6 +1332,8 @@ final class _SettingsWorkspace extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _ProviderContextPrivacyNotice(copy: copy),
+              const SizedBox(height: 14),
               DropdownButtonFormField<AIProviderKind>(
                 initialValue: providerKind,
                 icon: const Icon(Icons.keyboard_arrow_down_rounded),
@@ -1457,6 +1459,58 @@ final class _SettingsWorkspace extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+final class _ProviderContextPrivacyNotice extends StatelessWidget {
+  const _ProviderContextPrivacyNotice({required this.copy});
+
+  final WritellerCopy copy;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.tertiaryContainer.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.tertiary.withValues(alpha: 0.34)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.privacy_tip_outlined,
+              color: color.onTertiaryContainer,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    copy.t('aiProviderPrivacyTitle'),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: color.onTertiaryContainer,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    copy.t('aiProviderPrivacyBody'),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: color.onTertiaryContainer,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

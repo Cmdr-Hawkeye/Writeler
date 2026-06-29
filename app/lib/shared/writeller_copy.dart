@@ -79,6 +79,12 @@ final class WritellerCopy {
     'language': 'Sprache',
     'languageGerman': 'Deutsch',
     'languageEnglish': 'English',
+    'aiShortLabel': 'KI',
+    'aiTopBarToggle': 'KI-Unterstützung global umschalten',
+    'aiTopBarHint':
+        'Schaltet KI-Funktionen appweit ein oder aus. Manuskripttext wird nicht automatisch verändert.',
+    'aiTopBarLockedHint':
+        'KI ist durch „Keine KI/keine Cloud“ im Arbeitsprofil gesperrt.',
     'designSettings': 'Design',
     'designSettingsBody':
         'Wähle die Arbeitsstimmung für Oberfläche, Marke und Fokusflächen.',
@@ -127,6 +133,9 @@ final class WritellerCopy {
         'Steuert, wie dieses Projekt KI und optionale Synchronisation nutzt.',
     'providerSettingsBody':
         'Provider, Modell und API-Key für KI-Funktionen konfigurieren.',
+    'aiProviderPrivacyTitle': 'Hinweis zu Kontext und Modelltraining',
+    'aiProviderPrivacyBody':
+        'KI-Aufträge senden den von dir gewählten Kontext an den ausgewählten Anbieter. Je nach Kontext können darin Teile deines Manuskripts, Szenenplanung oder Projektdaten enthalten sein. Manche Anbieter können übermittelte Daten gemäß ihren Bedingungen zum Training oder zur Verbesserung neuer Modelle verwenden. Wähle den Kontext bewusst und prüfe die Datenschutzregeln deines Providers.',
     'emptyTitle': 'Noch kein Projekt geöffnet',
     'emptyBody':
         'Lege ein lokales Schreibprojekt an und strukturiere es in Kapitel, Szenen und Notizen.',
@@ -970,6 +979,12 @@ final class WritellerCopy {
     'language': 'Language',
     'languageGerman': 'Deutsch',
     'languageEnglish': 'English',
+    'aiShortLabel': 'AI',
+    'aiTopBarToggle': 'Toggle AI assistance globally',
+    'aiTopBarHint':
+        'Turns AI features on or off app-wide. Manuscript text is never changed automatically.',
+    'aiTopBarLockedHint':
+        'AI is locked by the "No AI / No Cloud" work profile.',
     'designSettings': 'Design',
     'designSettingsBody':
         'Choose the working mood for the interface, brand, and focus surfaces.',
@@ -1017,6 +1032,9 @@ final class WritellerCopy {
         'Controls how this project uses AI and optional sync.',
     'providerSettingsBody':
         'Configure provider, model, and API key for AI features.',
+    'aiProviderPrivacyTitle': 'Context and model-training notice',
+    'aiProviderPrivacyBody':
+        'AI tasks send the context you choose to the selected provider. Depending on that context, parts of your manuscript, scene planning, or project data may be included. Some providers may use submitted data under their terms to train or improve future models. Choose the context deliberately and review your provider privacy rules.',
     'emptyTitle': 'No project open',
     'emptyBody':
         'Create a local writing project and organize it into chapters, scenes, and notes.',

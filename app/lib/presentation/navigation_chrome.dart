@@ -341,6 +341,9 @@ final class _StudioTopBar extends StatelessWidget {
     required this.project,
     required this.languageCode,
     required this.onLanguageChanged,
+    required this.globalAiEnabled,
+    required this.noAiNoCloud,
+    required this.onGlobalAiChanged,
     required this.showCreateProject,
     required this.onCreateProject,
     required this.onOpenCommandPalette,
@@ -353,6 +356,9 @@ final class _StudioTopBar extends StatelessWidget {
   final Project? project;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
+  final bool globalAiEnabled;
+  final bool noAiNoCloud;
+  final ValueChanged<bool> onGlobalAiChanged;
   final bool showCreateProject;
   final VoidCallback onCreateProject;
   final VoidCallback onOpenCommandPalette;
@@ -365,7 +371,7 @@ final class _StudioTopBar extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 520;
+        final compact = constraints.maxWidth < 720;
         return Container(
           height: 72,
           padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 24),
@@ -452,6 +458,14 @@ final class _StudioTopBar extends StatelessWidget {
                       ),
               ),
               const SizedBox(width: 8),
+              _GlobalAiTopBarSwitch(
+                copy: copy,
+                enabled: globalAiEnabled,
+                locked: noAiNoCloud,
+                compact: compact,
+                onChanged: onGlobalAiChanged,
+              ),
+              const SizedBox(width: 8),
               IconButton.outlined(
                 tooltip: copy.t('commandPalette'),
                 onPressed: onOpenCommandPalette,
@@ -478,6 +492,83 @@ final class _StudioTopBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+final class _GlobalAiTopBarSwitch extends StatelessWidget {
+  const _GlobalAiTopBarSwitch({
+    required this.copy,
+    required this.enabled,
+    required this.locked,
+    required this.compact,
+    required this.onChanged,
+  });
+
+  final WritellerCopy copy;
+  final bool enabled;
+  final bool locked;
+  final bool compact;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final activeColor = enabled ? color.primary : color.onSurfaceVariant;
+    final message =
+        locked ? copy.t('aiTopBarLockedHint') : copy.t('aiTopBarHint');
+    return Tooltip(
+      message: message,
+      child: Semantics(
+        button: true,
+        toggled: enabled,
+        label: copy.t('aiTopBarToggle'),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: enabled
+                ? color.primaryContainer.withValues(alpha: 0.52)
+                : color.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: enabled
+                  ? color.primary.withValues(alpha: 0.38)
+                  : color.outlineVariant,
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: compact ? 8 : 10,
+              right: 6,
+              top: 4,
+              bottom: 4,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  enabled ? Icons.auto_awesome : Icons.auto_awesome_outlined,
+                  size: 18,
+                  color: activeColor,
+                ),
+                if (!compact) ...[
+                  const SizedBox(width: 7),
+                  Text(
+                    copy.t('aiShortLabel'),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: color.onSurface,
+                        ),
+                  ),
+                ],
+                Switch(
+                  value: enabled,
+                  onChanged: locked ? null : onChanged,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
