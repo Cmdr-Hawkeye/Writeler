@@ -1079,11 +1079,11 @@ void main() {
 
     await tapNavigationItem(tester, 'Settings');
 
-    expect(find.text('Work profile'), findsOneWidget);
-    expect(find.text('Spelling & dictionaries'), findsOneWidget);
-    await tester.drag(find.byType(ListView).last, const Offset(0, -520));
+    expect(find.text('Work profile'), findsWidgets);
+    expect(find.text('Spelling & dictionaries'), findsWidgets);
+    await tester.tap(find.text('Provider configuration').first);
     await tester.pumpAndSettle();
-    expect(find.text('Provider configuration'), findsOneWidget);
+    expect(find.text('Provider configuration'), findsWidgets);
     expect(find.text('Context and model-training notice'), findsOneWidget);
 
     await tapNavigationItem(tester, 'Export/Import');
@@ -1125,10 +1125,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tapNavigationItem(tester, 'Settings');
-    await tester.drag(find.byType(ListView).last, const Offset(0, -620));
+    await tester.tap(find.text('Project details').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Project details'), findsOneWidget);
+    expect(find.text('Project details'), findsWidgets);
     expect(find.text('30000'), findsOneWidget);
 
     await tester.tap(find.text('Pages').last);
@@ -1178,8 +1178,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tapNavigationItem(tester, 'Settings');
+    await tester.tap(find.text('Work profile').first);
+    await tester.pumpAndSettle();
 
-    expect(find.text('Work profile'), findsOneWidget);
+    expect(find.text('Work profile'), findsWidgets);
     expect(find.text('Select a project'), findsNothing);
 
     await tester.tap(find.text('No AI / No Cloud'));

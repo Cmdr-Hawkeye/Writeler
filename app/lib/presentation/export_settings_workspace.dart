@@ -1228,13 +1228,12 @@ final class _SettingsWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Text(copy.t('settings'),
-            style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 16),
-        _SettingsSection(
+    final color = Theme.of(context).colorScheme;
+    final tabs = [
+      _SettingsTabSpec(
+        icon: Icons.palette_outlined,
+        label: copy.t('designSettings'),
+        child: _SettingsSection(
           title: copy.t('designSettings'),
           help: copy.t('helpDesignSettings'),
           body: copy.t('designSettingsBody'),
@@ -1244,7 +1243,11 @@ final class _SettingsWorkspace extends StatelessWidget {
             onChanged: onDesignThemeChanged,
           ),
         ),
-        _SettingsSection(
+      ),
+      _SettingsTabSpec(
+        icon: Icons.tune_outlined,
+        label: copy.t('globalProfileSettings'),
+        child: _SettingsSection(
           title: copy.t('globalProfileSettings'),
           help: copy.t('helpGlobalProfileSettings'),
           body: copy.t('globalProfileSettingsBody'),
@@ -1304,7 +1307,11 @@ final class _SettingsWorkspace extends StatelessWidget {
             ],
           ),
         ),
-        _SettingsSection(
+      ),
+      _SettingsTabSpec(
+        icon: Icons.spellcheck_outlined,
+        label: copy.t('spellCheckSettings'),
+        child: _SettingsSection(
           title: copy.t('spellCheckSettings'),
           help: copy.t('helpSpellCheckSettings'),
           body: copy.t('spellCheckSettingsBody'),
@@ -1315,7 +1322,11 @@ final class _SettingsWorkspace extends StatelessWidget {
             onChanged: onSpellCheckSettingsChanged,
           ),
         ),
-        _SettingsSection(
+      ),
+      _SettingsTabSpec(
+        icon: Icons.assignment_outlined,
+        label: copy.t('projectMetadata'),
+        child: _SettingsSection(
           title: copy.t('projectMetadata'),
           help: copy.t('helpProjectMetadata'),
           body: copy.t('projectMetadataBody'),
@@ -1325,7 +1336,11 @@ final class _SettingsWorkspace extends StatelessWidget {
             onSave: onSaveProjectMetadata,
           ),
         ),
-        _SettingsSection(
+      ),
+      _SettingsTabSpec(
+        icon: Icons.key_outlined,
+        label: copy.t('providerConfig'),
+        child: _SettingsSection(
           title: copy.t('providerConfig'),
           help: copy.t('helpProviderKind'),
           body: copy.t('providerSettingsBody'),
@@ -1458,7 +1473,101 @@ final class _SettingsWorkspace extends StatelessWidget {
             ],
           ),
         ),
-      ],
+      ),
+    ];
+
+    return DefaultTabController(
+      length: tabs.length,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 14),
+            child: Text(
+              copy.t('settings'),
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: color.surfaceContainerLow,
+              border: Border(
+                top: BorderSide(color: color.outlineVariant),
+                bottom: BorderSide(color: color.outlineVariant),
+              ),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final scrollable = constraints.maxWidth < 980;
+                final showIcons = constraints.maxWidth >= 760;
+                return TabBar(
+                  isScrollable: scrollable,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  indicatorSize: TabBarIndicatorSize.label,
+                  tabs: [
+                    for (final tab in tabs)
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize:
+                              scrollable ? MainAxisSize.min : MainAxisSize.max,
+                          children: [
+                            if (showIcons) ...[
+                              Icon(tab.icon, size: 18),
+                              const SizedBox(width: 8),
+                            ],
+                            Flexible(
+                              child: Text(
+                                tab.label,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                for (final tab in tabs) _SettingsTabPage(child: tab.child),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _SettingsTabSpec {
+  const _SettingsTabSpec({
+    required this.icon,
+    required this.label,
+    required this.child,
+  });
+
+  final IconData icon;
+  final String label;
+  final Widget child;
+}
+
+final class _SettingsTabPage extends StatelessWidget {
+  const _SettingsTabPage({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scrollbar(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        children: [child],
+      ),
     );
   }
 }
