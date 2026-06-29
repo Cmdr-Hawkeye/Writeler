@@ -1703,6 +1703,8 @@ final class _WritellerShellState extends State<WritellerShell> {
     AITaskKind task, {
     required _AIWorkshopContextKind contextKind,
     Scene? scene,
+    required List<CatalogItem> contextCatalogItems,
+    required List<Relationship> contextRelationships,
   }) async {
     final project = _selectedProject;
     final targetScene = scene ?? _selectedScene ?? _scenes.firstOrNull;
@@ -1725,6 +1727,8 @@ final class _WritellerShellState extends State<WritellerShell> {
           task: task,
           languageCode: copy.languageCode,
           userPrompt: userPrompt,
+          contextCatalogItems: contextCatalogItems,
+          contextRelationships: contextRelationships,
         );
       } else {
         await requester.forScene(
@@ -1733,6 +1737,8 @@ final class _WritellerShellState extends State<WritellerShell> {
           task: task,
           languageCode: copy.languageCode,
           userPrompt: userPrompt,
+          contextCatalogItems: contextCatalogItems,
+          contextRelationships: contextRelationships,
         );
       }
       final suggestions =
@@ -1754,6 +1760,8 @@ final class _WritellerShellState extends State<WritellerShell> {
           'task': task.name,
           'context': contextKind.name,
           if (targetScene != null) 'sceneId': targetScene.id,
+          'contextCatalogItems': contextCatalogItems.length,
+          'contextRelationships': contextRelationships.length,
         },
       );
       if (!mounted) return;
@@ -3299,6 +3307,8 @@ final class _WritellerShellState extends State<WritellerShell> {
           selectedScene: _selectedScene,
           chapters: _chapters,
           scenes: _scenes,
+          catalogItems: _catalogItems,
+          relationships: _relationships,
           suggestions: _suggestions,
           notes: _notes,
           activeProviderConfig:
@@ -3311,12 +3321,16 @@ final class _WritellerShellState extends State<WritellerShell> {
             task, {
             required contextKind,
             scene,
+            required contextCatalogItems,
+            required contextRelationships,
           }) =>
               _requestAiSuggestion(
             copy,
             task,
             contextKind: contextKind,
             scene: scene,
+            contextCatalogItems: contextCatalogItems,
+            contextRelationships: contextRelationships,
           ),
           onAcceptSuggestion: (suggestion) =>
               _decideSuggestion(copy, suggestion, SuggestionDecision.accepted),

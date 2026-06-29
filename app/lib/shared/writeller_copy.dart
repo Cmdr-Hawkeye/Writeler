@@ -647,6 +647,19 @@ final class WritellerCopy {
     'aiPromptSubmitHint': 'Strg+Enter sendet den Auftrag',
     'promptTemplates': 'Prompt-Vorlagen',
     'promptPreview': 'Exakter Prompt an das LLM',
+    'additionalAiContext': 'Zusätzlicher KI-Kontext',
+    'additionalAiContextBody':
+        'Optional: Figuren, Orte, Objekte und Beziehungen gezielt mitsenden.',
+    'helpAdditionalAiContext':
+        'Wähle nur die Projektbausteine aus, die das Modell für diese Aufgabe wirklich kennen soll.',
+    'selectedAiContextCount': 'Ausgewählte Kontextbausteine',
+    'clearAiContextSelection': 'Auswahl leeren',
+    'noAdditionalAiContext':
+        'Noch keine auswählbaren Figuren, Orte, Objekte oder Beziehungen vorhanden.',
+    'aiContextCharacters': 'Figuren',
+    'aiContextLocations': 'Orte',
+    'aiContextObjects': 'Objekte',
+    'aiContextRelationships': 'Beziehungen',
     'structuredAnswer': 'Strukturierte Antwort',
     'promptTemplateSceneIdeas':
         'Entwickle drei unterschiedliche Szenenvarianten. Benenne jeweils Konflikt, neue Information und erzählerischen Nutzen.',
@@ -1538,6 +1551,19 @@ final class WritellerCopy {
     'aiPromptSubmitHint': 'Ctrl+Enter sends the task',
     'promptTemplates': 'Prompt templates',
     'promptPreview': 'Exact prompt sent to the LLM',
+    'additionalAiContext': 'Additional AI context',
+    'additionalAiContextBody':
+        'Optional: send selected characters, locations, objects, and relationships.',
+    'helpAdditionalAiContext':
+        'Select only the project building blocks the model should actually know for this task.',
+    'selectedAiContextCount': 'Selected context items',
+    'clearAiContextSelection': 'Clear selection',
+    'noAdditionalAiContext':
+        'No selectable characters, locations, objects, or relationships yet.',
+    'aiContextCharacters': 'Characters',
+    'aiContextLocations': 'Locations',
+    'aiContextObjects': 'Objects',
+    'aiContextRelationships': 'Relationships',
     'structuredAnswer': 'Structured answer',
     'promptTemplateSceneIdeas':
         'Develop three distinct scene variants. For each, name the conflict, new information, and narrative value.',

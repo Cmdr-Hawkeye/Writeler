@@ -2,6 +2,8 @@ import '../../../core/domain/draft_status.dart';
 import '../../../core/domain/entity_ref.dart';
 import '../../../core/domain/entity_type.dart';
 import '../../../core/domain/ids.dart';
+import '../../catalog/domain/catalog_item.dart';
+import '../../catalog/domain/relationship.dart';
 import '../../projects/domain/project.dart';
 import '../../structure/domain/scene.dart';
 import '../domain/ai_policy.dart';
@@ -28,6 +30,8 @@ final class RequestAISuggestion {
     required AITaskKind task,
     required String userPrompt,
     String languageCode = 'en',
+    List<CatalogItem> contextCatalogItems = const [],
+    List<Relationship> contextRelationships = const [],
     ModelParameters parameters = const ModelParameters(),
   }) async {
     policy.ensureProjectAllowsAI(project);
@@ -40,6 +44,8 @@ final class RequestAISuggestion {
       task: task,
       userPrompt: userPrompt,
       languageCode: languageCode,
+      contextCatalogItems: contextCatalogItems,
+      contextRelationships: contextRelationships,
     );
 
     final response = await provider.generateText(
@@ -50,6 +56,8 @@ final class RequestAISuggestion {
           'projectId': project.id,
           'sceneId': scene.id,
           'wordCount': scene.actualWordCount,
+          'contextCatalogItemCount': contextCatalogItems.length,
+          'contextRelationshipCount': contextRelationships.length,
         },
         parameters: parameters,
       ),
@@ -82,6 +90,8 @@ final class RequestAISuggestion {
     required AITaskKind task,
     required String userPrompt,
     String languageCode = 'en',
+    List<CatalogItem> contextCatalogItems = const [],
+    List<Relationship> contextRelationships = const [],
     ModelParameters parameters = const ModelParameters(),
   }) async {
     policy.ensureProjectAllowsAI(project);
@@ -95,6 +105,8 @@ final class RequestAISuggestion {
       task: task,
       userPrompt: userPrompt,
       languageCode: languageCode,
+      contextCatalogItems: contextCatalogItems,
+      contextRelationships: contextRelationships,
     );
 
     final response = await provider.generateText(
@@ -105,6 +117,8 @@ final class RequestAISuggestion {
           'projectId': project.id,
           'sceneCount': scenes.length,
           'chapterCount': chapters.length,
+          'contextCatalogItemCount': contextCatalogItems.length,
+          'contextRelationshipCount': contextRelationships.length,
         },
         parameters: parameters,
       ),
@@ -142,6 +156,8 @@ final class AIProjectPromptBuilder {
     required AITaskKind task,
     required String userPrompt,
     required String languageCode,
+    List<CatalogItem> contextCatalogItems = const [],
+    List<Relationship> contextRelationships = const [],
   }) {
     final german = languageCode == 'de';
     final orderedChapters = [...chapters]
@@ -174,6 +190,12 @@ final class AIProjectPromptBuilder {
       german
           ? 'Szenen (${orderedScenes.length}):\n${_sceneSummary(orderedScenes, german: true)}'
           : 'Scenes (${orderedScenes.length}):\n${_sceneSummary(orderedScenes, german: false)}',
+      _fineGrainedContextBlock(
+        catalogItems: contextCatalogItems,
+        relationships: contextRelationships,
+        scenes: orderedScenes,
+        german: german,
+      ),
       german
           ? 'Nutzerauftrag: ${_fallback(userPrompt, 'keine Zusatzanweisung')}'
           : 'User request: ${_fallback(userPrompt, 'no extra instruction')}',
@@ -276,6 +298,8 @@ final class AIScenePromptBuilder {
     required AITaskKind task,
     required String userPrompt,
     required String languageCode,
+    List<CatalogItem> contextCatalogItems = const [],
+    List<Relationship> contextRelationships = const [],
   }) {
     final german = languageCode == 'de';
     final manuscriptExcerpt = _excerpt(scene.manuscriptText);
@@ -313,6 +337,12 @@ final class AIScenePromptBuilder {
         german
             ? 'Manuskript-Auszug:\n$manuscriptExcerpt'
             : 'Manuscript excerpt:\n$manuscriptExcerpt',
+      _fineGrainedContextBlock(
+        catalogItems: contextCatalogItems,
+        relationships: contextRelationships,
+        scenes: [scene],
+        german: german,
+      ),
       german
           ? 'Nutzerauftrag: ${_fallback(userPrompt, 'keine Zusatzanweisung')}'
           : 'User request: ${_fallback(userPrompt, 'no extra instruction')}',
@@ -383,4 +413,126 @@ final class AIScenePromptBuilder {
     if (trimmed.length <= 1200) return trimmed;
     return '${trimmed.substring(0, 1200)}...';
   }
+}
+
+String _fineGrainedContextBlock({
+  required List<CatalogItem> catalogItems,
+  required List<Relationship> relationships,
+  required List<Scene> scenes,
+  required bool german,
+}) {
+  final relevantItems = catalogItems
+      .where((item) =>
+          item.type == EntityType.character ||
+          item.type == EntityType.location ||
+          item.type == EntityType.object)
+      .take(18)
+      .toList();
+  final relevantRelationships = relationships.take(18).toList();
+  if (relevantItems.isEmpty && relevantRelationships.isEmpty) return '';
+
+  final itemById = {
+    for (final item in relevantItems) item.id: item,
+  };
+  final sceneById = {
+    for (final scene in scenes) scene.id: scene,
+  };
+  final lines = <String>[
+    german
+        ? 'ZusÃ¤tzlich ausgewÃ¤hlter Kontext:'
+        : 'Additional selected context:',
+  ];
+  if (relevantItems.isNotEmpty) {
+    lines.add(german ? 'EntitÃ¤ten:' : 'Entities:');
+    for (final item in relevantItems) {
+      final type = _catalogTypeLabel(item.type, german: german);
+      final summary = _trimForPrompt(item.summary, maxLength: 240);
+      final details = _catalogFieldSummary(item, german: german);
+      lines.add(
+        '- $type: ${item.name}'
+        '${summary.isEmpty ? '' : ' - $summary'}'
+        '${details.isEmpty ? '' : ' ($details)'}',
+      );
+    }
+  }
+  if (relevantRelationships.isNotEmpty) {
+    lines.add(german ? 'Beziehungen:' : 'Relationships:');
+    for (final relationship in relevantRelationships) {
+      final source = _entityPromptLabel(
+        relationship.source,
+        itemById: itemById,
+        sceneById: sceneById,
+        german: german,
+      );
+      final target = _entityPromptLabel(
+        relationship.target,
+        itemById: itemById,
+        sceneById: sceneById,
+        german: german,
+      );
+      final label = relationship.label?.trim().isNotEmpty == true
+          ? relationship.label!.trim()
+          : relationship.relationshipType;
+      final description = _trimForPrompt(
+        relationship.description ?? '',
+        maxLength: 220,
+      );
+      final direction = relationship.direction == RelationshipDirection.directed
+          ? '->'
+          : '<->';
+      final strength = relationship.strength == null
+          ? ''
+          : german
+              ? ', StÃ¤rke ${relationship.strength!.toStringAsFixed(1)}'
+              : ', strength ${relationship.strength!.toStringAsFixed(1)}';
+      lines.add(
+        '- $source $direction $target: $label'
+        '$strength${description.isEmpty ? '' : ' - $description'}',
+      );
+    }
+  }
+  return lines.join('\n');
+}
+
+String _catalogTypeLabel(EntityType type, {required bool german}) {
+  return switch (type) {
+    EntityType.character => german ? 'Figur' : 'Character',
+    EntityType.location => german ? 'Ort' : 'Location',
+    EntityType.object => german ? 'Objekt' : 'Object',
+    _ => type.wireName,
+  };
+}
+
+String _catalogFieldSummary(CatalogItem item, {required bool german}) {
+  final entries = item.fields.entries
+      .where(
+          (entry) => entry.value != null && '${entry.value}'.trim().isNotEmpty)
+      .take(3)
+      .map((entry) =>
+          '${entry.key}: ${_trimForPrompt('${entry.value}', maxLength: 80)}')
+      .toList();
+  return entries.join(german ? '; ' : '; ');
+}
+
+String _entityPromptLabel(
+  EntityRef ref, {
+  required Map<String, CatalogItem> itemById,
+  required Map<String, Scene> sceneById,
+  required bool german,
+}) {
+  if (ref.type == EntityType.scene) {
+    return sceneById[ref.id]?.title ??
+        (german ? 'Szene ${ref.id}' : 'Scene ${ref.id}');
+  }
+  final item = itemById[ref.id];
+  if (item != null) {
+    return '${_catalogTypeLabel(item.type, german: german)} ${item.name}';
+  }
+  return '${ref.type.wireName} ${ref.id}';
+}
+
+String _trimForPrompt(String value, {required int maxLength}) {
+  final trimmed = value.trim().replaceAll(RegExp(r'\s+'), ' ');
+  if (trimmed.length <= maxLength) return trimmed;
+  return '${trimmed.substring(0, maxLength)}...';
 }

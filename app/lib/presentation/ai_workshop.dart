@@ -14,6 +14,8 @@ typedef _AIWorkshopTaskRequest = void Function(
   AITaskKind task, {
   required _AIWorkshopContextKind contextKind,
   Scene? scene,
+  required List<CatalogItem> contextCatalogItems,
+  required List<Relationship> contextRelationships,
 });
 
 final class _AIWorkshop extends StatefulWidget {
@@ -23,6 +25,8 @@ final class _AIWorkshop extends StatefulWidget {
     required this.selectedScene,
     required this.chapters,
     required this.scenes,
+    required this.catalogItems,
+    required this.relationships,
     required this.suggestions,
     required this.notes,
     required this.activeProviderConfig,
@@ -42,6 +46,8 @@ final class _AIWorkshop extends StatefulWidget {
   final Scene? selectedScene;
   final List<Chapter> chapters;
   final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
   final List<AISuggestion> suggestions;
   final List<ProjectNote> notes;
   final AIProviderConfig activeProviderConfig;
@@ -62,6 +68,8 @@ final class _AIWorkshop extends StatefulWidget {
 final class _AIWorkshopState extends State<_AIWorkshop> {
   late _AIWorkshopContextKind _contextKind;
   String? _sceneId;
+  final Set<String> _selectedCatalogItemIds = {};
+  final Set<String> _selectedRelationshipIds = {};
 
   @override
   void initState() {
@@ -84,6 +92,7 @@ final class _AIWorkshopState extends State<_AIWorkshop> {
         widget.selectedScene != null) {
       _sceneId = widget.selectedScene!.id;
     }
+    _pruneContextSelection();
   }
 
   @override
@@ -130,6 +139,10 @@ final class _AIWorkshopState extends State<_AIWorkshop> {
                     scene: scene,
                     chapters: widget.chapters,
                     scenes: widget.scenes,
+                    catalogItems: widget.catalogItems,
+                    relationships: widget.relationships,
+                    selectedCatalogItemIds: _selectedCatalogItemIds,
+                    selectedRelationshipIds: _selectedRelationshipIds,
                     canRequest: canRequest,
                     activeProviderConfig: widget.activeProviderConfig,
                     promptController: widget.promptController,
@@ -137,6 +150,9 @@ final class _AIWorkshopState extends State<_AIWorkshop> {
                     lastError: widget.lastError,
                     onContextChanged: _changeContext,
                     onSceneChanged: _changeScene,
+                    onToggleCatalogItem: _toggleCatalogItem,
+                    onToggleRelationship: _toggleRelationship,
+                    onClearAdditionalContext: _clearAdditionalContext,
                     onRequestTask: _requestTask,
                   ),
                   const SizedBox(height: 24),
@@ -192,7 +208,53 @@ final class _AIWorkshopState extends State<_AIWorkshop> {
       task,
       contextKind: _contextKind,
       scene: _selectedSceneForContext(),
+      contextCatalogItems: _selectedCatalogItems(),
+      contextRelationships: _selectedRelationships(),
     );
+  }
+
+  List<CatalogItem> _selectedCatalogItems() {
+    return widget.catalogItems
+        .where((item) => _selectedCatalogItemIds.contains(item.id))
+        .toList();
+  }
+
+  List<Relationship> _selectedRelationships() {
+    return widget.relationships
+        .where((relationship) =>
+            _selectedRelationshipIds.contains(relationship.id))
+        .toList();
+  }
+
+  void _toggleCatalogItem(CatalogItem item) {
+    setState(() {
+      if (!_selectedCatalogItemIds.remove(item.id)) {
+        _selectedCatalogItemIds.add(item.id);
+      }
+    });
+  }
+
+  void _toggleRelationship(Relationship relationship) {
+    setState(() {
+      if (!_selectedRelationshipIds.remove(relationship.id)) {
+        _selectedRelationshipIds.add(relationship.id);
+      }
+    });
+  }
+
+  void _clearAdditionalContext() {
+    setState(() {
+      _selectedCatalogItemIds.clear();
+      _selectedRelationshipIds.clear();
+    });
+  }
+
+  void _pruneContextSelection() {
+    final itemIds = widget.catalogItems.map((item) => item.id).toSet();
+    final relationshipIds =
+        widget.relationships.map((relationship) => relationship.id).toSet();
+    _selectedCatalogItemIds.removeWhere((id) => !itemIds.contains(id));
+    _selectedRelationshipIds.removeWhere((id) => !relationshipIds.contains(id));
   }
 }
 
@@ -292,6 +354,10 @@ final class _AIPromptConsole extends StatefulWidget {
     required this.scene,
     required this.chapters,
     required this.scenes,
+    required this.catalogItems,
+    required this.relationships,
+    required this.selectedCatalogItemIds,
+    required this.selectedRelationshipIds,
     required this.canRequest,
     required this.activeProviderConfig,
     required this.promptController,
@@ -299,6 +365,9 @@ final class _AIPromptConsole extends StatefulWidget {
     required this.lastError,
     required this.onContextChanged,
     required this.onSceneChanged,
+    required this.onToggleCatalogItem,
+    required this.onToggleRelationship,
+    required this.onClearAdditionalContext,
     required this.onRequestTask,
   });
 
@@ -308,6 +377,10 @@ final class _AIPromptConsole extends StatefulWidget {
   final Scene? scene;
   final List<Chapter> chapters;
   final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final Set<String> selectedCatalogItemIds;
+  final Set<String> selectedRelationshipIds;
   final bool canRequest;
   final AIProviderConfig activeProviderConfig;
   final TextEditingController promptController;
@@ -315,6 +388,9 @@ final class _AIPromptConsole extends StatefulWidget {
   final String? lastError;
   final ValueChanged<_AIWorkshopContextKind> onContextChanged;
   final ValueChanged<Scene> onSceneChanged;
+  final ValueChanged<CatalogItem> onToggleCatalogItem;
+  final ValueChanged<Relationship> onToggleRelationship;
+  final VoidCallback onClearAdditionalContext;
   final ValueChanged<AITaskKind> onRequestTask;
 
   @override
@@ -381,6 +457,19 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
             _AIProviderStatusLine(
               copy: widget.copy,
               config: widget.activeProviderConfig,
+            ),
+            const SizedBox(height: 12),
+            _AIAdditionalContextSelector(
+              copy: widget.copy,
+              catalogItems: widget.catalogItems,
+              relationships: widget.relationships,
+              scenes: widget.scenes,
+              selectedCatalogItemIds: widget.selectedCatalogItemIds,
+              selectedRelationshipIds: widget.selectedRelationshipIds,
+              isEnabled: !widget.isRequesting,
+              onToggleCatalogItem: widget.onToggleCatalogItem,
+              onToggleRelationship: widget.onToggleRelationship,
+              onClear: widget.onClearAdditionalContext,
             ),
             const SizedBox(height: 14),
             _HelpedLabel(
@@ -494,6 +583,14 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
               scene: widget.scene,
               chapters: widget.chapters,
               scenes: widget.scenes,
+              catalogItems: widget.catalogItems
+                  .where(
+                      (item) => widget.selectedCatalogItemIds.contains(item.id))
+                  .toList(),
+              relationships: widget.relationships
+                  .where((relationship) =>
+                      widget.selectedRelationshipIds.contains(relationship.id))
+                  .toList(),
               promptController: widget.promptController,
               task: _previewTask,
             ),
@@ -626,6 +723,228 @@ final class _AIContextPicker extends StatelessWidget {
   }
 }
 
+final class _AIAdditionalContextSelector extends StatelessWidget {
+  const _AIAdditionalContextSelector({
+    required this.copy,
+    required this.catalogItems,
+    required this.relationships,
+    required this.scenes,
+    required this.selectedCatalogItemIds,
+    required this.selectedRelationshipIds,
+    required this.isEnabled,
+    required this.onToggleCatalogItem,
+    required this.onToggleRelationship,
+    required this.onClear,
+  });
+
+  final WritellerCopy copy;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final List<Scene> scenes;
+  final Set<String> selectedCatalogItemIds;
+  final Set<String> selectedRelationshipIds;
+  final bool isEnabled;
+  final ValueChanged<CatalogItem> onToggleCatalogItem;
+  final ValueChanged<Relationship> onToggleRelationship;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final selectableItems = catalogItems
+        .where((item) =>
+            item.type == EntityType.character ||
+            item.type == EntityType.location ||
+            item.type == EntityType.object)
+        .toList();
+    final selectedCount =
+        selectedCatalogItemIds.length + selectedRelationshipIds.length;
+
+    return Material(
+      color: Colors.transparent,
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        leading: Icon(Icons.tune_outlined, color: color.primary),
+        title: _HelpedLabel(
+          label: copy.t('additionalAiContext'),
+          help: copy.t('helpAdditionalAiContext'),
+        ),
+        subtitle: Text(
+          selectedCount == 0
+              ? copy.t('additionalAiContextBody')
+              : '${copy.t('selectedAiContextCount')}: $selectedCount',
+        ),
+        childrenPadding: const EdgeInsets.only(bottom: 8),
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (selectedCount > 0)
+                  OutlinedButton.icon(
+                    onPressed: isEnabled ? onClear : null,
+                    icon: const Icon(Icons.backspace_outlined),
+                    label: Text(copy.t('clearAiContextSelection')),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (selectableItems.isEmpty && relationships.isEmpty)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                copy.t('noAdditionalAiContext'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
+              ),
+            )
+          else ...[
+            _AIContextChipGroup(
+              title: copy.t('aiContextCharacters'),
+              items: selectableItems
+                  .where((item) => item.type == EntityType.character),
+              selectedIds: selectedCatalogItemIds,
+              isEnabled: isEnabled,
+              labelFor: (item) => item.name,
+              onToggle: onToggleCatalogItem,
+            ),
+            _AIContextChipGroup(
+              title: copy.t('aiContextLocations'),
+              items: selectableItems
+                  .where((item) => item.type == EntityType.location),
+              selectedIds: selectedCatalogItemIds,
+              isEnabled: isEnabled,
+              labelFor: (item) => item.name,
+              onToggle: onToggleCatalogItem,
+            ),
+            _AIContextChipGroup(
+              title: copy.t('aiContextObjects'),
+              items: selectableItems
+                  .where((item) => item.type == EntityType.object),
+              selectedIds: selectedCatalogItemIds,
+              isEnabled: isEnabled,
+              labelFor: (item) => item.name,
+              onToggle: onToggleCatalogItem,
+            ),
+            _AIContextChipGroup(
+              title: copy.t('aiContextRelationships'),
+              items: relationships,
+              selectedIds: selectedRelationshipIds,
+              isEnabled: isEnabled,
+              labelFor: (relationship) => _aiRelationshipLabel(
+                relationship,
+                catalogItems: catalogItems,
+                scenes: scenes,
+                copy: copy,
+              ),
+              onToggle: onToggleRelationship,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+final class _AIContextChipGroup<T extends Object> extends StatelessWidget {
+  const _AIContextChipGroup({
+    required this.title,
+    required this.items,
+    required this.selectedIds,
+    required this.isEnabled,
+    required this.labelFor,
+    required this.onToggle,
+  });
+
+  final String title;
+  final Iterable<T> items;
+  final Set<String> selectedIds;
+  final bool isEnabled;
+  final String Function(T item) labelFor;
+  final ValueChanged<T> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleItems = items.toList();
+    if (visibleItems.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in visibleItems)
+                FilterChip(
+                  selected: selectedIds.contains(_contextSelectableId(item)),
+                  showCheckmark: true,
+                  label: Text(labelFor(item)),
+                  onSelected: isEnabled ? (_) => onToggle(item) : null,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _contextSelectableId(Object item) {
+  return switch (item) {
+    CatalogItem() => item.id,
+    Relationship() => item.id,
+    _ => '',
+  };
+}
+
+String _aiRelationshipLabel(
+  Relationship relationship, {
+  required List<CatalogItem> catalogItems,
+  required List<Scene> scenes,
+  required WritellerCopy copy,
+}) {
+  final source = _aiEntityLabel(
+    relationship.source,
+    catalogItems: catalogItems,
+    scenes: scenes,
+    copy: copy,
+  );
+  final target = _aiEntityLabel(
+    relationship.target,
+    catalogItems: catalogItems,
+    scenes: scenes,
+    copy: copy,
+  );
+  final label = relationship.label?.trim().isNotEmpty == true
+      ? relationship.label!.trim()
+      : relationship.relationshipType;
+  final arrow =
+      relationship.direction == RelationshipDirection.directed ? '->' : '<->';
+  return '$source $arrow $target: $label';
+}
+
+String _aiEntityLabel(
+  EntityRef ref, {
+  required List<CatalogItem> catalogItems,
+  required List<Scene> scenes,
+  required WritellerCopy copy,
+}) {
+  if (ref.type == EntityType.scene) {
+    return scenes.where((scene) => scene.id == ref.id).firstOrNull?.title ??
+        copy.t('scene');
+  }
+  final item = catalogItems.where((item) => item.id == ref.id).firstOrNull;
+  return item?.name ?? ref.type.wireName;
+}
+
 final class _LivePromptPreview extends StatelessWidget {
   const _LivePromptPreview({
     required this.copy,
@@ -634,6 +953,8 @@ final class _LivePromptPreview extends StatelessWidget {
     required this.scene,
     required this.chapters,
     required this.scenes,
+    required this.catalogItems,
+    required this.relationships,
     required this.promptController,
     required this.task,
   });
@@ -644,6 +965,8 @@ final class _LivePromptPreview extends StatelessWidget {
   final Scene? scene;
   final List<Chapter> chapters;
   final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
   final TextEditingController promptController;
   final AITaskKind task;
 
@@ -678,6 +1001,8 @@ final class _LivePromptPreview extends StatelessWidget {
                         task: task,
                         userPrompt: userPrompt,
                         languageCode: copy.languageCode,
+                        contextCatalogItems: catalogItems,
+                        contextRelationships: relationships,
                       ),
                 _AIWorkshopContextKind.scene => scene == null
                     ? copy.t('aiNeedsScene')
@@ -687,6 +1012,8 @@ final class _LivePromptPreview extends StatelessWidget {
                         task: task,
                         userPrompt: userPrompt,
                         languageCode: copy.languageCode,
+                        contextCatalogItems: catalogItems,
+                        contextRelationships: relationships,
                       ),
               };
               return DecoratedBox(

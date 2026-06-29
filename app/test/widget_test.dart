@@ -6,6 +6,7 @@ import 'package:writeller/core/domain/entity_type.dart';
 import 'package:writeller/features/ai_harness/domain/ai_suggestion.dart';
 import 'package:writeller/features/ai_harness/infrastructure/in_memory_ai_suggestion_repository.dart';
 import 'package:writeller/features/catalog/application/create_catalog_item.dart';
+import 'package:writeller/features/catalog/domain/relationship.dart';
 import 'package:writeller/features/catalog/infrastructure/in_memory_catalog_item_repository.dart';
 import 'package:writeller/features/catalog/infrastructure/in_memory_relationship_repository.dart';
 import 'package:writeller/features/metrics/application/in_memory_metric_repository.dart';
@@ -646,16 +647,44 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final catalogRepository = InMemoryCatalogItemRepository();
+    final relationshipRepository = InMemoryRelationshipRepository();
     await appPreferenceRepository.write('app.language', 'en');
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'AI Draft'),
+    );
+    final character = await CreateCatalogItem(catalogRepository)(
+      CreateCatalogItemCommand(
+        projectId: project.id,
+        type: EntityType.character,
+        name: 'Mara',
+        summary: 'Engineer with a careful eye for weak signals.',
+      ),
+    );
+    await relationshipRepository.save(
+      Relationship(
+        id: 'relationship-1',
+        projectId: project.id,
+        source: EntityRef(type: EntityType.character, id: character.id),
+        target: EntityRef(type: EntityType.project, id: project.id),
+        relationshipType: 'coreCast',
+        label: 'core cast',
+        description: 'Mara carries the technical mystery.',
+        direction: RelationshipDirection.directed,
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+      ),
+    );
 
     await tester.pumpWidget(
       WritellerApp(
-        projectRepository: InMemoryProjectRepository(),
+        projectRepository: projectRepository,
         chapterRepository: InMemoryChapterRepository(),
         sceneRepository: InMemorySceneRepository(),
         sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
-        catalogItemRepository: InMemoryCatalogItemRepository(),
-        relationshipRepository: InMemoryRelationshipRepository(),
+        catalogItemRepository: catalogRepository,
+        relationshipRepository: relationshipRepository,
         metricRepository: InMemoryMetricRepository(),
         aiSuggestionRepository: InMemoryAISuggestionRepository(),
         projectNoteRepository: InMemoryProjectNoteRepository(),
@@ -666,13 +695,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New Project'));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.byType(EditableText), 'AI Draft');
-    await tester.tap(find.text('Create'));
-    await tester.pumpAndSettle();
-
     await tapNavigationItem(tester, 'AI Workshop');
 
     final sendButton = tester.widget<FilledButton>(
@@ -681,6 +703,25 @@ void main() {
 
     expect(sendButton.onPressed, isNotNull);
     expect(find.textContaining('Project-wide'), findsWidgets);
+    expect(find.text('Additional AI context'), findsOneWidget);
+
+    await tester.tap(find.text('Additional AI context'));
+    await tester.pumpAndSettle();
+    expect(find.text('Characters'), findsWidgets);
+    expect(find.text('Mara'), findsWidgets);
+
+    await tester.tap(find.text('Mara'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Exact prompt sent to the LLM'),
+      220,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Exact prompt sent to the LLM'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Additional selected context'), findsOneWidget);
+    expect(find.textContaining('Character: Mara'), findsOneWidget);
 
     await tester.ensureVisible(find.widgetWithText(FilledButton, 'Send task'));
     await tester.tap(find.widgetWithText(FilledButton, 'Send task'));
