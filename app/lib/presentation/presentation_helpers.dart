@@ -4,6 +4,28 @@ part of '../main.dart';
 
 const _estimatedWordsPerPage = 250;
 
+int _wordTargetToPageTarget(int words) {
+  if (words <= 0) return 0;
+  return math.max(1, (words / _estimatedWordsPerPage).round());
+}
+
+String? _convertedProjectTargetText(
+  String source, {
+  required _ProjectTargetUnit from,
+  required _ProjectTargetUnit to,
+}) {
+  final value = int.tryParse(source.trim());
+  if (value == null || from == to) return null;
+  final converted = switch ((from, to)) {
+    (_ProjectTargetUnit.words, _ProjectTargetUnit.pages) =>
+      _wordTargetToPageTarget(value),
+    (_ProjectTargetUnit.pages, _ProjectTargetUnit.words) =>
+      value * _estimatedWordsPerPage,
+    _ => value,
+  };
+  return '$converted';
+}
+
 final class _ProjectTypeOption {
   const _ProjectTypeOption({
     required this.value,

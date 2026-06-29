@@ -1702,7 +1702,7 @@ final class _ProjectMetadataSettingsState
           ],
           selected: {_targetUnit},
           onSelectionChanged: (selection) {
-            setState(() => _targetUnit = selection.single);
+            _changeTargetUnit(selection.single);
           },
         ),
         const SizedBox(height: 12),
@@ -1742,6 +1742,23 @@ final class _ProjectMetadataSettingsState
         targetValue: targetText.isEmpty ? null : int.tryParse(targetText),
       ),
     );
+  }
+
+  void _changeTargetUnit(_ProjectTargetUnit unit) {
+    final converted = _convertedProjectTargetText(
+      _targetController.text,
+      from: _targetUnit,
+      to: unit,
+    );
+    setState(() {
+      _targetUnit = unit;
+      if (converted != null) {
+        _targetController.text = converted;
+        _targetController.selection = TextSelection.collapsed(
+          offset: converted.length,
+        );
+      }
+    });
   }
 }
 

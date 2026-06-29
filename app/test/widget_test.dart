@@ -1092,6 +1092,59 @@ void main() {
     expect(find.text('Choose import file'), findsOneWidget);
   });
 
+  testWidgets('settings convert project target between words and pages',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+    final projectRepository = InMemoryProjectRepository();
+    await CreateProject(projectRepository)(
+      const CreateProjectCommand(
+        title: 'Target Conversion',
+        wordTarget: 30000,
+      ),
+    );
+
+    await tester.pumpWidget(
+      WritellerApp(
+        projectRepository: projectRepository,
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Settings');
+    await tester.drag(find.byType(ListView).last, const Offset(0, -620));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Project details'), findsOneWidget);
+    expect(find.text('30000'), findsOneWidget);
+
+    await tester.tap(find.text('Pages').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('120'), findsOneWidget);
+
+    await tester.tap(find.text('Save project details'));
+    await tester.pumpAndSettle();
+
+    final saved = (await projectRepository.listActive()).single;
+    expect(saved.wordTarget, 30000);
+    expect(saved.metadata['targetUnit'], 'pages');
+    expect(saved.metadata['pageTarget'], 120);
+  });
+
   testWidgets('settings store global work profile preferences', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

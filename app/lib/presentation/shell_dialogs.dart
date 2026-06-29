@@ -141,7 +141,7 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
               ],
               selected: {_targetUnit},
               onSelectionChanged: (selection) {
-                setState(() => _targetUnit = selection.single);
+                _changeTargetUnit(selection.single);
               },
             ),
             const SizedBox(height: 12),
@@ -242,6 +242,23 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
           'wordsPerPageEstimate': _estimatedWordsPerPage,
       },
     );
+  }
+
+  void _changeTargetUnit(_ProjectTargetUnit unit) {
+    final converted = _convertedProjectTargetText(
+      _wordTargetController.text,
+      from: _targetUnit,
+      to: unit,
+    );
+    setState(() {
+      _targetUnit = unit;
+      if (converted != null) {
+        _wordTargetController.text = converted;
+        _wordTargetController.selection = TextSelection.collapsed(
+          offset: converted.length,
+        );
+      }
+    });
   }
 }
 
