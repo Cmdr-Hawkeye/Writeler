@@ -1231,99 +1231,6 @@ final class _SettingsWorkspace extends StatelessWidget {
     final color = Theme.of(context).colorScheme;
     final tabs = [
       _SettingsTabSpec(
-        icon: Icons.palette_outlined,
-        label: copy.t('designSettings'),
-        child: _SettingsSection(
-          title: copy.t('designSettings'),
-          help: copy.t('helpDesignSettings'),
-          body: copy.t('designSettingsBody'),
-          child: _DesignThemeSelector(
-            copy: copy,
-            value: designTheme,
-            onChanged: onDesignThemeChanged,
-          ),
-        ),
-      ),
-      _SettingsTabSpec(
-        icon: Icons.tune_outlined,
-        label: copy.t('globalProfileSettings'),
-        child: _SettingsSection(
-          title: copy.t('globalProfileSettings'),
-          help: copy.t('helpGlobalProfileSettings'),
-          body: copy.t('globalProfileSettingsBody'),
-          child: Column(
-            children: [
-              SwitchListTile(
-                value: aiEnabled,
-                title: _HelpedLabel(
-                  label: copy.t('aiEnabled'),
-                  help: copy.t('helpAiEnabled'),
-                ),
-                subtitle: Text(copy.t('globalAiEnabledHint')),
-                onChanged: (value) => onSaveProfileSettings(
-                  aiEnabled: value,
-                  cloudSyncEnabled: cloudSyncEnabled,
-                  noAiNoCloud: value ? false : noAiNoCloud,
-                ),
-              ),
-              SwitchListTile(
-                value: cloudSyncEnabled,
-                title: _HelpedLabel(
-                  label: copy.t('cloudSyncEnabled'),
-                  help: copy.t('helpCloudSyncEnabled'),
-                ),
-                subtitle: Text(copy.t('globalCloudSyncHint')),
-                onChanged: noAiNoCloud
-                    ? null
-                    : (value) => onSaveProfileSettings(
-                          aiEnabled: aiEnabled,
-                          cloudSyncEnabled: value,
-                          noAiNoCloud: noAiNoCloud,
-                        ),
-              ),
-              SwitchListTile(
-                value: noAiNoCloud,
-                title: _HelpedLabel(
-                  label: copy.t('noAiNoCloud'),
-                  help: copy.t('helpNoAiNoCloud'),
-                ),
-                subtitle: Text(copy.t('globalNoAiNoCloudHint')),
-                onChanged: (value) => onSaveProfileSettings(
-                  aiEnabled: value ? false : aiEnabled,
-                  cloudSyncEnabled: value ? false : cloudSyncEnabled,
-                  noAiNoCloud: value,
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Text(
-                    '${copy.t('syncAdapter')}: $syncAdapterName. ${copy.t('syncAdapterHint')}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      _SettingsTabSpec(
-        icon: Icons.spellcheck_outlined,
-        label: copy.t('spellCheckSettings'),
-        child: _SettingsSection(
-          title: copy.t('spellCheckSettings'),
-          help: copy.t('helpSpellCheckSettings'),
-          body: copy.t('spellCheckSettingsBody'),
-          child: _SpellCheckSettingsPanel(
-            copy: copy,
-            settings: spellCheckSettings,
-            onlineBlocked: noAiNoCloud,
-            onChanged: onSpellCheckSettingsChanged,
-          ),
-        ),
-      ),
-      _SettingsTabSpec(
         icon: Icons.assignment_outlined,
         label: copy.t('projectMetadata'),
         child: _SettingsSection(
@@ -1471,6 +1378,99 @@ final class _SettingsWorkspace extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
+          ),
+        ),
+      ),
+      _SettingsTabSpec(
+        icon: Icons.palette_outlined,
+        label: copy.t('designSettings'),
+        child: _SettingsSection(
+          title: copy.t('designSettings'),
+          help: copy.t('helpDesignSettings'),
+          body: copy.t('designSettingsBody'),
+          child: _DesignThemeSelector(
+            copy: copy,
+            value: designTheme,
+            onChanged: onDesignThemeChanged,
+          ),
+        ),
+      ),
+      _SettingsTabSpec(
+        icon: Icons.tune_outlined,
+        label: copy.t('globalProfileSettings'),
+        child: _SettingsSection(
+          title: copy.t('globalProfileSettings'),
+          help: copy.t('helpGlobalProfileSettings'),
+          body: copy.t('globalProfileSettingsBody'),
+          child: Column(
+            children: [
+              SwitchListTile(
+                value: aiEnabled,
+                title: _HelpedLabel(
+                  label: copy.t('aiEnabled'),
+                  help: copy.t('helpAiEnabled'),
+                ),
+                subtitle: Text(copy.t('globalAiEnabledHint')),
+                onChanged: (value) => onSaveProfileSettings(
+                  aiEnabled: value,
+                  cloudSyncEnabled: cloudSyncEnabled,
+                  noAiNoCloud: value ? false : noAiNoCloud,
+                ),
+              ),
+              SwitchListTile(
+                value: cloudSyncEnabled,
+                title: _HelpedLabel(
+                  label: copy.t('cloudSyncEnabled'),
+                  help: copy.t('helpCloudSyncEnabled'),
+                ),
+                subtitle: Text(copy.t('globalCloudSyncHint')),
+                onChanged: noAiNoCloud
+                    ? null
+                    : (value) => onSaveProfileSettings(
+                          aiEnabled: aiEnabled,
+                          cloudSyncEnabled: value,
+                          noAiNoCloud: noAiNoCloud,
+                        ),
+              ),
+              SwitchListTile(
+                value: noAiNoCloud,
+                title: _HelpedLabel(
+                  label: copy.t('noAiNoCloud'),
+                  help: copy.t('helpNoAiNoCloud'),
+                ),
+                subtitle: Text(copy.t('globalNoAiNoCloudHint')),
+                onChanged: (value) => onSaveProfileSettings(
+                  aiEnabled: value ? false : aiEnabled,
+                  cloudSyncEnabled: value ? false : cloudSyncEnabled,
+                  noAiNoCloud: value,
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    '${copy.t('syncAdapter')}: $syncAdapterName. ${copy.t('syncAdapterHint')}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      _SettingsTabSpec(
+        icon: Icons.spellcheck_outlined,
+        label: copy.t('spellCheckSettings'),
+        child: _SettingsSection(
+          title: copy.t('spellCheckSettings'),
+          help: copy.t('helpSpellCheckSettings'),
+          body: copy.t('spellCheckSettingsBody'),
+          child: _SpellCheckSettingsPanel(
+            copy: copy,
+            settings: spellCheckSettings,
+            onlineBlocked: noAiNoCloud,
+            onChanged: onSpellCheckSettingsChanged,
           ),
         ),
       ),
