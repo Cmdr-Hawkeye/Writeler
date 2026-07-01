@@ -2,6 +2,8 @@ part of '../main.dart';
 
 // Manuscript editor, scene navigator, focus mode, autosave status, and scene planning widgets.
 
+const _editorToolbarControlHeight = 44.0;
+
 final class _ProjectWorkspace extends StatefulWidget {
   const _ProjectWorkspace({
     required this.copy,
@@ -122,8 +124,8 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
             _editorMode == _ManuscriptEditorMode.fullManuscript;
         final hideSceneNavigator =
             fullManuscriptMode || constraints.maxWidth < 640;
-        final compactActions = constraints.maxWidth < 760;
-        final compactAuxiliaryActions = constraints.maxWidth < 980;
+        final compactActions = constraints.maxWidth <= 1280;
+        final compactAuxiliaryActions = constraints.maxWidth <= 1280;
 
         return Column(
           children: [
@@ -146,93 +148,163 @@ final class _ProjectWorkspaceState extends State<_ProjectWorkspace> {
                                   ),
                         ),
                       ),
-                      if (!compactActions) ...[
-                        const SizedBox(width: 12),
-                        SegmentedButton<_ManuscriptEditorMode>(
-                          showSelectedIcon: false,
-                          selected: {_editorMode},
-                          onSelectionChanged: (selection) => setState(
-                            () => _editorMode = selection.first,
+                      const SizedBox(width: 12),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          compactAuxiliaryActions
+                              ? SizedBox.square(
+                                  dimension: _editorToolbarControlHeight,
+                                  child: IconButton.filled(
+                                    tooltip: widget.copy.t('newScene'),
+                                    onPressed: widget.onCreateScene,
+                                    icon: const Icon(Icons.add),
+                                  ),
+                                )
+                              : FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    fixedSize: const Size.fromHeight(
+                                      _editorToolbarControlHeight,
+                                    ),
+                                  ),
+                                  onPressed: widget.onCreateScene,
+                                  icon: const Icon(Icons.add),
+                                  label: Text(widget.copy.t('newScene')),
+                                ),
+                          const SizedBox(width: 8),
+                          compactAuxiliaryActions
+                              ? SizedBox.square(
+                                  dimension: _editorToolbarControlHeight,
+                                  child: IconButton.outlined(
+                                    tooltip: widget.copy.t('newChapter'),
+                                    onPressed: widget.onCreateChapter,
+                                    icon: const Icon(
+                                      Icons.create_new_folder_outlined,
+                                    ),
+                                  ),
+                                )
+                              : OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    fixedSize: const Size.fromHeight(
+                                      _editorToolbarControlHeight,
+                                    ),
+                                  ),
+                                  onPressed: widget.onCreateChapter,
+                                  icon: const Icon(
+                                    Icons.create_new_folder_outlined,
+                                  ),
+                                  label: Text(widget.copy.t('newChapter')),
+                                ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (!compactActions)
+                                SizedBox(
+                                  height: _editorToolbarControlHeight,
+                                  child: SegmentedButton<_ManuscriptEditorMode>(
+                                    showSelectedIcon: false,
+                                    style: const ButtonStyle(
+                                      minimumSize: WidgetStatePropertyAll(
+                                        Size(0, _editorToolbarControlHeight),
+                                      ),
+                                    ),
+                                    selected: {_editorMode},
+                                    onSelectionChanged: (selection) => setState(
+                                      () => _editorMode = selection.first,
+                                    ),
+                                    segments: [
+                                      ButtonSegment(
+                                        value: _ManuscriptEditorMode.scene,
+                                        icon: const Icon(
+                                          Icons.notes_outlined,
+                                          size: 18,
+                                        ),
+                                        label: Text(widget.copy.t('sceneMode')),
+                                      ),
+                                      ButtonSegment(
+                                        value: _ManuscriptEditorMode
+                                            .fullManuscript,
+                                        icon: const Icon(
+                                          Icons.article_outlined,
+                                          size: 18,
+                                        ),
+                                        label: Text(
+                                          widget.copy.t('fullManuscriptMode'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                PopupMenuButton<_ManuscriptEditorMode>(
+                                  tooltip: widget.copy.t('manuscriptMode'),
+                                  onSelected: (mode) =>
+                                      setState(() => _editorMode = mode),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: _ManuscriptEditorMode.scene,
+                                      child: Text(widget.copy.t('sceneMode')),
+                                    ),
+                                    PopupMenuItem(
+                                      value:
+                                          _ManuscriptEditorMode.fullManuscript,
+                                      child: Text(
+                                        widget.copy.t('fullManuscriptMode'),
+                                      ),
+                                    ),
+                                  ],
+                                  child: SizedBox.square(
+                                    dimension: _editorToolbarControlHeight,
+                                    child: Icon(
+                                      fullManuscriptMode
+                                          ? Icons.article_outlined
+                                          : Icons.notes_outlined,
+                                    ),
+                                  ),
+                                ),
+                              if (!fullManuscriptMode &&
+                                  hideSceneNavigator &&
+                                  widget.scenes.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                _CompactSceneSelector(
+                                  copy: widget.copy,
+                                  scenes: widget.scenes,
+                                  selectedScene: widget.selectedScene,
+                                  onSelectScene: widget.onSelectScene,
+                                ),
+                              ],
+                              const SizedBox(width: 8),
+                              compactAuxiliaryActions
+                                  ? SizedBox.square(
+                                      dimension: _editorToolbarControlHeight,
+                                      child: IconButton.outlined(
+                                        tooltip:
+                                            widget.copy.t('openStoryContext'),
+                                        onPressed: widget.onOpenContext,
+                                        icon: const Icon(Icons.public_outlined),
+                                      ),
+                                    )
+                                  : OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        fixedSize: const Size.fromHeight(
+                                          _editorToolbarControlHeight,
+                                        ),
+                                      ),
+                                      onPressed: widget.onOpenContext,
+                                      icon: const Icon(Icons.public_outlined),
+                                      label: Text(
+                                        widget.copy.t('storyContext'),
+                                      ),
+                                    ),
+                            ],
                           ),
-                          segments: [
-                            ButtonSegment(
-                              value: _ManuscriptEditorMode.scene,
-                              icon: const Icon(Icons.notes_outlined, size: 18),
-                              label: Text(widget.copy.t('sceneMode')),
-                            ),
-                            ButtonSegment(
-                              value: _ManuscriptEditorMode.fullManuscript,
-                              icon: const Icon(
-                                Icons.article_outlined,
-                                size: 18,
-                              ),
-                              label: Text(widget.copy.t('fullManuscriptMode')),
-                            ),
-                          ],
                         ),
-                      ] else ...[
-                        const SizedBox(width: 8),
-                        PopupMenuButton<_ManuscriptEditorMode>(
-                          tooltip: widget.copy.t('manuscriptMode'),
-                          icon: Icon(
-                            fullManuscriptMode
-                                ? Icons.article_outlined
-                                : Icons.notes_outlined,
-                          ),
-                          onSelected: (mode) =>
-                              setState(() => _editorMode = mode),
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: _ManuscriptEditorMode.scene,
-                              child: Text(widget.copy.t('sceneMode')),
-                            ),
-                            PopupMenuItem(
-                              value: _ManuscriptEditorMode.fullManuscript,
-                              child: Text(widget.copy.t('fullManuscriptMode')),
-                            ),
-                          ],
-                        ),
-                      ],
-                      if (!fullManuscriptMode &&
-                          hideSceneNavigator &&
-                          widget.scenes.isNotEmpty) ...[
-                        const SizedBox(width: 8),
-                        _CompactSceneSelector(
-                          copy: widget.copy,
-                          scenes: widget.scenes,
-                          selectedScene: widget.selectedScene,
-                          onSelectScene: widget.onSelectScene,
-                        ),
-                      ],
-                      const SizedBox(width: 8),
-                      compactAuxiliaryActions
-                          ? IconButton.outlined(
-                              tooltip: widget.copy.t('openStoryContext'),
-                              onPressed: widget.onOpenContext,
-                              icon: const Icon(Icons.public_outlined),
-                            )
-                          : OutlinedButton.icon(
-                              onPressed: widget.onOpenContext,
-                              icon: const Icon(Icons.public_outlined),
-                              label: Text(widget.copy.t('storyContext')),
-                            ),
-                      const SizedBox(width: 8),
-                      compactAuxiliaryActions
-                          ? IconButton.filled(
-                              tooltip: widget.copy.t('newScene'),
-                              onPressed: widget.onCreateScene,
-                              icon: const Icon(Icons.add),
-                            )
-                          : FilledButton.icon(
-                              onPressed: widget.onCreateScene,
-                              icon: const Icon(Icons.add),
-                              label: Text(widget.copy.t('newScene')),
-                            ),
-                      const SizedBox(width: 8),
-                      IconButton.outlined(
-                        tooltip: widget.copy.t('newChapter'),
-                        onPressed: widget.onCreateChapter,
-                        icon: const Icon(Icons.create_new_folder_outlined),
                       ),
                     ],
                   ),
@@ -901,31 +973,34 @@ final class _CompactSceneSelector extends StatelessWidget {
           border: Border.all(color: color.outlineVariant),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.notes_outlined, size: 18, color: color.primary),
-              const SizedBox(width: 6),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 150),
-                child: Text(
-                  selectedScene?.title ?? copy.t('scene'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+        child: SizedBox(
+          height: _editorToolbarControlHeight,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 0, 8, 0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.notes_outlined, size: 18, color: color.primary),
+                const SizedBox(width: 6),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 150),
+                  child: Text(
+                    selectedScene?.title ?? copy.t('scene'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 18,
-                color: color.onSurfaceVariant,
-              ),
-            ],
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: color.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
         ),
       ),

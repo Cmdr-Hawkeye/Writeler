@@ -66,7 +66,7 @@ void main() {
     expect(find.text('Logs'), findsOneWidget);
     expect(find.text('Self-publishing'), findsOneWidget);
     expect(find.byTooltip('New Project'), findsOneWidget);
-    expect(find.byType(Switch), findsOneWidget);
+    expect(find.byTooltip('Toggle AI assistance globally'), findsOneWidget);
   });
 
   testWidgets('new project action appears in the top bar project menu',
@@ -990,6 +990,8 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Editor').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Manuscript mode'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Full manuscript'));
     await tester.pumpAndSettle();

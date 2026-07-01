@@ -4,6 +4,8 @@ part of '../main.dart';
 
 enum _WorkspaceNavGroup { write, world, review, output }
 
+const _topBarControlHeight = 44.0;
+
 final class _WorkspaceNavItem {
   const _WorkspaceNavItem({
     required this.index,
@@ -376,8 +378,9 @@ final class _StudioTopBar extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 1120;
-        final showProjectSelectionLabel = constraints.maxWidth >= 1160;
+        final compact = constraints.maxWidth <= 1280;
+        final showProjectSelectionLabel =
+            !compact && constraints.maxWidth >= 760;
         return Container(
           height: 72,
           padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 24),
@@ -389,132 +392,176 @@ final class _StudioTopBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              if (showProjectSelectionLabel) ...[
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: color.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: color.primary.withValues(alpha: 0.24),
-                    ),
-                  ),
-                  child: Icon(workspaceIcon, color: color.primary, size: 22),
-                ),
-                const SizedBox(width: 14),
-              ],
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      workspaceTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: compact
-                          ? Theme.of(context).textTheme.titleMedium
-                          : Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      contextLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: color.onSurfaceVariant,
+                    if (!compact) ...[
+                      Container(
+                        width: _topBarControlHeight,
+                        height: _topBarControlHeight,
+                        decoration: BoxDecoration(
+                          color: color.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: color.primary.withValues(alpha: 0.24),
                           ),
+                        ),
+                        child:
+                            Icon(workspaceIcon, color: color.primary, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                    ],
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            workspaceTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: compact
+                                ? Theme.of(context).textTheme.titleMedium
+                                : Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            contextLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: color.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              if (showProjectSelectionLabel) ...[
-                Text(
-                  copy.t('projectSelectionLabel'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: color.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              _TopBarProjectMenu(
-                copy: copy,
-                projects: projects,
-                selectedProject: project,
-                compact: compact,
-                onSelectProject: onSelectProject,
-                onDeleteProject: onDeleteProject,
-              ),
-              const SizedBox(width: 8),
-              PopupMenuButton<String>(
-                tooltip: copy.t('language'),
-                onSelected: onLanguageChanged,
-                itemBuilder: (context) => [
-                  for (final language in WritellerCopy.supportedLanguages)
-                    PopupMenuItem(
-                      value: language.code,
-                      child: Row(
-                        children: [
-                          Icon(
-                            language.code == languageCode
-                                ? Icons.check
-                                : Icons.language,
-                            size: 18,
+              const SizedBox(width: 12),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (showProjectSelectionLabel) ...[
+                    Text(
+                      copy.t('projectSelectionLabel'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: color.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
                           ),
-                          const SizedBox(width: 10),
-                          Text(language.nativeName),
-                        ],
-                      ),
                     ),
+                    const SizedBox(width: 8),
+                  ],
+                  _TopBarProjectMenu(
+                    copy: copy,
+                    projects: projects,
+                    selectedProject: project,
+                    compact: compact,
+                    onSelectProject: onSelectProject,
+                    onDeleteProject: onDeleteProject,
+                  ),
+                  if (showCreateProject) ...[
+                    const SizedBox(width: 8),
+                    _ActionHelp(
+                      message: copy.t('helpNewProject'),
+                      child: compact
+                          ? SizedBox.square(
+                              dimension: _topBarControlHeight,
+                              child: IconButton.filled(
+                                tooltip: copy.t('newProject'),
+                                onPressed: onCreateProject,
+                                icon: const Icon(Icons.add),
+                              ),
+                            )
+                          : FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                fixedSize:
+                                    const Size.fromHeight(_topBarControlHeight),
+                              ),
+                              onPressed: onCreateProject,
+                              icon: const Icon(Icons.add),
+                              label: Text(copy.t('newProject')),
+                            ),
+                    ),
+                  ],
                 ],
-                child: compact
-                    ? Tooltip(
-                        message: copy.t('language'),
-                        child: const SizedBox.square(
-                          dimension: 40,
-                          child: Icon(Icons.language),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: compact ? _topBarControlHeight : null,
+                        height: _topBarControlHeight,
+                        child: PopupMenuButton<String>(
+                          tooltip: copy.t('language'),
+                          padding: EdgeInsets.zero,
+                          onSelected: onLanguageChanged,
+                          itemBuilder: (context) => [
+                            for (final language
+                                in WritellerCopy.supportedLanguages)
+                              PopupMenuItem(
+                                value: language.code,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      language.code == languageCode
+                                          ? Icons.check
+                                          : Icons.language,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(language.nativeName),
+                                  ],
+                                ),
+                              ),
+                          ],
+                          child: compact
+                              ? Center(
+                                  child: Tooltip(
+                                    message: copy.t('language'),
+                                    child: Icon(
+                                      Icons.language,
+                                      color: color.primary,
+                                    ),
+                                  ),
+                                )
+                              : _LanguageMenuAnchor(
+                                  copy: copy,
+                                  languageCode: languageCode,
+                                ),
                         ),
-                      )
-                    : _LanguageMenuAnchor(
-                        copy: copy,
-                        languageCode: languageCode,
                       ),
-              ),
-              const SizedBox(width: 8),
-              _GlobalAiTopBarSwitch(
-                copy: copy,
-                enabled: globalAiEnabled,
-                locked: noAiNoCloud,
-                compact: compact,
-                onChanged: onGlobalAiChanged,
-              ),
-              const SizedBox(width: 8),
-              IconButton.outlined(
-                tooltip: copy.t('commandPalette'),
-                onPressed: onOpenCommandPalette,
-                icon: const Icon(Icons.manage_search_outlined),
-              ),
-              if (showCreateProject) ...[
-                const SizedBox(width: 8),
-                _ActionHelp(
-                  message: copy.t('helpNewProject'),
-                  child: compact
-                      ? IconButton.filled(
-                          tooltip: copy.t('newProject'),
-                          onPressed: onCreateProject,
-                          icon: const Icon(Icons.add),
-                        )
-                      : FilledButton.icon(
-                          onPressed: onCreateProject,
-                          icon: const Icon(Icons.add),
-                          label: Text(copy.t('newProject')),
+                      const SizedBox(width: 8),
+                      _GlobalAiTopBarSwitch(
+                        copy: copy,
+                        enabled: globalAiEnabled,
+                        locked: noAiNoCloud,
+                        compact: compact,
+                        onChanged: onGlobalAiChanged,
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox.square(
+                        dimension: _topBarControlHeight,
+                        child: IconButton.outlined(
+                          tooltip: copy.t('commandPalette'),
+                          onPressed: onOpenCommandPalette,
+                          icon: const Icon(Icons.manage_search_outlined),
                         ),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ],
           ),
         );
@@ -617,7 +664,7 @@ final class _TopBarProjectButton extends StatelessWidget {
       return Tooltip(
         message: label,
         child: SizedBox.square(
-          dimension: 40,
+          dimension: _topBarControlHeight,
           child: Icon(
             Icons.menu_book_outlined,
             color: enabled ? color.onSurface : color.onSurfaceVariant,
@@ -628,37 +675,41 @@ final class _TopBarProjectButton extends StatelessWidget {
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 260),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.outlineVariant),
-          color: enabled ? color.surfaceContainerLow : color.surfaceContainer,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.menu_book_outlined, size: 18, color: color.primary),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color:
-                            enabled ? color.onSurface : color.onSurfaceVariant,
-                      ),
+      child: SizedBox(
+        height: _topBarControlHeight,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.outlineVariant),
+            color: enabled ? color.surfaceContainerLow : color.surfaceContainer,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.menu_book_outlined, size: 18, color: color.primary),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: enabled
+                              ? color.onSurface
+                              : color.onSurfaceVariant,
+                        ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 18,
-                color: color.onSurfaceVariant,
-              ),
-            ],
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: color.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -731,40 +782,57 @@ final class _GlobalAiTopBarSwitch extends StatelessWidget {
     final activeColor = enabled ? color.primary : color.onSurfaceVariant;
     final message =
         locked ? copy.t('aiTopBarLockedHint') : copy.t('aiTopBarHint');
+    if (compact) {
+      return Tooltip(
+        message: message,
+        child: Semantics(
+          button: true,
+          toggled: enabled,
+          label: copy.t('aiTopBarToggle'),
+          child: SizedBox.square(
+            dimension: _topBarControlHeight,
+            child: IconButton.outlined(
+              tooltip: copy.t('aiTopBarToggle'),
+              onPressed: locked ? null : () => onChanged(!enabled),
+              icon: Icon(
+                enabled ? Icons.auto_awesome : Icons.auto_awesome_outlined,
+                color: activeColor,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Tooltip(
       message: message,
       child: Semantics(
         button: true,
         toggled: enabled,
         label: copy.t('aiTopBarToggle'),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: enabled
-                ? color.primaryContainer.withValues(alpha: 0.52)
-                : color.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
+        child: SizedBox(
+          height: _topBarControlHeight,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
               color: enabled
-                  ? color.primary.withValues(alpha: 0.38)
-                  : color.outlineVariant,
+                  ? color.primaryContainer.withValues(alpha: 0.52)
+                  : color.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: enabled
+                    ? color.primary.withValues(alpha: 0.38)
+                    : color.outlineVariant,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: compact ? 8 : 10,
-              right: 6,
-              top: 4,
-              bottom: 4,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  enabled ? Icons.auto_awesome : Icons.auto_awesome_outlined,
-                  size: 18,
-                  color: activeColor,
-                ),
-                if (!compact) ...[
+            child: Padding(
+              padding: const EdgeInsets.only(left: 10, right: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    enabled ? Icons.auto_awesome : Icons.auto_awesome_outlined,
+                    size: 18,
+                    color: activeColor,
+                  ),
                   const SizedBox(width: 7),
                   Text(
                     copy.t('aiShortLabel'),
@@ -772,13 +840,13 @@ final class _GlobalAiTopBarSwitch extends StatelessWidget {
                           color: color.onSurface,
                         ),
                   ),
+                  Switch(
+                    value: enabled,
+                    onChanged: locked ? null : onChanged,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ],
-                Switch(
-                  value: enabled,
-                  onChanged: locked ? null : onChanged,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -803,28 +871,31 @@ final class _LanguageMenuAnchor extends StatelessWidget {
     return Semantics(
       button: true,
       label: copy.t('language'),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: color.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.language, size: 18, color: color.primary),
-              const SizedBox(width: 8),
-              Text(
-                language.code.toUpperCase(),
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: color.onSurface,
-                    ),
-              ),
-              const SizedBox(width: 4),
-              Icon(Icons.arrow_drop_down, size: 18, color: color.primary),
-            ],
+      child: SizedBox(
+        height: _topBarControlHeight,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: color.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.outlineVariant),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.language, size: 18, color: color.primary),
+                const SizedBox(width: 8),
+                Text(
+                  language.code.toUpperCase(),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: color.onSurface,
+                      ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.arrow_drop_down, size: 18, color: color.primary),
+              ],
+            ),
           ),
         ),
       ),
