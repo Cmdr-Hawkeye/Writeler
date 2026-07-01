@@ -10,6 +10,8 @@ enum _AIWorkshopContextKind { project, scene }
 
 enum _AISuggestionInboxFilter { open, accepted, noted, rejected, all }
 
+enum _AIConsoleTab { overview, context, instruction, prompt }
+
 typedef _AIWorkshopTaskRequest = void Function(
   AITaskKind task, {
   required _AIWorkshopContextKind contextKind,
@@ -399,6 +401,7 @@ final class _AIPromptConsole extends StatefulWidget {
 
 final class _AIPromptConsoleState extends State<_AIPromptConsole> {
   AITaskKind _previewTask = AITaskKind.customScenePrompt;
+  _AIConsoleTab _selectedTab = _AIConsoleTab.overview;
 
   @override
   Widget build(BuildContext context) {
@@ -416,6 +419,15 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
     final contextDetail = widget.contextKind == _AIWorkshopContextKind.project
         ? widget.project?.title ?? widget.copy.t('selectProject')
         : widget.scene?.title ?? widget.copy.t('aiNeedsScene');
+    final selectedCatalogItems = widget.catalogItems
+        .where((item) => widget.selectedCatalogItemIds.contains(item.id))
+        .toList();
+    final selectedRelationships = widget.relationships
+        .where((relationship) =>
+            widget.selectedRelationshipIds.contains(relationship.id))
+        .toList();
+    final selectedContextCount =
+        selectedCatalogItems.length + selectedRelationships.length;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -423,214 +435,92 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.outlineVariant),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _AIWorkflowGuide(copy: widget.copy),
-            const SizedBox(height: 16),
-            _AIWorkflowSectionHeader(
-              step: '1',
-              title: widget.copy.t('aiStepContextTitle'),
-              body: widget.copy.t('aiStepContextBody'),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.psychology_alt_outlined, color: color.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    '${widget.copy.t('aiContext')}: $contextTitle - $contextDetail',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+      child: DefaultTabController(
+        length: _AIConsoleTab.values.length,
+        initialIndex: _selectedTab.index,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+                indicatorSize: TabBarIndicatorSize.label,
+                onTap: (index) => setState(
+                  () => _selectedTab = _AIConsoleTab.values[index],
                 ),
-                const SizedBox(width: 8),
-                _HelpTooltip(message: widget.copy.t('helpAiContext')),
-              ],
-            ),
-            const SizedBox(height: 10),
-            _AIContextPicker(
-              copy: widget.copy,
-              contextKind: widget.contextKind,
-              scenes: widget.scenes,
-              selectedScene: widget.scene,
-              isEnabled: !widget.isRequesting,
-              onContextChanged: widget.onContextChanged,
-              onSceneChanged: widget.onSceneChanged,
-            ),
-            const SizedBox(height: 12),
-            _AIProviderStatusLine(
-              copy: widget.copy,
-              config: widget.activeProviderConfig,
-            ),
-            const SizedBox(height: 12),
-            _AIAdditionalContextSelector(
-              copy: widget.copy,
-              catalogItems: widget.catalogItems,
-              relationships: widget.relationships,
-              scenes: widget.scenes,
-              selectedCatalogItemIds: widget.selectedCatalogItemIds,
-              selectedRelationshipIds: widget.selectedRelationshipIds,
-              isEnabled: !widget.isRequesting,
-              onToggleCatalogItem: widget.onToggleCatalogItem,
-              onToggleRelationship: widget.onToggleRelationship,
-              onClear: widget.onClearAdditionalContext,
-            ),
-            const SizedBox(height: 16),
-            _AIWorkflowSectionHeader(
-              step: '2',
-              title: widget.copy.t('aiStepInstructionTitle'),
-              body: widget.copy.t('aiStepInstructionBody'),
-            ),
-            const SizedBox(height: 10),
-            _HelpedLabel(
-              label: widget.copy.t('promptTemplates'),
-              help: widget.copy.t('helpPromptTemplates'),
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final action in primaryActions)
-                  _ActionHelp(
-                    message: _aiTaskHelp(action.task, widget.copy),
-                    child: ActionChip(
-                      tooltip: _aiTaskHelp(action.task, widget.copy),
-                      avatar: Icon(action.icon, size: 18),
-                      label: Text(_aiTaskLabel(action.task.name, widget.copy)),
-                      onPressed: !widget.isRequesting
-                          ? () => _useTemplate(action.task)
-                          : null,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Shortcuts(
-              shortcuts: const {
-                SingleActivator(LogicalKeyboardKey.enter, control: true):
-                    _SubmitAiPromptIntent(),
-                SingleActivator(LogicalKeyboardKey.enter, meta: true):
-                    _SubmitAiPromptIntent(),
-              },
-              child: Actions(
-                actions: {
-                  _SubmitAiPromptIntent: CallbackAction<_SubmitAiPromptIntent>(
-                    onInvoke: (intent) {
-                      if (widget.canRequest && !widget.isRequesting) {
-                        _submitCurrentTask();
-                      }
-                      return null;
-                    },
-                  ),
-                },
-                child: TextField(
-                  controller: widget.promptController,
-                  minLines: 2,
-                  maxLines: 4,
-                  textInputAction: TextInputAction.newline,
-                  decoration: InputDecoration(
-                    labelText: widget.copy.t('aiPrompt'),
-                    helperText: widget.copy.t('aiPromptSubmitHint'),
-                    suffixIcon: Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _HelpTooltip(
-                        message: widget.copy.t('helpSubmitAiPrompt'),
-                      ),
-                    ),
-                    suffixIconConstraints: const BoxConstraints(minWidth: 42),
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
+                tabs: [
+                  for (final tab in _AIConsoleTab.values)
+                    Tab(text: _aiConsoleTabLabel(tab, widget.copy)),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            _AIWorkflowSectionHeader(
-              step: '3',
-              title: widget.copy.t('aiStepPromptTitle'),
-              body: widget.copy.t('aiStepPromptBody'),
-            ),
-            const SizedBox(height: 4),
-            _LivePromptPreview(
-              copy: widget.copy,
-              project: widget.project,
-              contextKind: widget.contextKind,
-              scene: widget.scene,
-              chapters: widget.chapters,
-              scenes: widget.scenes,
-              catalogItems: widget.catalogItems
-                  .where(
-                      (item) => widget.selectedCatalogItemIds.contains(item.id))
-                  .toList(),
-              relationships: widget.relationships
-                  .where((relationship) =>
-                      widget.selectedRelationshipIds.contains(relationship.id))
-                  .toList(),
-              promptController: widget.promptController,
-              task: _previewTask,
-            ),
-            const SizedBox(height: 12),
-            _AIWorkflowSectionHeader(
-              step: '4',
-              title: widget.copy.t('aiStepSendTitle'),
-              body: widget.copy.t('aiStepSendBody'),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _ActionHelp(
-                  message: widget.copy.t('helpSubmitAiPrompt'),
-                  child: FilledButton.icon(
-                    onPressed: widget.canRequest && !widget.isRequesting
-                        ? _submitCurrentTask
-                        : null,
-                    icon: const Icon(Icons.send_outlined),
-                    label: Text(widget.copy.t('submitAiPrompt')),
-                  ),
-                ),
-                PopupMenuButton<AITaskKind>(
-                  enabled: widget.canRequest && !widget.isRequesting,
-                  tooltip: widget.copy.t('moreAiChecks'),
-                  onSelected: _useTemplate,
-                  itemBuilder: (context) => [
-                    for (final action in secondaryActions)
-                      PopupMenuItem(
-                        value: action.task,
-                        child: ListTile(
-                          dense: true,
-                          leading: Icon(action.icon),
-                          title:
-                              Text(_aiTaskLabel(action.task.name, widget.copy)),
-                          subtitle: Text(
-                            _aiTaskHelp(action.task, widget.copy),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
+              const SizedBox(height: 18),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                child: KeyedSubtree(
+                  key: ValueKey(_selectedTab),
+                  child: switch (_selectedTab) {
+                    _AIConsoleTab.overview => _AIOverviewTab(
+                        copy: widget.copy,
+                        contextTitle: contextTitle,
+                        contextDetail: contextDetail,
+                        taskLabel: _aiTaskLabel(_previewTask.name, widget.copy),
+                        selectedContextCount: selectedContextCount,
+                        providerConfig: widget.activeProviderConfig,
                       ),
-                  ],
-                  child: _AiMenuAnchor(copy: widget.copy),
+                    _AIConsoleTab.context => _AIContextTab(
+                        copy: widget.copy,
+                        contextTitle: contextTitle,
+                        contextDetail: contextDetail,
+                        contextKind: widget.contextKind,
+                        scenes: widget.scenes,
+                        selectedScene: widget.scene,
+                        isRequesting: widget.isRequesting,
+                        catalogItems: widget.catalogItems,
+                        relationships: widget.relationships,
+                        selectedCatalogItemIds: widget.selectedCatalogItemIds,
+                        selectedRelationshipIds: widget.selectedRelationshipIds,
+                        onContextChanged: widget.onContextChanged,
+                        onSceneChanged: widget.onSceneChanged,
+                        onToggleCatalogItem: widget.onToggleCatalogItem,
+                        onToggleRelationship: widget.onToggleRelationship,
+                        onClearAdditionalContext:
+                            widget.onClearAdditionalContext,
+                      ),
+                    _AIConsoleTab.instruction => _AIInstructionTab(
+                        copy: widget.copy,
+                        primaryActions: primaryActions,
+                        secondaryActions: secondaryActions,
+                        canRequest: widget.canRequest,
+                        isRequesting: widget.isRequesting,
+                        promptController: widget.promptController,
+                        onUseTemplate: _useTemplate,
+                        onSubmit: _submitCurrentTask,
+                      ),
+                    _AIConsoleTab.prompt => _AIPromptSendTab(
+                        copy: widget.copy,
+                        project: widget.project,
+                        contextKind: widget.contextKind,
+                        scene: widget.scene,
+                        chapters: widget.chapters,
+                        scenes: widget.scenes,
+                        selectedCatalogItems: selectedCatalogItems,
+                        selectedRelationships: selectedRelationships,
+                        promptController: widget.promptController,
+                        task: _previewTask,
+                        canRequest: widget.canRequest,
+                        isRequesting: widget.isRequesting,
+                        lastError: widget.lastError,
+                        activeProviderConfig: widget.activeProviderConfig,
+                        onSubmit: _submitCurrentTask,
+                      ),
+                  },
                 ),
-                _HelpTooltip(message: widget.copy.t('helpAiQuickActions')),
-              ],
-            ),
-            if (widget.isRequesting || widget.lastError != null) ...[
-              const SizedBox(height: 12),
-              _AIRequestStatus(
-                copy: widget.copy,
-                isRequesting: widget.isRequesting,
-                message: widget.lastError,
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -645,6 +535,420 @@ final class _AIPromptConsoleState extends State<_AIPromptConsole> {
     widget.promptController.text = _promptTemplateFor(task, widget.copy);
     widget.promptController.selection = TextSelection.collapsed(
       offset: widget.promptController.text.length,
+    );
+  }
+}
+
+final class _AIOverviewTab extends StatelessWidget {
+  const _AIOverviewTab({
+    required this.copy,
+    required this.contextTitle,
+    required this.contextDetail,
+    required this.taskLabel,
+    required this.selectedContextCount,
+    required this.providerConfig,
+  });
+
+  final WritellerCopy copy;
+  final String contextTitle;
+  final String contextDetail;
+  final String taskLabel;
+  final int selectedContextCount;
+  final AIProviderConfig providerConfig;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _AIWorkflowGuide(copy: copy),
+        const SizedBox(height: 16),
+        Text(
+          copy.t('aiOverviewTitle'),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          copy.t('aiOverviewBody'),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 14),
+        _AIOverviewRows(
+          rows: [
+            MapEntry(
+              copy.t('aiOverviewContextLabel'),
+              '$contextTitle - $contextDetail',
+            ),
+            MapEntry(copy.t('aiOverviewInstructionLabel'), taskLabel),
+            MapEntry(
+              copy.t('aiOverviewSelectedContextLabel'),
+              '$selectedContextCount',
+            ),
+            MapEntry(
+              copy.t('aiOverviewProviderLabel'),
+              '${providerConfig.displayName} - ${providerConfig.modelName}',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+final class _AIOverviewRows extends StatelessWidget {
+  const _AIOverviewRows({required this.rows});
+
+  final List<MapEntry<String, String>> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 560;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: color.outlineVariant),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              for (var index = 0; index < rows.length; index++) ...[
+                if (index > 0) Divider(height: 1, color: color.outlineVariant),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: compact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              rows[index].key,
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              rows[index].value,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(color: color.onSurfaceVariant),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 190,
+                              child: Text(
+                                rows[index].key,
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                rows[index].value,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: color.onSurfaceVariant),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+final class _AIContextTab extends StatelessWidget {
+  const _AIContextTab({
+    required this.copy,
+    required this.contextTitle,
+    required this.contextDetail,
+    required this.contextKind,
+    required this.scenes,
+    required this.selectedScene,
+    required this.isRequesting,
+    required this.catalogItems,
+    required this.relationships,
+    required this.selectedCatalogItemIds,
+    required this.selectedRelationshipIds,
+    required this.onContextChanged,
+    required this.onSceneChanged,
+    required this.onToggleCatalogItem,
+    required this.onToggleRelationship,
+    required this.onClearAdditionalContext,
+  });
+
+  final WritellerCopy copy;
+  final String contextTitle;
+  final String contextDetail;
+  final _AIWorkshopContextKind contextKind;
+  final List<Scene> scenes;
+  final Scene? selectedScene;
+  final bool isRequesting;
+  final List<CatalogItem> catalogItems;
+  final List<Relationship> relationships;
+  final Set<String> selectedCatalogItemIds;
+  final Set<String> selectedRelationshipIds;
+  final ValueChanged<_AIWorkshopContextKind> onContextChanged;
+  final ValueChanged<Scene> onSceneChanged;
+  final ValueChanged<CatalogItem> onToggleCatalogItem;
+  final ValueChanged<Relationship> onToggleRelationship;
+  final VoidCallback onClearAdditionalContext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _AIWorkflowSectionHeader(
+          step: '1',
+          title: copy.t('aiStepContextTitle'),
+          body: copy.t('aiStepContextBody'),
+        ),
+        const SizedBox(height: 12),
+        _HelpedLabel(
+          label: '${copy.t('aiContext')}: $contextTitle - $contextDetail',
+          help: copy.t('helpAiContext'),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 10),
+        _AIContextPicker(
+          copy: copy,
+          contextKind: contextKind,
+          scenes: scenes,
+          selectedScene: selectedScene,
+          isEnabled: !isRequesting,
+          onContextChanged: onContextChanged,
+          onSceneChanged: onSceneChanged,
+        ),
+        const SizedBox(height: 12),
+        _AIAdditionalContextSelector(
+          copy: copy,
+          catalogItems: catalogItems,
+          relationships: relationships,
+          scenes: scenes,
+          selectedCatalogItemIds: selectedCatalogItemIds,
+          selectedRelationshipIds: selectedRelationshipIds,
+          isEnabled: !isRequesting,
+          onToggleCatalogItem: onToggleCatalogItem,
+          onToggleRelationship: onToggleRelationship,
+          onClear: onClearAdditionalContext,
+        ),
+      ],
+    );
+  }
+}
+
+final class _AIInstructionTab extends StatelessWidget {
+  const _AIInstructionTab({
+    required this.copy,
+    required this.primaryActions,
+    required this.secondaryActions,
+    required this.canRequest,
+    required this.isRequesting,
+    required this.promptController,
+    required this.onUseTemplate,
+    required this.onSubmit,
+  });
+
+  final WritellerCopy copy;
+  final List<_AiWorkshopAction> primaryActions;
+  final List<_AiWorkshopAction> secondaryActions;
+  final bool canRequest;
+  final bool isRequesting;
+  final TextEditingController promptController;
+  final ValueChanged<AITaskKind> onUseTemplate;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _AIWorkflowSectionHeader(
+          step: '2',
+          title: copy.t('aiStepInstructionTitle'),
+          body: copy.t('aiStepInstructionBody'),
+        ),
+        const SizedBox(height: 12),
+        _HelpedLabel(
+          label: copy.t('promptTemplates'),
+          help: copy.t('helpPromptTemplates'),
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final action in primaryActions)
+              ActionChip(
+                tooltip: _aiTaskHelp(action.task, copy),
+                avatar: Icon(action.icon, size: 18),
+                label: Text(_aiTaskLabel(action.task.name, copy)),
+                onPressed:
+                    !isRequesting ? () => onUseTemplate(action.task) : null,
+              ),
+            PopupMenuButton<AITaskKind>(
+              enabled: !isRequesting,
+              tooltip: copy.t('moreAiChecks'),
+              onSelected: onUseTemplate,
+              itemBuilder: (context) => [
+                for (final action in secondaryActions)
+                  PopupMenuItem(
+                    value: action.task,
+                    child: ListTile(
+                      dense: true,
+                      leading: Icon(action.icon),
+                      title: Text(_aiTaskLabel(action.task.name, copy)),
+                      subtitle: Text(
+                        _aiTaskHelp(action.task, copy),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+              ],
+              child: _AiMenuAnchor(copy: copy),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Shortcuts(
+          shortcuts: const {
+            SingleActivator(LogicalKeyboardKey.enter, control: true):
+                _SubmitAiPromptIntent(),
+            SingleActivator(LogicalKeyboardKey.enter, meta: true):
+                _SubmitAiPromptIntent(),
+          },
+          child: Actions(
+            actions: {
+              _SubmitAiPromptIntent: CallbackAction<_SubmitAiPromptIntent>(
+                onInvoke: (intent) {
+                  if (canRequest && !isRequesting) onSubmit();
+                  return null;
+                },
+              ),
+            },
+            child: TextField(
+              controller: promptController,
+              minLines: 2,
+              maxLines: 4,
+              textInputAction: TextInputAction.newline,
+              decoration: InputDecoration(
+                labelText: copy.t('aiPrompt'),
+                helperText: copy.t('aiPromptSubmitHint'),
+                suffixIcon: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _HelpTooltip(message: copy.t('helpSubmitAiPrompt')),
+                ),
+                suffixIconConstraints: const BoxConstraints(minWidth: 42),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _AIPromptSendTab extends StatelessWidget {
+  const _AIPromptSendTab({
+    required this.copy,
+    required this.project,
+    required this.contextKind,
+    required this.scene,
+    required this.chapters,
+    required this.scenes,
+    required this.selectedCatalogItems,
+    required this.selectedRelationships,
+    required this.promptController,
+    required this.task,
+    required this.canRequest,
+    required this.isRequesting,
+    required this.lastError,
+    required this.activeProviderConfig,
+    required this.onSubmit,
+  });
+
+  final WritellerCopy copy;
+  final Project? project;
+  final _AIWorkshopContextKind contextKind;
+  final Scene? scene;
+  final List<Chapter> chapters;
+  final List<Scene> scenes;
+  final List<CatalogItem> selectedCatalogItems;
+  final List<Relationship> selectedRelationships;
+  final TextEditingController promptController;
+  final AITaskKind task;
+  final bool canRequest;
+  final bool isRequesting;
+  final String? lastError;
+  final AIProviderConfig activeProviderConfig;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _AIWorkflowSectionHeader(
+          step: '3',
+          title: copy.t('aiStepPromptTitle'),
+          body: copy.t('aiStepPromptBody'),
+        ),
+        const SizedBox(height: 4),
+        _LivePromptPreview(
+          copy: copy,
+          project: project,
+          contextKind: contextKind,
+          scene: scene,
+          chapters: chapters,
+          scenes: scenes,
+          catalogItems: selectedCatalogItems,
+          relationships: selectedRelationships,
+          promptController: promptController,
+          task: task,
+        ),
+        const SizedBox(height: 12),
+        _AIWorkflowSectionHeader(
+          step: '4',
+          title: copy.t('aiStepSendTitle'),
+          body: copy.t('aiStepSendBody'),
+        ),
+        const SizedBox(height: 10),
+        _AIProviderStatusLine(copy: copy, config: activeProviderConfig),
+        const SizedBox(height: 12),
+        _ActionHelp(
+          message: copy.t('helpSubmitAiPrompt'),
+          child: FilledButton.icon(
+            onPressed: canRequest && !isRequesting ? onSubmit : null,
+            icon: const Icon(Icons.send_outlined),
+            label: Text(copy.t('submitAiPrompt')),
+          ),
+        ),
+        if (isRequesting || lastError != null) ...[
+          const SizedBox(height: 12),
+          _AIRequestStatus(
+            copy: copy,
+            isRequesting: isRequesting,
+            message: lastError,
+          ),
+        ],
+      ],
     );
   }
 }
@@ -823,12 +1127,10 @@ final class _AIContextPicker extends StatelessWidget {
           segments: [
             ButtonSegment(
               value: _AIWorkshopContextKind.project,
-              icon: const Icon(Icons.folder_special_outlined),
               label: Text(copy.t('project')),
             ),
             ButtonSegment(
               value: _AIWorkshopContextKind.scene,
-              icon: const Icon(Icons.auto_awesome_motion_outlined),
               label: Text(copy.t('scene')),
             ),
           ],
@@ -846,7 +1148,6 @@ final class _AIContextPicker extends StatelessWidget {
               icon: const Icon(Icons.keyboard_arrow_down_rounded),
               decoration: InputDecoration(
                 labelText: copy.t('selectAiScene'),
-                prefixIcon: const Icon(Icons.view_agenda_outlined),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -1859,6 +2160,15 @@ String _filterLabel(_AISuggestionInboxFilter filter, WritellerCopy copy) {
     _AISuggestionInboxFilter.noted => copy.t('aiInboxNoted'),
     _AISuggestionInboxFilter.rejected => copy.t('aiInboxRejected'),
     _AISuggestionInboxFilter.all => copy.t('aiInboxAll'),
+  };
+}
+
+String _aiConsoleTabLabel(_AIConsoleTab tab, WritellerCopy copy) {
+  return switch (tab) {
+    _AIConsoleTab.overview => copy.t('aiTabOverview'),
+    _AIConsoleTab.context => copy.t('aiTabContext'),
+    _AIConsoleTab.instruction => copy.t('aiTabInstruction'),
+    _AIConsoleTab.prompt => copy.t('aiTabPrompt'),
   };
 }
 

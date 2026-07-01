@@ -697,11 +697,11 @@ void main() {
 
     await tapNavigationItem(tester, 'AI Workshop');
 
-    final sendButton = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Send task'),
-    );
+    expect(find.text('Overview'), findsWidgets);
+    expect(find.text('How the AI workshop works'), findsOneWidget);
+    await tester.tap(find.widgetWithText(Tab, 'Context'));
+    await tester.pumpAndSettle();
 
-    expect(sendButton.onPressed, isNotNull);
     expect(find.textContaining('Project-wide'), findsWidgets);
     expect(find.text('Additional AI context'), findsOneWidget);
 
@@ -712,16 +712,17 @@ void main() {
 
     await tester.tap(find.text('Mara'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Exact prompt sent to the LLM'),
-      220,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.tap(find.widgetWithText(Tab, 'Prompt & Send'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Exact prompt sent to the LLM'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Additional selected context'), findsOneWidget);
     expect(find.textContaining('Character: Mara'), findsOneWidget);
+
+    final sendButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Send task'),
+    );
+    expect(sendButton.onPressed, isNotNull);
 
     await tester.ensureVisible(find.widgetWithText(FilledButton, 'Send task'));
     await tester.tap(find.widgetWithText(FilledButton, 'Send task'));
