@@ -1059,6 +1059,75 @@ void main() {
     );
   });
 
+  testWidgets('relationship graph renders connected entities', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    final catalogRepository = InMemoryCatalogItemRepository();
+    final relationshipRepository = InMemoryRelationshipRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Graph Book'),
+    );
+    final character = await CreateCatalogItem(catalogRepository)(
+      CreateCatalogItemCommand(
+        projectId: project.id,
+        type: EntityType.character,
+        name: 'Mara',
+      ),
+    );
+    final location = await CreateCatalogItem(catalogRepository)(
+      CreateCatalogItemCommand(
+        projectId: project.id,
+        type: EntityType.location,
+        name: 'Orbital Gym',
+      ),
+    );
+    await relationshipRepository.save(
+      Relationship(
+        id: 'relationship-graph-1',
+        projectId: project.id,
+        source: EntityRef(type: EntityType.character, id: character.id),
+        target: EntityRef(type: EntityType.location, id: location.id),
+        relationshipType: 'locatedAt',
+        label: 'trains at',
+        description: 'Mara uses the gym as a quiet calibration room.',
+        strength: 0.8,
+        direction: RelationshipDirection.directed,
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+      ),
+    );
+
+    await tester.pumpWidget(
+      WritellerApp(
+        projectRepository: projectRepository,
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: catalogRepository,
+        relationshipRepository: relationshipRepository,
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapNavigationItem(tester, 'Relationship graph');
+
+    expect(find.text('Relationship details'), findsOneWidget);
+    expect(find.text('Mara'), findsWidgets);
+    expect(find.text('Orbital Gym'), findsWidgets);
+    expect(find.text('trains at'), findsWidgets);
+    expect(find.byType(CustomPaint), findsWidgets);
+  });
+
   testWidgets('top bar language switch updates workspace copy', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

@@ -514,6 +514,7 @@ final class WritellerCopy {
     'motifTracker': 'Motiv-Tracker',
     'noMotifsYet': 'Noch keine Muster aus Szenentyp, Ton oder Status.',
     'relationshipMap': 'Beziehungskarte',
+    'relationshipGraphInspector': 'Beziehungsdetails',
     'noRelationshipsYet': 'Noch keine Beziehungen verknüpft.',
     'noRelationshipsTitle': 'Noch keine Beziehungen',
     'noRelationshipsBody':
@@ -1454,6 +1455,7 @@ final class WritellerCopy {
     'motifTracker': 'Motif tracker',
     'noMotifsYet': 'No patterns from scene type, tone, or status yet.',
     'relationshipMap': 'Relationship map',
+    'relationshipGraphInspector': 'Relationship details',
     'noRelationshipsYet': 'No relationships linked yet.',
     'noRelationshipsTitle': 'No relationships yet',
     'noRelationshipsBody':

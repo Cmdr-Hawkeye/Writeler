@@ -591,7 +591,7 @@ final class _TimelineRow extends StatelessWidget {
   }
 }
 
-final class _RelationshipGraphWorkspace extends StatelessWidget {
+final class _RelationshipGraphWorkspace extends StatefulWidget {
   const _RelationshipGraphWorkspace({
     required this.copy,
     required this.relationships,
@@ -611,59 +611,96 @@ final class _RelationshipGraphWorkspace extends StatelessWidget {
   final ValueChanged<Relationship> onDeleteRelationship;
 
   @override
+  State<_RelationshipGraphWorkspace> createState() =>
+      _RelationshipGraphWorkspaceState();
+}
+
+final class _RelationshipGraphWorkspaceState
+    extends State<_RelationshipGraphWorkspace> {
+  String? _selectedRelationshipId;
+
+  @override
   Widget build(BuildContext context) {
-    final endpointCount = scenes.length + catalogItems.length;
+    final endpointCount = widget.scenes.length + widget.catalogItems.length;
     final canCreateRelationship = endpointCount >= 2;
+    final selectedRelationship = widget.relationships
+            .where((relationship) => relationship.id == _selectedRelationshipId)
+            .firstOrNull ??
+        widget.relationships.firstOrNull;
     return Column(
       children: [
         _WorkspaceHeader(
-          title: copy.t('relationshipGraph'),
-          actionLabel: copy.t('newRelationship'),
+          title: widget.copy.t('relationshipGraph'),
+          actionLabel: widget.copy.t('newRelationship'),
           actionIcon: Icons.add,
-          actionHelp: copy.t('helpNewRelationship'),
-          onAction: () => onCreateRelationship(null),
+          actionHelp: widget.copy.t('helpNewRelationship'),
+          onAction: () => widget.onCreateRelationship(null),
         ),
         const Divider(height: 1),
         Expanded(
-          child: relationships.isEmpty
+          child: widget.relationships.isEmpty
               ? _EmptyPanel(
                   icon: Icons.hub_outlined,
-                  title: copy.t('noRelationshipsTitle'),
+                  title: widget.copy.t('noRelationshipsTitle'),
                   body: canCreateRelationship
-                      ? copy.t('noRelationshipsBody')
-                      : copy.t('relationshipNeedsEndpoints'),
+                      ? widget.copy.t('noRelationshipsBody')
+                      : widget.copy.t('relationshipNeedsEndpoints'),
                   action: FilledButton.icon(
-                    onPressed: () => onCreateRelationship(null),
+                    onPressed: () => widget.onCreateRelationship(null),
                     icon: const Icon(Icons.add),
-                    label: Text(copy.t('newRelationship')),
+                    label: Text(widget.copy.t('newRelationship')),
                   ),
                 )
-              : ListView.separated(
+              : Padding(
                   padding: const EdgeInsets.all(24),
-                  itemCount: relationships.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final relationship = relationships[index];
-                    return _RelationshipGraphRow(
-                      copy: copy,
-                      relationship: relationship,
-                      sourceLabel: _entityLabel(
-                        relationship.source,
-                        scenes,
-                        catalogItems,
-                        copy,
-                      ),
-                      targetLabel: _entityLabel(
-                        relationship.target,
-                        scenes,
-                        catalogItems,
-                        copy,
-                      ),
-                      onEdit: () => onEditRelationship(relationship),
-                      onDelete: () => onDeleteRelationship(relationship),
-                    );
-                  },
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final compact = constraints.maxWidth < 920;
+                      final canvas = _RelationshipGraphCanvas(
+                        copy: widget.copy,
+                        relationships: widget.relationships,
+                        scenes: widget.scenes,
+                        catalogItems: widget.catalogItems,
+                        selectedRelationship: selectedRelationship,
+                        onSelectRelationship: (relationship) => setState(
+                          () => _selectedRelationshipId = relationship.id,
+                        ),
+                      );
+                      final inspector = _RelationshipGraphInspector(
+                        copy: widget.copy,
+                        relationship: selectedRelationship,
+                        scenes: widget.scenes,
+                        catalogItems: widget.catalogItems,
+                        onEdit: selectedRelationship == null
+                            ? null
+                            : () => widget.onEditRelationship(
+                                  selectedRelationship,
+                                ),
+                        onDelete: selectedRelationship == null
+                            ? null
+                            : () => widget.onDeleteRelationship(
+                                  selectedRelationship,
+                                ),
+                      );
+
+                      if (compact) {
+                        return Column(
+                          children: [
+                            Expanded(child: canvas),
+                            const SizedBox(height: 16),
+                            SizedBox(height: 250, child: inspector),
+                          ],
+                        );
+                      }
+                      return Row(
+                        children: [
+                          Expanded(child: canvas),
+                          const SizedBox(width: 18),
+                          SizedBox(width: 320, child: inspector),
+                        ],
+                      );
+                    },
+                  ),
                 ),
         ),
       ],
@@ -671,6 +708,566 @@ final class _RelationshipGraphWorkspace extends StatelessWidget {
   }
 }
 
+final class _RelationshipGraphCanvas extends StatelessWidget {
+  const _RelationshipGraphCanvas({
+    required this.copy,
+    required this.relationships,
+    required this.scenes,
+    required this.catalogItems,
+    required this.selectedRelationship,
+    required this.onSelectRelationship,
+  });
+
+  final WritellerCopy copy;
+  final List<Relationship> relationships;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final Relationship? selectedRelationship;
+  final ValueChanged<Relationship> onSelectRelationship;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final nodes = _relationshipGraphNodes(
+      relationships,
+      scenes,
+      catalogItems,
+      copy,
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.surfaceContainerLowest,
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final size = Size(
+              math.max(1, constraints.maxWidth),
+              math.max(1, constraints.maxHeight),
+            );
+            final positions = _relationshipGraphPositions(nodes, size);
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                CustomPaint(
+                  painter: _RelationshipGraphPainter(
+                    colorScheme: color,
+                    relationships: relationships,
+                    positions: positions,
+                    selectedRelationship: selectedRelationship,
+                  ),
+                ),
+                for (final relationship in relationships)
+                  if (_relationshipMidpoint(relationship, positions)
+                      case final midpoint?)
+                    _RelationshipEdgeLabel(
+                      copy: copy,
+                      relationship: relationship,
+                      selected: relationship.id == selectedRelationship?.id,
+                      midpoint: midpoint,
+                      canvasSize: size,
+                      onTap: () => onSelectRelationship(relationship),
+                    ),
+                for (final node in nodes)
+                  if (positions[_relationshipNodeKey(node.ref)] case final pos?)
+                    _RelationshipGraphNodeChip(
+                      node: node,
+                      position: pos,
+                      highlighted: selectedRelationship == null ||
+                          _relationshipTouchesRef(
+                            selectedRelationship!,
+                            node.ref,
+                          ),
+                    ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+final class _RelationshipGraphInspector extends StatelessWidget {
+  const _RelationshipGraphInspector({
+    required this.copy,
+    required this.relationship,
+    required this.scenes,
+    required this.catalogItems,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final WritellerCopy copy;
+  final Relationship? relationship;
+  final List<Scene> scenes;
+  final List<CatalogItem> catalogItems;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final relationship = this.relationship;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: relationship == null
+            ? Center(child: Text(copy.t('noRelationshipsYet')))
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    copy.t('relationshipGraphInspector'),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _relationshipTitle(relationship, copy),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _relationshipSubtitle(
+                              relationship,
+                              copy,
+                              scenes: scenes,
+                              catalogItems: catalogItems,
+                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: color.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 16),
+                          _RelationshipDetailLine(
+                            label: copy.t('relationshipType'),
+                            value: _relationshipTypeLabel(
+                              relationship.relationshipType,
+                              copy,
+                            ),
+                          ),
+                          _RelationshipDetailLine(
+                            label: copy.t('relationshipDirected'),
+                            value: relationship.direction ==
+                                    RelationshipDirection.directed
+                                ? copy.t('relationshipDirected')
+                                : copy.t('relationshipUndirected'),
+                          ),
+                          _RelationshipDetailLine(
+                            label: copy.t('relationshipStrength'),
+                            value: relationship.strength == null
+                                ? copy.t('missing')
+                                : '${(relationship.strength! * 100).round()}%',
+                          ),
+                          if (relationship.description?.trim().isNotEmpty ==
+                              true) ...[
+                            const SizedBox(height: 14),
+                            Text(
+                              relationship.description!.trim(),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: onEdit,
+                          icon: const Icon(Icons.edit_outlined),
+                          label: Text(copy.t('editRelationship')),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.outlined(
+                        tooltip: copy.t('deleteRelationship'),
+                        onPressed: onDelete,
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+final class _RelationshipGraphNodeChip extends StatelessWidget {
+  const _RelationshipGraphNodeChip({
+    required this.node,
+    required this.position,
+    required this.highlighted,
+  });
+
+  final _RelationshipGraphNode node;
+  final Offset position;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final accent = _relationshipNodeColor(node.type, color);
+    return Positioned(
+      left: position.dx - 72,
+      top: position.dy - 28,
+      width: 144,
+      height: 56,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: highlighted
+              ? accent.withValues(alpha: 0.16)
+              : color.surfaceContainerHighest.withValues(alpha: 0.72),
+          border: Border.all(
+            color: highlighted ? accent : color.outlineVariant,
+            width: highlighted ? 1.6 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: highlighted
+              ? [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.16),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            children: [
+              Icon(_catalogIcon(node.type), size: 18, color: accent),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      node.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      node.typeLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: color.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _RelationshipDetailLine extends StatelessWidget {
+  const _RelationshipDetailLine({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 104,
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _RelationshipEdgeLabel extends StatelessWidget {
+  const _RelationshipEdgeLabel({
+    required this.copy,
+    required this.relationship,
+    required this.selected,
+    required this.midpoint,
+    required this.canvasSize,
+    required this.onTap,
+  });
+
+  final WritellerCopy copy;
+  final Relationship relationship;
+  final bool selected;
+  final Offset midpoint;
+  final Size canvasSize;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final label = _relationshipTitle(relationship, copy);
+    final left = (midpoint.dx - 70).clamp(12.0, canvasSize.width - 152.0);
+    final top = (midpoint.dy - 18).clamp(12.0, canvasSize.height - 48.0);
+    return Positioned(
+      left: left,
+      top: top,
+      width: 140,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: selected
+                  ? color.primaryContainer
+                  : color.surface.withValues(alpha: 0.92),
+              border: Border.all(
+                color: selected ? color.primary : color.outlineVariant,
+              ),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: selected
+                        ? color.onPrimaryContainer
+                        : color.onSurfaceVariant,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _RelationshipGraphPainter extends CustomPainter {
+  const _RelationshipGraphPainter({
+    required this.colorScheme,
+    required this.relationships,
+    required this.positions,
+    required this.selectedRelationship,
+  });
+
+  final ColorScheme colorScheme;
+  final List<Relationship> relationships;
+  final Map<String, Offset> positions;
+  final Relationship? selectedRelationship;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    _drawBackground(canvas, size);
+    for (final relationship in relationships) {
+      final source = positions[_relationshipNodeKey(relationship.source)];
+      final target = positions[_relationshipNodeKey(relationship.target)];
+      if (source == null || target == null) continue;
+      final vector = target - source;
+      final distance = vector.distance;
+      if (distance < 1) continue;
+      final unit = vector / distance;
+      final start = source + unit * 62;
+      final end = target - unit * 62;
+      final selected = relationship.id == selectedRelationship?.id;
+      final strength = relationship.strength?.clamp(0.0, 1.0) ?? 0.44;
+      final paint = Paint()
+        ..color = selected
+            ? colorScheme.primary
+            : colorScheme.outline.withValues(alpha: 0.62)
+        ..strokeWidth = selected ? 3.4 : 1.3 + (strength * 2.3)
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+
+      canvas.drawLine(start, end, paint);
+      if (relationship.direction == RelationshipDirection.directed) {
+        _drawArrow(canvas, end, unit, paint.color);
+      }
+    }
+  }
+
+  void _drawBackground(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = colorScheme.outlineVariant.withValues(alpha: 0.18)
+      ..strokeWidth = 1;
+    const gap = 72.0;
+    for (var x = gap; x < size.width; x += gap) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (var y = gap; y < size.height; y += gap) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  void _drawArrow(Canvas canvas, Offset tip, Offset unit, Color color) {
+    final normal = Offset(-unit.dy, unit.dx);
+    final base = tip - unit * 14;
+    final path = Path()
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo((base + normal * 7).dx, (base + normal * 7).dy)
+      ..lineTo((base - normal * 7).dx, (base - normal * 7).dy)
+      ..close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _RelationshipGraphPainter oldDelegate) {
+    return oldDelegate.relationships != relationships ||
+        oldDelegate.positions != positions ||
+        oldDelegate.selectedRelationship?.id != selectedRelationship?.id ||
+        oldDelegate.colorScheme != colorScheme;
+  }
+}
+
+final class _RelationshipGraphNode {
+  const _RelationshipGraphNode({
+    required this.ref,
+    required this.label,
+    required this.typeLabel,
+    required this.type,
+  });
+
+  final EntityRef ref;
+  final String label;
+  final String typeLabel;
+  final EntityType type;
+}
+
+List<_RelationshipGraphNode> _relationshipGraphNodes(
+  List<Relationship> relationships,
+  List<Scene> scenes,
+  List<CatalogItem> catalogItems,
+  WritellerCopy copy,
+) {
+  final refs = <String, EntityRef>{};
+  for (final relationship in relationships) {
+    refs[_relationshipNodeKey(relationship.source)] = relationship.source;
+    refs[_relationshipNodeKey(relationship.target)] = relationship.target;
+  }
+  return [
+    for (final ref in refs.values)
+      _RelationshipGraphNode(
+        ref: ref,
+        label: _entityLabel(ref, scenes, catalogItems, copy),
+        typeLabel: _entityTypeLabel(ref.type, copy),
+        type: ref.type,
+      ),
+  ]..sort((a, b) {
+      final typeCompare = a.type.index.compareTo(b.type.index);
+      if (typeCompare != 0) return typeCompare;
+      return a.label.compareTo(b.label);
+    });
+}
+
+Map<String, Offset> _relationshipGraphPositions(
+  List<_RelationshipGraphNode> nodes,
+  Size size,
+) {
+  if (nodes.isEmpty) return const {};
+  final center = Offset(size.width / 2, size.height / 2);
+  if (nodes.length == 1) {
+    return {_relationshipNodeKey(nodes.first.ref): center};
+  }
+  final horizontalRadius = math.max(100.0, (size.width - 190) / 2);
+  final verticalRadius = math.max(90.0, (size.height - 150) / 2);
+  final radius = math.min(horizontalRadius, verticalRadius);
+  return {
+    for (var index = 0; index < nodes.length; index++)
+      _relationshipNodeKey(nodes[index].ref): Offset(
+        center.dx +
+            math.cos((-math.pi / 2) + (index * 2 * math.pi / nodes.length)) *
+                radius,
+        center.dy +
+            math.sin((-math.pi / 2) + (index * 2 * math.pi / nodes.length)) *
+                radius,
+      ),
+  };
+}
+
+String _relationshipNodeKey(EntityRef ref) => '${ref.type.wireName}:${ref.id}';
+
+Offset? _relationshipMidpoint(
+  Relationship relationship,
+  Map<String, Offset> positions,
+) {
+  final source = positions[_relationshipNodeKey(relationship.source)];
+  final target = positions[_relationshipNodeKey(relationship.target)];
+  if (source == null || target == null) return null;
+  return Offset((source.dx + target.dx) / 2, (source.dy + target.dy) / 2);
+}
+
+Color _relationshipNodeColor(EntityType type, ColorScheme color) {
+  return switch (type) {
+    EntityType.character => color.primary,
+    EntityType.location => color.tertiary,
+    EntityType.object => color.secondary,
+    EntityType.scene => color.error,
+    _ => color.primary,
+  };
+}
+
+// ignore: unused_element
 final class _RelationshipGraphRow extends StatelessWidget {
   const _RelationshipGraphRow({
     required this.copy,
