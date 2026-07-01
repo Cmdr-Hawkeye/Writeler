@@ -501,6 +501,8 @@ void main() {
     await tester.pumpAndSettle();
 
     await tapNavigationItem(tester, 'Storyboard');
+    expect(find.text('1 · Opening'), findsOneWidget);
+    expect(find.text('2 · Second'), findsOneWidget);
     await tester.drag(find.text('Opening').first, const Offset(90, 40));
     await tester.pump(const Duration(milliseconds: 700));
 

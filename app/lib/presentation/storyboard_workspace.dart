@@ -5,7 +5,10 @@ const double _storyboardCanvasHeight = 1040;
 const double _storyboardCardWidth = 230;
 const double _storyboardCardHeight = 92;
 const double _storyboardCanvasPadding = 96;
-const int _storyboardDefaultRowsPerLane = 7;
+const double _storyboardSceneColumnWidth = 304;
+const double _storyboardSceneColumnLeft = 44;
+const double _storyboardSceneColumnTop = 34;
+const double _storyboardSceneColumnHeaderHeight = 52;
 
 enum _StoryboardNodeKind { scene, character, location, object, note }
 
@@ -41,7 +44,9 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
     _storyboardCanvasWidth,
     _storyboardCanvasHeight,
   );
+  int _sceneColumnCount = 0;
   bool _connectMode = false;
+  bool _showSceneTitles = true;
   String? _pendingConnectionStartId;
   Timer? _persistTimer;
   bool _storyboardDirty = false;
@@ -78,7 +83,19 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
 
     final nodes = _buildNodes(project);
     _syncCanvasState(nodes);
-    _canvasSize = _resolvedCanvasSize();
+    final sceneNodeById = {
+      for (final node in nodes)
+        if (node.kind == _StoryboardNodeKind.scene) node.id: node,
+    };
+    final orderedSceneIds = [
+      ..._timelineOrder.where(sceneNodeById.containsKey),
+      ...sceneNodeById.keys.where((id) => !_timelineOrder.contains(id)),
+    ];
+    final sceneNodes = [
+      for (final id in orderedSceneIds) sceneNodeById[id]!,
+    ];
+    _sceneColumnCount = sceneNodes.length;
+    _canvasSize = _resolvedCanvasSize(sceneCount: sceneNodes.length);
     final nodesById = {for (final node in nodes) node.id: node};
     final nodesByIdForTimeline = {for (final node in nodes) node.id: node};
     final timelineNodes = [
@@ -93,11 +110,16 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
           nodeCount: nodes.length,
           connectionCount: _connections.length,
           connectMode: _connectMode,
+          showSceneTitles: _showSceneTitles,
           onConnectModeChanged: (value) {
             setState(() {
               _connectMode = value;
               _pendingConnectionStartId = null;
             });
+          },
+          onShowSceneTitlesChanged: (value) {
+            setState(() => _showSceneTitles = value);
+            _schedulePersist();
           },
           onClearConnections: _connections.isEmpty
               ? null
@@ -116,10 +138,12 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
               : _StoryboardCanvas(
                   copy: widget.copy,
                   nodes: nodes,
+                  sceneNodes: sceneNodes,
                   canvasSize: _canvasSize,
                   positions: _positions,
                   connections: _connections,
                   connectMode: _connectMode,
+                  showSceneTitles: _showSceneTitles,
                   pendingConnectionStartId: _pendingConnectionStartId,
                   onMoveNode: _moveNode,
                   onTapNode: _tapNode,
@@ -245,16 +269,50 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
       }
     }
 
-    final usedByKind = <_StoryboardNodeKind, int>{};
+    final sceneIndexById = <String, int>{
+      for (var index = 0; index < _timelineOrder.length; index++)
+        _timelineOrder[index]: index,
+    };
+    var unplacedNonSceneIndex = 0;
     for (final node in nodes) {
       if (_positions.containsKey(node.id)) continue;
-      final index =
-          usedByKind.update(node.kind, (value) => value + 1, ifAbsent: () => 0);
-      _positions[node.id] = _defaultPosition(node.kind, index);
+      final index = node.kind == _StoryboardNodeKind.scene
+          ? sceneIndexById[node.id] ?? 0
+          : unplacedNonSceneIndex++;
+      _positions[node.id] = _defaultPosition(
+        node.kind,
+        index,
+        sceneCount: sceneNodeIds.length,
+      );
     }
   }
 
-  Offset _defaultPosition(_StoryboardNodeKind kind, int index) {
+  Offset _defaultPosition(
+    _StoryboardNodeKind kind,
+    int index, {
+    required int sceneCount,
+  }) {
+    if (sceneCount > 0) {
+      final column = kind == _StoryboardNodeKind.scene
+          ? index.clamp(0, sceneCount - 1)
+          : index % sceneCount;
+      final row = kind == _StoryboardNodeKind.scene ? 0 : index ~/ sceneCount;
+      final baseX =
+          _storyboardSceneColumnLeft + column * _storyboardSceneColumnWidth;
+      final baseY = kind == _StoryboardNodeKind.scene
+          ? _storyboardSceneColumnTop + _storyboardSceneColumnHeaderHeight + 16
+          : _storyboardSceneColumnTop +
+              _storyboardSceneColumnHeaderHeight +
+              148;
+      final stagger = switch (kind) {
+        _StoryboardNodeKind.location => 28.0,
+        _StoryboardNodeKind.object => 56.0,
+        _StoryboardNodeKind.note => 84.0,
+        _ => 0.0,
+      };
+      return Offset(baseX + 36, baseY + row * 132 + stagger);
+    }
+
     final baseColumn = switch (kind) {
       _StoryboardNodeKind.character => 0,
       _StoryboardNodeKind.location => 1,
@@ -262,8 +320,8 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
       _StoryboardNodeKind.scene => 2,
       _StoryboardNodeKind.note => 3,
     };
-    final lane = index ~/ _storyboardDefaultRowsPerLane;
-    final row = index % _storyboardDefaultRowsPerLane;
+    final row = index % 7;
+    final lane = index ~/ 7;
     final stagger = switch (kind) {
       _StoryboardNodeKind.object => 52.0,
       _StoryboardNodeKind.note => 28.0,
@@ -275,9 +333,19 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
     );
   }
 
-  Size _resolvedCanvasSize([Offset? additionalPosition]) {
+  Size _resolvedCanvasSize({
+    Offset? additionalPosition,
+    int? sceneCount,
+  }) {
     var width = _storyboardCanvasWidth;
     var height = _storyboardCanvasHeight;
+    final columns = sceneCount ?? _sceneColumnCount;
+    if (columns > 0) {
+      width = math.max(
+        width,
+        _storyboardSceneColumnLeft * 2 + columns * _storyboardSceneColumnWidth,
+      );
+    }
     final positions = [
       ..._positions.values,
       if (additionalPosition != null) additionalPosition,
@@ -299,7 +367,7 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
     setState(() {
       final current = _positions[id] ?? Offset.zero;
       final proposed = current + delta;
-      _canvasSize = _resolvedCanvasSize(proposed);
+      _canvasSize = _resolvedCanvasSize(additionalPosition: proposed);
       _positions[id] = _clampPosition(proposed);
     });
     _schedulePersist();
@@ -360,7 +428,12 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
     _positions.clear();
     _connections.clear();
     _timelineOrder.clear();
+    _showSceneTitles = true;
     final storyboard = _storyboardMetadata(widget.project);
+    final showSceneTitles = storyboard['showSceneTitles'];
+    if (showSceneTitles is bool) {
+      _showSceneTitles = showSceneTitles;
+    }
     final positions = storyboard['positions'];
     if (positions is Map) {
       for (final entry in positions.entries) {
@@ -406,6 +479,7 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
       },
       'connections': (_connections.toList()..sort()),
       'timeline': List<String>.unmodifiable(_timelineOrder),
+      'showSceneTitles': _showSceneTitles,
       'updatedAt': DateTime.now().toUtc().toIso8601String(),
     };
   }
@@ -417,7 +491,9 @@ final class _StoryboardToolbar extends StatelessWidget {
     required this.nodeCount,
     required this.connectionCount,
     required this.connectMode,
+    required this.showSceneTitles,
     required this.onConnectModeChanged,
+    required this.onShowSceneTitlesChanged,
     required this.onClearConnections,
   });
 
@@ -425,7 +501,9 @@ final class _StoryboardToolbar extends StatelessWidget {
   final int nodeCount;
   final int connectionCount;
   final bool connectMode;
+  final bool showSceneTitles;
   final ValueChanged<bool> onConnectModeChanged;
+  final ValueChanged<bool> onShowSceneTitlesChanged;
   final VoidCallback? onClearConnections;
 
   @override
@@ -487,6 +565,19 @@ final class _StoryboardToolbar extends StatelessWidget {
               message: copy.t('storyboardConnectHint'),
               child: Icon(Icons.help_outline, size: 20, color: color.primary),
             ),
+            Tooltip(
+              message: copy.t('storyboardSceneTitlesHint'),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Switch(
+                    value: showSceneTitles,
+                    onChanged: onShowSceneTitlesChanged,
+                  ),
+                  Text(copy.t('storyboardSceneTitles')),
+                ],
+              ),
+            ),
             OutlinedButton.icon(
               onPressed: onClearConnections,
               icon: const Icon(Icons.link_off_outlined),
@@ -503,10 +594,12 @@ final class _StoryboardCanvas extends StatefulWidget {
   const _StoryboardCanvas({
     required this.copy,
     required this.nodes,
+    required this.sceneNodes,
     required this.canvasSize,
     required this.positions,
     required this.connections,
     required this.connectMode,
+    required this.showSceneTitles,
     required this.pendingConnectionStartId,
     required this.onMoveNode,
     required this.onTapNode,
@@ -514,10 +607,12 @@ final class _StoryboardCanvas extends StatefulWidget {
 
   final WritellerCopy copy;
   final List<_StoryboardNode> nodes;
+  final List<_StoryboardNode> sceneNodes;
   final Size canvasSize;
   final Map<String, Offset> positions;
   final Set<String> connections;
   final bool connectMode;
+  final bool showSceneTitles;
   final String? pendingConnectionStartId;
   final void Function(String id, Offset delta) onMoveNode;
   final ValueChanged<String> onTapNode;
@@ -580,9 +675,25 @@ final class _StoryboardCanvasState extends State<_StoryboardCanvas> {
                                   color.outlineVariant.withValues(alpha: 0.3),
                               accentColor:
                                   color.primary.withValues(alpha: 0.16),
+                              sceneCount: widget.sceneNodes.length,
                             ),
                           ),
                         ),
+                        if (widget.showSceneTitles)
+                          for (var index = 0;
+                              index < widget.sceneNodes.length;
+                              index++)
+                            Positioned(
+                              left: _storyboardSceneColumnLeft +
+                                  index * _storyboardSceneColumnWidth +
+                                  14,
+                              top: _storyboardSceneColumnTop + 10,
+                              width: _storyboardSceneColumnWidth - 28,
+                              child: _StoryboardSceneColumnHeader(
+                                index: index,
+                                node: widget.sceneNodes[index],
+                              ),
+                            ),
                         Positioned.fill(
                           child: CustomPaint(
                             painter: _StoryboardConnectionPainter(
@@ -783,6 +894,52 @@ final class _StoryboardNodeCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _StoryboardSceneColumnHeader extends StatelessWidget {
+  const _StoryboardSceneColumnHeader({
+    required this.index,
+    required this.node,
+  });
+
+  final int index;
+  final _StoryboardNode node;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final label = '${index + 1} · ${node.title}';
+    return Tooltip(
+      message: node.tooltip,
+      waitDuration: const Duration(milliseconds: 350),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color.surface.withValues(alpha: 0.88),
+          border: Border.all(color: color.outlineVariant),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            children: [
+              Icon(Icons.movie_filter_outlined, size: 16, color: color.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1335,10 +1492,12 @@ final class _StoryboardBackgroundPainter extends CustomPainter {
   const _StoryboardBackgroundPainter({
     required this.lineColor,
     required this.accentColor,
+    required this.sceneCount,
   });
 
   final Color lineColor;
   final Color accentColor;
+  final int sceneCount;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1352,17 +1511,31 @@ final class _StoryboardBackgroundPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    final lanePaint = Paint()
+    if (sceneCount <= 0) return;
+
+    final laneStrokePaint = Paint()
       ..color = accentColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
-    for (final x in [56.0, 446.0, 836.0, 1226.0]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(x - 24, 34, 312, size.height - 72),
-          const Radius.circular(16),
+    final laneFillPaint = Paint()
+      ..color = accentColor.withValues(alpha: 0.28)
+      ..style = PaintingStyle.fill;
+    for (var index = 0; index < sceneCount; index++) {
+      final x =
+          _storyboardSceneColumnLeft + index * _storyboardSceneColumnWidth;
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          x,
+          _storyboardSceneColumnTop,
+          _storyboardSceneColumnWidth - 18,
+          size.height - (_storyboardSceneColumnTop * 2),
         ),
-        lanePaint,
+        const Radius.circular(16),
+      );
+      canvas.drawRRect(rect, laneFillPaint);
+      canvas.drawRRect(
+        rect,
+        laneStrokePaint,
       );
     }
   }
@@ -1370,7 +1543,8 @@ final class _StoryboardBackgroundPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _StoryboardBackgroundPainter oldDelegate) =>
       lineColor != oldDelegate.lineColor ||
-      accentColor != oldDelegate.accentColor;
+      accentColor != oldDelegate.accentColor ||
+      sceneCount != oldDelegate.sceneCount;
 }
 
 final class _StoryboardConnectionPainter extends CustomPainter {

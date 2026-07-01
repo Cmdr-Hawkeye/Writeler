@@ -443,6 +443,9 @@ final class WritellerCopy {
     'storyboard': 'Storyboard',
     'storyboardElements': 'Elemente',
     'storyboardConnections': 'Linien',
+    'storyboardSceneTitles': 'Szenentitel',
+    'storyboardSceneTitlesHint':
+        'Blendet die Szenentitel über den Storyboard-Spalten ein oder aus.',
     'storyboardMoveMode': 'Verschieben',
     'storyboardConnectMode': 'Verbinden',
     'storyboardConnectHint':
@@ -1398,6 +1401,9 @@ final class WritellerCopy {
     'storyboard': 'Storyboard',
     'storyboardElements': 'Elements',
     'storyboardConnections': 'Lines',
+    'storyboardSceneTitles': 'Scene titles',
+    'storyboardSceneTitlesHint':
+        'Show or hide scene titles above the storyboard columns.',
     'storyboardMoveMode': 'Move',
     'storyboardConnectMode': 'Connect',
     'storyboardConnectHint':
