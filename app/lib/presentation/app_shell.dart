@@ -22,8 +22,18 @@ final class _CommandPaletteEntry {
 
 const _localBackupDirectoryKey = 'localBackupDirectory';
 const _autoBackupDisabledKey = 'autoBackupDisabled';
+const _localBackupIntervalMinutesKey = 'localBackupIntervalMinutes';
 const _lastLocalBackupAtKey = 'lastLocalBackupAt';
 const _lastLocalBackupPathKey = 'lastLocalBackupPath';
+const _defaultLocalBackupIntervalMinutes = 5;
+const _localBackupIntervalOptions = [1, 3, 5, 10, 15, 30, 60, 120];
+
+int _normalizeLocalBackupInterval(int? minutes) {
+  if (minutes == null) return _defaultLocalBackupIntervalMinutes;
+  return _localBackupIntervalOptions.contains(minutes)
+      ? minutes
+      : _defaultLocalBackupIntervalMinutes;
+}
 
 final class _CommandPaletteDialog extends StatefulWidget {
   const _CommandPaletteDialog({
@@ -423,10 +433,6 @@ final class _WritellerShellState extends State<WritellerShell>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _addSceneDraftListeners();
-    _localBackupTimer = Timer.periodic(
-      const Duration(minutes: 5),
-      (_) => unawaited(_createLocalBackup(trigger: 'interval')),
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadTimer = Timer(const Duration(milliseconds: 250), _loadProjects);
     });
@@ -434,7 +440,6 @@ final class _WritellerShellState extends State<WritellerShell>
 
   @override
   void dispose() {
-    unawaited(_createLocalBackup(trigger: 'app-close'));
     WidgetsBinding.instance.removeObserver(this);
     _loadTimer?.cancel();
     _autosaveTimer?.cancel();
@@ -452,6 +457,13 @@ final class _WritellerShellState extends State<WritellerShell>
     _apiKeyRefController.dispose();
     _importArchiveController.dispose();
     super.dispose();
+  }
+
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    _localBackupTimer?.cancel();
+    await _createLocalBackup(trigger: 'app-exit');
+    return AppExitResponse.exit;
   }
 
   @override
@@ -518,6 +530,8 @@ final class _WritellerShellState extends State<WritellerShell>
     });
     if (selectedProject != null) {
       await _loadProjectData(selectedProject.id);
+    } else {
+      _scheduleLocalBackupTimer();
     }
   }
 
@@ -588,6 +602,7 @@ final class _WritellerShellState extends State<WritellerShell>
       _selectedScene = scenes.firstOrNull;
       _syncSceneControllers(_selectedScene);
     });
+    _scheduleLocalBackupTimer();
   }
 
   Future<void> _selectProject(Project project) async {
@@ -606,6 +621,32 @@ final class _WritellerShellState extends State<WritellerShell>
       _syncSceneControllers(null);
     });
     await _loadProjectData(project.id);
+  }
+
+  void _scheduleLocalBackupTimer() {
+    _localBackupTimer?.cancel();
+    final project = _selectedProject;
+    if (project == null ||
+        _projectAutoBackupDisabled(project) ||
+        _projectLocalBackupDirectory(project) == null) {
+      _localBackupTimer = null;
+      return;
+    }
+    final intervalMinutes = _projectLocalBackupIntervalMinutes(project);
+    _localBackupTimer = Timer(
+      Duration(minutes: intervalMinutes),
+      () => unawaited(_runScheduledLocalBackup()),
+    );
+  }
+
+  Future<void> _runScheduledLocalBackup() async {
+    try {
+      await _createLocalBackup(trigger: 'interval');
+    } finally {
+      if (mounted) {
+        _scheduleLocalBackupTimer();
+      }
+    }
   }
 
   void _selectScene(Scene scene) {
@@ -980,6 +1021,8 @@ final class _WritellerShellState extends State<WritellerShell>
     });
     if (selectedProject != null) {
       await _loadProjectData(selectedProject.id);
+    } else {
+      _scheduleLocalBackupTimer();
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1382,6 +1425,13 @@ final class _WritellerShellState extends State<WritellerShell>
     } else {
       metadata.remove(_autoBackupDisabledKey);
     }
+    final backupIntervalMinutes =
+        _normalizeLocalBackupInterval(update.localBackupIntervalMinutes);
+    if (backupIntervalMinutes == _defaultLocalBackupIntervalMinutes) {
+      metadata.remove(_localBackupIntervalMinutesKey);
+    } else {
+      metadata[_localBackupIntervalMinutesKey] = backupIntervalMinutes;
+    }
     final targetValue = update.targetValue;
     final int? wordTarget = switch (update.targetUnit) {
       _ProjectTargetUnit.words => targetValue,
@@ -1415,6 +1465,7 @@ final class _WritellerShellState extends State<WritellerShell>
       _projects = projects;
       _selectedProject = updated;
     });
+    _scheduleLocalBackupTimer();
     await _recordProjectMetric(
       eventType: 'project.metadata.updated',
       metadata: {
@@ -1423,6 +1474,7 @@ final class _WritellerShellState extends State<WritellerShell>
         'targetUnit': targetValue == null ? null : update.targetUnit.name,
         'localBackupConfigured': localBackupDirectory.isNotEmpty,
         'autoBackupDisabled': update.autoBackupDisabled,
+        'localBackupIntervalMinutes': backupIntervalMinutes,
       },
     );
   }
@@ -1438,6 +1490,7 @@ final class _WritellerShellState extends State<WritellerShell>
 
     _localBackupInProgress = true;
     try {
+      await _savePendingSceneBeforeLocalBackup();
       final artifact = _projectExporter.exportArtifact(
         project: project,
         chapters: _chapters
@@ -1467,6 +1520,7 @@ final class _WritellerShellState extends State<WritellerShell>
       final createdAt = DateTime.now();
       final result = await writeRollingLocalBackup(
         directoryPath: directory,
+        projectTitle: project.title,
         bytes: artifact.bytes,
         now: createdAt,
       );
@@ -1517,6 +1571,21 @@ final class _WritellerShellState extends State<WritellerShell>
     }
   }
 
+  Future<void> _savePendingSceneBeforeLocalBackup() async {
+    if (!mounted ||
+        _selectedScene == null ||
+        _selectedProject == null ||
+        _sceneSaveState != _SceneSaveState.unsaved) {
+      return;
+    }
+    final copy = WritellerCopy(Localizations.localeOf(context).languageCode);
+    await _saveSelectedScene(
+      copy,
+      showSnackBar: false,
+      recordMetric: false,
+    );
+  }
+
   Future<void> _saveLocalBackupRuntimeMetadata(
     Project project, {
     required String filePath,
@@ -1547,6 +1616,12 @@ final class _WritellerShellState extends State<WritellerShell>
 
   bool _projectAutoBackupDisabled(Project project) {
     return project.metadata[_autoBackupDisabledKey] == true;
+  }
+
+  int _projectLocalBackupIntervalMinutes(Project project) {
+    return _normalizeLocalBackupInterval(
+      _metadataInt(project.metadata[_localBackupIntervalMinutesKey]),
+    );
   }
 
   Future<void> _saveProjectContext(String value) async {

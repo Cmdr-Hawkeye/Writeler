@@ -17,6 +17,7 @@ final class LocalBackupWriteResult {
 
 Future<LocalBackupWriteResult> writeRollingLocalBackup({
   required String directoryPath,
+  required String projectTitle,
   required Uint8List bytes,
   required DateTime now,
 }) async {
@@ -26,11 +27,15 @@ Future<LocalBackupWriteResult> writeRollingLocalBackup({
       await directory.create(recursive: true);
     }
 
+    final projectSlug = _fileSlug(projectTitle);
+    final backupFilePattern = RegExp(
+      '^backup_${RegExp.escape(projectSlug)}_\\d{8}_\\d{6}\\.writeller\\.json\$',
+    );
     final existingBackups = <File>[];
     await for (final entity in directory.list(followLinks: false)) {
       if (entity is! File) continue;
       final name = Uri.decodeComponent(entity.uri.pathSegments.last);
-      if (_backupFilePattern.hasMatch(name)) {
+      if (backupFilePattern.hasMatch(name)) {
         existingBackups.add(entity);
       }
     }
@@ -42,7 +47,7 @@ Future<LocalBackupWriteResult> writeRollingLocalBackup({
       }
     }
 
-    final fileName = 'backup_${_timestamp(now)}.writeller.json';
+    final fileName = 'backup_${projectSlug}_${_timestamp(now)}.writeller.json';
     final target = File('${directory.path}${Platform.pathSeparator}$fileName');
     await target.writeAsBytes(bytes, flush: true);
     return LocalBackupWriteResult(
@@ -54,7 +59,14 @@ Future<LocalBackupWriteResult> writeRollingLocalBackup({
   }
 }
 
-final _backupFilePattern = RegExp(r'^backup_\d{8}_\d{6}\.writeller\.json$');
+String _fileSlug(String value) {
+  final normalized = value
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
+  return normalized.isEmpty ? 'project' : normalized;
+}
 
 String _timestamp(DateTime value) {
   final local = value.toLocal();

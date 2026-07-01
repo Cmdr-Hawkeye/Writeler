@@ -1687,6 +1687,7 @@ final class _ProjectMetadataUpdate {
     required this.targetUnit,
     required this.targetValue,
     required this.localBackupDirectory,
+    required this.localBackupIntervalMinutes,
     required this.autoBackupDisabled,
   });
 
@@ -1695,7 +1696,16 @@ final class _ProjectMetadataUpdate {
   final _ProjectTargetUnit targetUnit;
   final int? targetValue;
   final String localBackupDirectory;
+  final int localBackupIntervalMinutes;
   final bool autoBackupDisabled;
+}
+
+String _backupIntervalLabel(int minutes, WritellerCopy copy) {
+  if (minutes == 1) return copy.t('oneMinute');
+  if (minutes < 60) return '$minutes ${copy.t('minutesShort')}';
+  final hours = minutes ~/ 60;
+  if (hours == 1) return copy.t('oneHour');
+  return '$hours ${copy.t('hoursShort')}';
 }
 
 final class _ProjectMetadataSettings extends StatefulWidget {
@@ -1727,6 +1737,7 @@ final class _ProjectMetadataSettingsState
   late var _projectType = widget.project?.projectType ?? 'novel';
   late var _targetUnit = _initialTargetUnit;
   late var _localBackupDirectory = _initialLocalBackupDirectory;
+  late var _localBackupIntervalMinutes = _initialLocalBackupIntervalMinutes;
   late var _autoBackupDisabled = _initialAutoBackupDisabled;
 
   String get _authorName =>
@@ -1737,6 +1748,10 @@ final class _ProjectMetadataSettingsState
 
   bool get _initialAutoBackupDisabled =>
       widget.project?.metadata[_autoBackupDisabledKey] == true;
+
+  int get _initialLocalBackupIntervalMinutes => _normalizeLocalBackupInterval(
+        _metadataInt(widget.project?.metadata[_localBackupIntervalMinutesKey]),
+      );
 
   _ProjectTargetUnit get _initialTargetUnit {
     return widget.project?.metadata['targetUnit'] == 'pages'
@@ -1764,6 +1779,7 @@ final class _ProjectMetadataSettingsState
       _projectType = widget.project?.projectType ?? 'novel';
       _targetUnit = _initialTargetUnit;
       _localBackupDirectory = _initialLocalBackupDirectory;
+      _localBackupIntervalMinutes = _initialLocalBackupIntervalMinutes;
       _autoBackupDisabled = _initialAutoBackupDisabled;
     }
   }
@@ -1888,6 +1904,31 @@ final class _ProjectMetadataSettingsState
           subtitle: Text(widget.copy.t('disableAutoBackupHint')),
           onChanged: (value) => setState(() => _autoBackupDisabled = value),
         ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: DropdownButtonFormField<int>(
+            initialValue: _localBackupIntervalMinutes,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            decoration: InputDecoration(
+              labelText: widget.copy.t('localBackupInterval'),
+              helperText: widget.copy.t('localBackupIntervalHint'),
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              for (final minutes in _localBackupIntervalOptions)
+                DropdownMenuItem(
+                  value: minutes,
+                  child: Text(_backupIntervalLabel(minutes, widget.copy)),
+                ),
+            ],
+            onChanged: _autoBackupDisabled
+                ? null
+                : (value) {
+                    if (value == null) return;
+                    setState(() => _localBackupIntervalMinutes = value);
+                  },
+          ),
+        ),
         if (_lastBackupText(project).isNotEmpty) ...[
           const SizedBox(height: 4),
           ListTile(
@@ -1930,6 +1971,7 @@ final class _ProjectMetadataSettingsState
         targetUnit: _targetUnit,
         targetValue: targetText.isEmpty ? null : int.tryParse(targetText),
         localBackupDirectory: _localBackupDirectory,
+        localBackupIntervalMinutes: _localBackupIntervalMinutes,
         autoBackupDisabled: _autoBackupDisabled,
       ),
     );

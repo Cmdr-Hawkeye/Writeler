@@ -94,7 +94,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New Project'));
+    await tester.tap(find.byTooltip('New Project'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(EditableText), 'Draft Atlas');
@@ -102,7 +102,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Draft Atlas'), findsWidgets);
-    await tester.tap(find.text('Draft Atlas').first);
+    await tester.tap(find.byTooltip('Draft Atlas'));
     await tester.pumpAndSettle();
     expect(find.text('Novel'), findsOneWidget);
     await tester.tapAt(const Offset(20, 20));
@@ -267,7 +267,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New Project'));
+    await tester.tap(find.byTooltip('New Project'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), 'Wizard Book');
     await tester.tap(find.text('Next'));
@@ -307,7 +307,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New Project'));
+    await tester.tap(find.byTooltip('New Project'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), 'Research Atlas');
     await tester.tap(find.text('Next'));
@@ -773,7 +773,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New Project'));
+    await tester.tap(find.byTooltip('New Project'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), 'Editor Check');
     await tester.tap(find.text('Create'));
@@ -1041,7 +1041,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New Project'));
+    await tester.tap(find.byTooltip('New Project'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), 'Relationship Check');
     await tester.tap(find.text('Create'));
@@ -1159,14 +1159,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('New Project'), findsOneWidget);
+    expect(find.byTooltip('New Project'), findsOneWidget);
 
-    await tester.tap(find.text('EN'));
+    await tester.tap(find.byTooltip('Language').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Deutsch'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Neues Projekt'), findsOneWidget);
+    expect(find.byTooltip('Neues Projekt'), findsOneWidget);
     expect(await appPreferenceRepository.read('app.language'), 'de');
   });
 
@@ -1254,6 +1254,8 @@ void main() {
 
     expect(find.text('120'), findsOneWidget);
 
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -500));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Save project details'));
     await tester.pumpAndSettle();
 
@@ -1287,7 +1289,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New Project'));
+    await tester.tap(find.byTooltip('New Project'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), 'Profile Test');
     await tester.tap(find.text('Create'));

@@ -16,6 +16,7 @@ final class LocalBackupWriteResult {
 
 Future<LocalBackupWriteResult> writeRollingLocalBackup({
   required String directoryPath,
+  required String projectTitle,
   required Uint8List bytes,
   required DateTime now,
 }) async {

@@ -463,6 +463,7 @@ extension _WritellerShellDialogs on _WritellerShellState {
     final metrics = await widget.metricRepository.listForProject(project.id);
     if (mounted) {
       _setShellState(() => _metrics = metrics);
+      _scheduleLocalBackupTimer();
     }
     if (!mounted) return;
 

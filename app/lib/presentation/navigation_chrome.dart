@@ -376,7 +376,8 @@ final class _StudioTopBar extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 900;
+        final compact = constraints.maxWidth < 1120;
+        final showProjectSelectionLabel = constraints.maxWidth >= 1160;
         return Container(
           height: 72,
           padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 24),
@@ -388,7 +389,7 @@ final class _StudioTopBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              if (!compact) ...[
+              if (showProjectSelectionLabel) ...[
                 Container(
                   width: 42,
                   height: 42,
@@ -428,6 +429,18 @@ final class _StudioTopBar extends StatelessWidget {
                   ],
                 ),
               ),
+              if (showProjectSelectionLabel) ...[
+                Text(
+                  copy.t('projectSelectionLabel'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: color.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(width: 8),
+              ],
               _TopBarProjectMenu(
                 copy: copy,
                 projects: projects,

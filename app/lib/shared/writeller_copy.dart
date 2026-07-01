@@ -176,6 +176,7 @@ final class WritellerCopy {
     'notesQueue': 'Notizen',
     'newProject': 'Neues Projekt',
     'projectTitle': 'Projekttitel',
+    'projectSelectionLabel': 'Projektauswahl',
     'projectMenu': 'Projekt wechseln',
     'projectWizardBasics': 'Projekt benennen',
     'projectWizardAuthor': 'Autor und Form',
@@ -210,8 +211,11 @@ final class WritellerCopy {
     'localBackupWizardBody':
         'Writeller kann automatisch lokale Projektarchive anlegen. Wähle einen Ordner auf deinem Rechner, wenn du diese Sicherheitskopien nutzen möchtest.',
     'localBackupSettingsBody':
-        'Writeller speichert alle fünf Minuten und beim Schließen bis zu drei lokale Projektarchive. Beim vierten Backup wird die älteste Datei ersetzt.',
+        'Writeller speichert im gewählten Intervall und beim Schließen bis zu drei lokale Projektarchive pro Projekt. Der Projektname steht im Dateinamen.',
     'localBackupFolder': 'Backup-Ordner',
+    'localBackupInterval': 'Backup-Intervall',
+    'localBackupIntervalHint':
+        'Der Timer startet nach Projektwechsel oder Backup neu und läuft damit in festen Abständen.',
     'chooseBackupFolder': 'Backup-Ordner wählen',
     'clearBackupFolder': 'Ordner entfernen',
     'noLocalBackupFolder': 'Kein Backup-Ordner gewählt',
@@ -224,6 +228,10 @@ final class WritellerCopy {
     'localBackupFailed': 'Lokales Backup konnte nicht erstellt werden',
     'localBackupUnsupported':
         'Lokale Backups sind auf dieser Plattform nicht verfügbar.',
+    'oneMinute': '1 Minute',
+    'minutesShort': 'Minuten',
+    'oneHour': '1 Stunde',
+    'hoursShort': 'Stunden',
     'step': 'Schritt',
     'back': 'Zurück',
     'next': 'Weiter',
@@ -1159,6 +1167,7 @@ final class WritellerCopy {
     'notesQueue': 'Notes',
     'newProject': 'New Project',
     'projectTitle': 'Project title',
+    'projectSelectionLabel': 'Project selection',
     'projectMenu': 'Switch project',
     'projectWizardBasics': 'Name the project',
     'projectWizardAuthor': 'Author and form',
@@ -1192,8 +1201,11 @@ final class WritellerCopy {
     'localBackupWizardBody':
         'Writeller can create automatic local project archives. Choose a folder on this computer if you want to use these safety copies.',
     'localBackupSettingsBody':
-        'Writeller saves up to three local project archives every five minutes and when the app closes. The fourth backup replaces the oldest file.',
+        'Writeller saves up to three local archives per project at the selected interval and when the app closes. The project name is part of the file name.',
     'localBackupFolder': 'Backup folder',
+    'localBackupInterval': 'Backup interval',
+    'localBackupIntervalHint':
+        'The timer restarts after a project switch or backup, so backups run at stable intervals.',
     'chooseBackupFolder': 'Choose backup folder',
     'clearBackupFolder': 'Remove folder',
     'noLocalBackupFolder': 'No backup folder selected',
@@ -1206,6 +1218,10 @@ final class WritellerCopy {
     'localBackupFailed': 'Local backup could not be created',
     'localBackupUnsupported':
         'Local backups are not available on this platform.',
+    'oneMinute': '1 minute',
+    'minutesShort': 'minutes',
+    'oneHour': '1 hour',
+    'hoursShort': 'hours',
     'step': 'Step',
     'back': 'Back',
     'next': 'Next',
