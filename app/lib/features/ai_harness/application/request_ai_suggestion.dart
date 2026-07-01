@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import '../../../core/domain/draft_status.dart';
 import '../../../core/domain/entity_ref.dart';
 import '../../../core/domain/entity_type.dart';
 import '../../../core/domain/ids.dart';
 import '../../catalog/domain/catalog_item.dart';
+import '../../catalog/domain/character_profile.dart';
 import '../../catalog/domain/relationship.dart';
 import '../../projects/domain/project.dart';
 import '../../structure/domain/scene.dart';
@@ -199,6 +202,10 @@ final class AIProjectPromptBuilder {
       german
           ? 'Nutzerauftrag: ${_fallback(userPrompt, 'keine Zusatzanweisung')}'
           : 'User request: ${_fallback(userPrompt, 'no extra instruction')}',
+      if (task == AITaskKind.worldContextStarter)
+        german
+            ? 'Persona-Steckbrief: Ergänze in jedem Persona-Objekt zusätzlich diese Felder: ${jsonEncode(characterProfileAiSchema)}. Fülle jedes passende Feld konkret, knapp und prüfbar.'
+            : 'Persona profile: Add these fields to every persona object: ${jsonEncode(characterProfileAiSchema)}. Fill every useful field concretely, briefly, and reviewably.',
       if (task == AITaskKind.worldContextStarter)
         german
             ? 'Kontext-Starthilfe: Beginne mit einem JSON-Block {"worldStarter":{"personas":[{"name":"","summary":"","background":"","goal":"","conflict":""}],"relationships":[{"sourceName":"","targetName":"","type":"","label":"","description":"","strength":0.7}],"locations":[{"name":"","summary":"","description":"","rules":""}],"drivers":[{"name":"","goal":"","conflict":"","stakes":""}],"events":[{"name":"","time":"","summary":"","goal":"","conflict":"","consequence":""}]}}. Erzeuge genau 10 Personas plus passende Beziehungen, Orte, Ziele/Konflikte und historische Ereignisse. Jeder Eintrag soll als Vorschlag prüfbar sein. Schreibe keine Manuskriptprosa.'

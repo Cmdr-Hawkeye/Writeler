@@ -935,57 +935,57 @@ final class _RelationshipGraphNodeChip extends StatelessWidget {
       top: position.dy - 28,
       width: 144,
       height: 56,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOutCubic,
-        decoration: BoxDecoration(
-          color: highlighted
-              ? accent.withValues(alpha: 0.16)
-              : color.surfaceContainerHighest.withValues(alpha: 0.72),
-          border: Border.all(
-            color: highlighted ? accent : color.outlineVariant,
-            width: highlighted ? 1.6 : 1,
+      child: Tooltip(
+        message: node.tooltip,
+        waitDuration: const Duration(milliseconds: 350),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: highlighted
+                ? accent.withValues(alpha: 0.16)
+                : color.surfaceContainerHighest.withValues(alpha: 0.72),
+            border: Border.all(
+              color: highlighted ? accent : color.outlineVariant,
+              width: highlighted ? 1.6 : 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: highlighted
+                ? [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.16),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : null,
           ),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: highlighted
-              ? [
-                  BoxShadow(
-                    color: accent.withValues(alpha: 0.16),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Row(
+              children: [
+                Icon(_catalogIcon(node.type), size: 18, color: accent),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _TooltipText(
+                        node.label,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      _TooltipText(
+                        node.typeLabel,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: color.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
                   ),
-                ]
-              : null,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            children: [
-              Icon(_catalogIcon(node.type), size: 18, color: accent),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      node.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    Text(
-                      node.typeLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: color.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1186,12 +1186,14 @@ final class _RelationshipGraphNode {
     required this.label,
     required this.typeLabel,
     required this.type,
+    required this.tooltip,
   });
 
   final EntityRef ref;
   final String label;
   final String typeLabel;
   final EntityType type;
+  final String tooltip;
 }
 
 List<_RelationshipGraphNode> _relationshipGraphNodes(
@@ -1212,6 +1214,7 @@ List<_RelationshipGraphNode> _relationshipGraphNodes(
         label: _entityLabel(ref, scenes, catalogItems, copy),
         typeLabel: _entityTypeLabel(ref.type, copy),
         type: ref.type,
+        tooltip: _entityTooltip(ref, scenes, catalogItems, copy),
       ),
   ]..sort((a, b) {
       final typeCompare = a.type.index.compareTo(b.type.index);
@@ -1327,6 +1330,33 @@ String _entityLabel(
   }
   return catalogItems.where((item) => item.id == ref.id).firstOrNull?.name ??
       ref.type.wireName;
+}
+
+String _entityTooltip(
+  EntityRef ref,
+  List<Scene> scenes,
+  List<CatalogItem> catalogItems,
+  WritellerCopy copy,
+) {
+  if (ref.type == EntityType.scene) {
+    final scene = scenes.where((scene) => scene.id == ref.id).firstOrNull;
+    if (scene == null) return copy.t('scene');
+    return [
+      '${copy.t('scene')}: ${scene.title}',
+      if (scene.summary.trim().isNotEmpty)
+        '${copy.t('summary')}: ${scene.summary.trim()}',
+      if (scene.goal?.trim().isNotEmpty == true)
+        '${copy.t('goal')}: ${scene.goal!.trim()}',
+      if (scene.conflict?.trim().isNotEmpty == true)
+        '${copy.t('conflict')}: ${scene.conflict!.trim()}',
+      if (scene.outcome?.trim().isNotEmpty == true)
+        '${copy.t('outcome')}: ${scene.outcome!.trim()}',
+    ].join('\n');
+  }
+  final item = catalogItems
+      .where((item) => item.type == ref.type && item.id == ref.id)
+      .firstOrNull;
+  return item == null ? ref.type.wireName : _catalogItemTooltipText(item, copy);
 }
 
 final class _StructureCockpitSummary extends StatelessWidget {

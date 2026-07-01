@@ -141,6 +141,105 @@ IconData _catalogIcon(EntityType type) {
   };
 }
 
+String _characterProfileFieldLabel(String key, WritellerCopy copy) {
+  return switch (key) {
+    'roleFunction' => copy.t('characterRoleFunction'),
+    'age' => copy.t('characterAge'),
+    'appearance' => copy.t('characterAppearance'),
+    'personality' => copy.t('characterPersonality'),
+    'motivation' => copy.t('characterMotivation'),
+    'fear' => copy.t('characterFear'),
+    'secret' => copy.t('characterSecret'),
+    'background' => copy.t('characterBackground'),
+    'goal' => copy.t('characterGoal'),
+    'conflict' => copy.t('characterConflict'),
+    'arc' => copy.t('characterArc'),
+    'voice' => copy.t('characterVoice'),
+    'relationshipNotes' => copy.t('characterRelationshipNotes'),
+    _ => key,
+  };
+}
+
+String _fieldText(Map<String, Object?> fields, String key) {
+  final value = fields[key];
+  if (value == null) return '';
+  return value.toString().trim();
+}
+
+Map<String, Object?> _mergedCharacterProfileFields({
+  required Map<String, Object?> existing,
+  required Map<String, String> profileValues,
+}) {
+  return {
+    ...existing,
+    for (final entry in profileValues.entries)
+      if (entry.value.trim().isNotEmpty) entry.key: entry.value.trim(),
+    for (final entry in profileValues.entries)
+      if (entry.value.trim().isEmpty) entry.key: null,
+  }..removeWhere((key, value) => value == null);
+}
+
+List<MapEntry<String, String>> _characterProfileEntries(
+  CatalogItem item,
+  WritellerCopy copy,
+) {
+  if (item.type != EntityType.character) return const [];
+  return [
+    for (final key in characterProfileFieldKeys)
+      if (_fieldText(item.fields, key).isNotEmpty)
+        MapEntry(_characterProfileFieldLabel(key, copy),
+            _fieldText(item.fields, key)),
+  ];
+}
+
+String _catalogItemTooltipText(CatalogItem item, WritellerCopy copy) {
+  final lines = <String>[
+    '${_entityTypeLabel(item.type, copy)}: ${item.name}',
+    if (item.summary.trim().isNotEmpty)
+      '${copy.t('summary')}: ${item.summary.trim()}',
+    for (final entry in _characterProfileEntries(item, copy))
+      '${entry.key}: ${entry.value}',
+  ];
+  return lines.join('\n');
+}
+
+final class _TooltipText extends StatelessWidget {
+  const _TooltipText(
+    this.text, {
+    this.maxLines = 1,
+    this.style,
+  });
+
+  final String text;
+  final int? maxLines;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: text,
+      waitDuration: const Duration(milliseconds: 350),
+      child: Text(
+        text,
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      ),
+    );
+  }
+}
+
+extension _TooltipWidgetExtension on Widget {
+  Widget withTooltip(String message) {
+    if (message.trim().isEmpty) return this;
+    return Tooltip(
+      message: message,
+      waitDuration: const Duration(milliseconds: 350),
+      child: this,
+    );
+  }
+}
+
 int _countWords(String text) {
   final trimmed = text.trim();
   if (trimmed.isEmpty) return 0;
@@ -341,10 +440,20 @@ String _worldSuggestionBody(AISuggestion suggestion) {
   final item = _worldSuggestionItem(suggestion);
   final fields = [
     item['summary'],
+    item['roleFunction'],
+    item['age'],
+    item['appearance'],
+    item['personality'],
+    item['motivation'],
+    item['fear'],
+    item['secret'],
     item['background'],
     item['description'],
     item['goal'],
     item['conflict'],
+    item['arc'],
+    item['voice'],
+    item['relationshipNotes'],
     item['consequence'],
     item['stakes'],
   ].whereType<String>().where((value) => value.trim().isNotEmpty).toList();

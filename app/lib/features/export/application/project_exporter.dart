@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../../../core/domain/entity_type.dart';
 import '../../catalog/domain/catalog_item.dart';
+import '../../catalog/domain/character_profile.dart';
 import '../../catalog/domain/relationship.dart';
 import '../../notes/domain/project_note.dart';
 import '../../projects/domain/project.dart';
@@ -528,6 +529,25 @@ final class ProjectExporter {
       ..writeln('Relationships: ${relationships.length}')
       ..writeln('Notes: ${notes.length}')
       ..writeln();
+    if (catalogItems.isNotEmpty) {
+      buffer
+        ..writeln('## Catalog')
+        ..writeln();
+      for (final item in catalogItems) {
+        buffer
+          ..writeln('### ${item.name}')
+          ..writeln()
+          ..writeln('Type: ${item.type.wireName}');
+        if (item.summary.trim().isNotEmpty) {
+          buffer.writeln('Summary: ${item.summary.trim()}');
+        }
+        final profileEntries = _catalogProfileEntries(item);
+        for (final entry in profileEntries) {
+          buffer.writeln('${entry.key}: ${entry.value}');
+        }
+        buffer.writeln();
+      }
+    }
   }
 
   String _toYWriterXml({
@@ -760,6 +780,37 @@ final class ProjectExporter {
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) return;
     buffer.writeln('  - $label: $trimmed');
+  }
+
+  List<MapEntry<String, String>> _catalogProfileEntries(CatalogItem item) {
+    final keys = item.type == EntityType.character
+        ? characterProfileFieldKeys
+        : item.fields.keys.toList();
+    return [
+      for (final key in keys)
+        if (item.fields[key]?.toString().trim().isNotEmpty == true)
+          MapEntry(_exportCatalogFieldLabel(key),
+              item.fields[key].toString().trim()),
+    ];
+  }
+
+  String _exportCatalogFieldLabel(String key) {
+    return switch (key) {
+      'roleFunction' => 'Role / function',
+      'age' => 'Age',
+      'appearance' => 'Appearance',
+      'personality' => 'Personality',
+      'motivation' => 'Motivation',
+      'fear' => 'Fear / wound',
+      'secret' => 'Secret',
+      'background' => 'Backstory',
+      'goal' => 'Goal',
+      'conflict' => 'Inner conflict',
+      'arc' => 'Arc',
+      'voice' => 'Voice / speech',
+      'relationshipNotes' => 'Relationship notes',
+      _ => key,
+    };
   }
 
   String _fileSlug(String title) {

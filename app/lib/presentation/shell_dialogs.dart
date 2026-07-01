@@ -504,29 +504,42 @@ extension _WritellerShellDialogs on _WritellerShellState {
 
     var draftName = '';
     var draftSummary = '';
+    final draftProfile = {
+      for (final key in characterProfileFieldKeys) key: '',
+    };
     final created = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text(copy.t(_newCatalogKey(type))),
           content: SizedBox(
-            width: 420,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  autofocus: true,
-                  decoration: InputDecoration(labelText: copy.t('name')),
-                  textInputAction: TextInputAction.next,
-                  onChanged: (value) => draftName = value,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: InputDecoration(labelText: copy.t('summary')),
-                  maxLines: 3,
-                  onChanged: (value) => draftSummary = value,
-                ),
-              ],
+            width: 520,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    autofocus: true,
+                    decoration: InputDecoration(labelText: copy.t('name')),
+                    textInputAction: TextInputAction.next,
+                    onChanged: (value) => draftName = value,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    decoration: InputDecoration(labelText: copy.t('summary')),
+                    maxLines: 3,
+                    onChanged: (value) => draftSummary = value,
+                  ),
+                  if (type == EntityType.character) ...[
+                    const SizedBox(height: 16),
+                    _CharacterProfileForm(
+                      copy: copy,
+                      values: draftProfile,
+                      onChanged: (key, value) => draftProfile[key] = value,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
           actions: [
@@ -551,6 +564,12 @@ extension _WritellerShellDialogs on _WritellerShellState {
         type: type,
         name: name.isEmpty ? copy.t(_untitledCatalogKey(type)) : name,
         summary: draftSummary,
+        fields: type == EntityType.character
+            ? _mergedCharacterProfileFields(
+                existing: const {},
+                profileValues: draftProfile,
+              )
+            : const {},
       ),
     );
     final items = await widget.catalogItemRepository.listByProject(project.id);
@@ -579,6 +598,10 @@ extension _WritellerShellDialogs on _WritellerShellState {
 
     final nameController = TextEditingController(text: item.name);
     final summaryController = TextEditingController(text: item.summary);
+    final profileControllers = {
+      for (final key in characterProfileFieldKeys)
+        key: TextEditingController(text: _fieldText(item.fields, key)),
+    };
     var draftStatus = item.status;
     final saved = await showDialog<bool>(
       context: context,
@@ -586,43 +609,52 @@ extension _WritellerShellDialogs on _WritellerShellState {
         return AlertDialog(
           title: Text(copy.t('editCatalogItem')),
           content: SizedBox(
-            width: 460,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  autofocus: true,
-                  decoration: InputDecoration(labelText: copy.t('name')),
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<DraftStatus>(
-                  initialValue: draftStatus,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                  decoration: InputDecoration(
-                    labelText: copy.t('status'),
-                    border: const OutlineInputBorder(),
+            width: 540,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    decoration: InputDecoration(labelText: copy.t('name')),
+                    textInputAction: TextInputAction.next,
                   ),
-                  items: [
-                    for (final status in DraftStatus.values)
-                      DropdownMenuItem(
-                        value: status,
-                        child:
-                            Text(_draftStatusLabel(status, copy.languageCode)),
-                      ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<DraftStatus>(
+                    initialValue: draftStatus,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                    decoration: InputDecoration(
+                      labelText: copy.t('status'),
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final status in DraftStatus.values)
+                        DropdownMenuItem(
+                          value: status,
+                          child: Text(
+                              _draftStatusLabel(status, copy.languageCode)),
+                        ),
+                    ],
+                    onChanged: (status) {
+                      if (status != null) draftStatus = status;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: summaryController,
+                    decoration: InputDecoration(labelText: copy.t('summary')),
+                    maxLines: 5,
+                  ),
+                  if (item.type == EntityType.character) ...[
+                    const SizedBox(height: 16),
+                    _CharacterProfileForm(
+                      copy: copy,
+                      controllers: profileControllers,
+                    ),
                   ],
-                  onChanged: (status) {
-                    if (status != null) draftStatus = status;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: summaryController,
-                  decoration: InputDecoration(labelText: copy.t('summary')),
-                  maxLines: 5,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [
@@ -646,6 +678,9 @@ extension _WritellerShellDialogs on _WritellerShellState {
     if (saved != true) {
       nameController.dispose();
       summaryController.dispose();
+      for (final controller in profileControllers.values) {
+        controller.dispose();
+      }
       return;
     }
 
@@ -656,9 +691,21 @@ extension _WritellerShellDialogs on _WritellerShellState {
           : nameController.text.trim(),
       summary: summaryController.text.trim(),
       status: draftStatus,
+      fields: item.type == EntityType.character
+          ? _mergedCharacterProfileFields(
+              existing: item.fields,
+              profileValues: {
+                for (final entry in profileControllers.entries)
+                  entry.key: entry.value.text,
+              },
+            )
+          : item.fields,
     );
     nameController.dispose();
     summaryController.dispose();
+    for (final controller in profileControllers.values) {
+      controller.dispose();
+    }
 
     await widget.catalogItemRepository.save(updated);
     final items = await widget.catalogItemRepository.listByProject(project.id);
@@ -1041,4 +1088,55 @@ final class _RelationshipEndpoint {
   final String label;
 
   String get key => '${ref.type.wireName}:${ref.id}';
+}
+
+final class _CharacterProfileForm extends StatelessWidget {
+  const _CharacterProfileForm({
+    required this.copy,
+    this.values,
+    this.controllers,
+    this.onChanged,
+  }) : assert(values != null || controllers != null);
+
+  final WritellerCopy copy;
+  final Map<String, String>? values;
+  final Map<String, TextEditingController>? controllers;
+  final void Function(String key, String value)? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            copy.t('characterProfile'),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        for (final key in characterProfileFieldKeys) ...[
+          TextField(
+            controller: controllers?[key],
+            decoration: InputDecoration(
+              labelText: _characterProfileFieldLabel(key, copy),
+              border: const OutlineInputBorder(),
+            ),
+            minLines: _compactCharacterProfileField(key) ? 1 : 2,
+            maxLines: _compactCharacterProfileField(key) ? 1 : 4,
+            onChanged:
+                values == null ? null : (value) => onChanged?.call(key, value),
+          ),
+          const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+bool _compactCharacterProfileField(String key) {
+  return const {'age', 'roleFunction'}.contains(key);
 }

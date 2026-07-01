@@ -173,6 +173,15 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
               '${scene.actualWordCount} ${widget.copy.t('words')}',
           body: _firstFilled([scene.summary, scene.goal, scene.conflict]),
           icon: Icons.movie_filter_outlined,
+          tooltip: [
+            '${widget.copy.t('scene')}: ${scene.title}',
+            if (scene.summary.trim().isNotEmpty)
+              '${widget.copy.t('summary')}: ${scene.summary.trim()}',
+            if (scene.goal?.trim().isNotEmpty == true)
+              '${widget.copy.t('goal')}: ${scene.goal!.trim()}',
+            if (scene.conflict?.trim().isNotEmpty == true)
+              '${widget.copy.t('conflict')}: ${scene.conflict!.trim()}',
+          ].join('\n'),
         ),
       for (final item in projectCatalog)
         if (item.type == EntityType.character ||
@@ -192,6 +201,7 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
             subtitle: widget.copy.t(_catalogTitleKey(item.type)),
             body: item.summary,
             icon: _catalogIcon(item.type),
+            tooltip: _catalogItemTooltipText(item, widget.copy),
           ),
       for (final note in projectNotes)
         _StoryboardNode(
@@ -203,6 +213,11 @@ final class _StoryboardWorkspaceState extends State<_StoryboardWorkspace> {
           subtitle: widget.copy.t('notes'),
           body: note.body,
           icon: Icons.sticky_note_2_outlined,
+          tooltip: [
+            widget.copy.t('notes'),
+            note.title,
+            if (note.body.trim().isNotEmpty) note.body.trim(),
+          ].join('\n'),
         ),
     ];
 
@@ -685,9 +700,8 @@ final class _StoryboardNodeCard extends StatelessWidget {
         onTap: onTap,
         onPanUpdate: connectMode ? null : (details) => onDrag(details.delta),
         child: Tooltip(
-          message: connectMode
-              ? copy.t('storyboardNodeConnectTooltip')
-              : copy.t('storyboardNodeMoveTooltip'),
+          message:
+              '${connectMode ? copy.t('storyboardNodeConnectTooltip') : copy.t('storyboardNodeMoveTooltip')}\n\n${node.tooltip}',
           waitDuration: const Duration(milliseconds: 500),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 130),
@@ -1430,6 +1444,7 @@ final class _StoryboardNode {
     required this.subtitle,
     required this.body,
     required this.icon,
+    required this.tooltip,
   });
 
   final String id;
@@ -1438,6 +1453,7 @@ final class _StoryboardNode {
   final String subtitle;
   final String body;
   final IconData icon;
+  final String tooltip;
 }
 
 Color _toneForNode(BuildContext context, _StoryboardNodeKind kind) {

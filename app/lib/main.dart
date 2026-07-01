@@ -30,6 +30,7 @@ import 'features/ai_harness/infrastructure/ollama_language_model_provider.dart';
 import 'features/ai_harness/infrastructure/openai_compatible_language_model_provider.dart';
 import 'features/ai_harness/infrastructure/structured_response_parser.dart';
 import 'features/catalog/application/create_catalog_item.dart';
+import 'features/catalog/domain/character_profile.dart';
 import 'features/catalog/domain/catalog_item.dart';
 import 'features/catalog/domain/catalog_item_repository.dart';
 import 'features/catalog/domain/relationship.dart';

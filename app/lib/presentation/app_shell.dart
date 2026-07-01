@@ -2014,9 +2014,8 @@ final class _WritellerShellState extends State<WritellerShell> {
           name: item['name'] as String?,
           summary: item['summary'] as String?,
           fields: {
-            'background': item['background'],
-            'goal': item['goal'],
-            'conflict': item['conflict'],
+            for (final key in characterProfileFieldKeys)
+              key: item[key] ?? item[_legacyCharacterProfileKey(key)],
           },
           role: 'persona',
           suggestionId: suggestion.id,
@@ -2134,6 +2133,14 @@ final class _WritellerShellState extends State<WritellerShell> {
         },
       ),
     );
+  }
+
+  String _legacyCharacterProfileKey(String key) {
+    return switch (key) {
+      'roleFunction' => 'role',
+      'relationshipNotes' => 'relationships',
+      _ => key,
+    };
   }
 
   Future<Relationship?> _createContextRelationship({

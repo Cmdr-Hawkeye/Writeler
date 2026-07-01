@@ -4603,8 +4603,8 @@ final class _SceneContextLinks extends StatelessWidget {
               for (final item in linkedItems)
                 InputChip(
                   avatar: Icon(_catalogIcon(item.type), size: 18),
-                  label: Text(item.name),
-                  tooltip: copy.t('removeSceneContext'),
+                  label: _TooltipText(item.name),
+                  tooltip: _catalogItemTooltipText(item, copy),
                   deleteButtonTooltipMessage: copy.t('removeSceneContext'),
                   onDeleted: () async => onToggleLink(item, false),
                 ),
@@ -4742,26 +4742,28 @@ final class _ExistingSceneContextDialogState
                       separatorBuilder: (_, __) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final item = filteredItems[index];
-                        return CheckboxListTile(
-                          secondary: Icon(_catalogIcon(item.type)),
-                          title: Text(item.name),
-                          subtitle: item.summary.trim().isEmpty
-                              ? null
-                              : Text(
-                                  item.summary,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                          value: _selectedIds.contains(item.id),
-                          onChanged: (selected) {
-                            setState(() {
-                              if (selected ?? false) {
-                                _selectedIds.add(item.id);
-                              } else {
-                                _selectedIds.remove(item.id);
-                              }
-                            });
-                          },
+                        return Tooltip(
+                          message: _catalogItemTooltipText(item, copy),
+                          child: CheckboxListTile(
+                            secondary: Icon(_catalogIcon(item.type)),
+                            title: _TooltipText(item.name),
+                            subtitle: item.summary.trim().isEmpty
+                                ? null
+                                : _TooltipText(
+                                    item.summary,
+                                    maxLines: 2,
+                                  ),
+                            value: _selectedIds.contains(item.id),
+                            onChanged: (selected) {
+                              setState(() {
+                                if (selected ?? false) {
+                                  _selectedIds.add(item.id);
+                                } else {
+                                  _selectedIds.remove(item.id);
+                                }
+                              });
+                            },
+                          ),
                         );
                       },
                     ),

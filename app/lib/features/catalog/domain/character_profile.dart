@@ -1,0 +1,32 @@
+const characterProfileFieldKeys = [
+  'roleFunction',
+  'age',
+  'appearance',
+  'personality',
+  'motivation',
+  'fear',
+  'secret',
+  'background',
+  'goal',
+  'conflict',
+  'arc',
+  'voice',
+  'relationshipNotes',
+];
+
+const characterProfileAiSchema = {
+  'summary': '',
+  'roleFunction': '',
+  'age': '',
+  'appearance': '',
+  'personality': '',
+  'motivation': '',
+  'fear': '',
+  'secret': '',
+  'background': '',
+  'goal': '',
+  'conflict': '',
+  'arc': '',
+  'voice': '',
+  'relationshipNotes': '',
+};

@@ -51,6 +51,11 @@ void main() {
         type: EntityType.character,
         name: 'Mara',
         summary: 'Keeps the expedition honest.',
+        fields: const {
+          'roleFunction': 'Navigator and conscience',
+          'motivation': 'Bring everyone home without lying to them.',
+          'voice': 'Precise, dry, observant',
+        },
       ),
     );
     final now = DateTime.now().toUtc();
@@ -111,8 +116,17 @@ void main() {
     expect(markdown, contains('# Exportable Book'));
     expect(markdown, contains('A short authored paragraph.'));
     expect(markdown, contains('Notes: 1'));
+    expect(markdown, contains('Role / function: Navigator and conscience'));
+    expect(markdown,
+        contains('Motivation: Bring everyone home without lying to them.'));
     expect(markdown, contains('## Notes'));
     expect(markdown, contains('Keep the pressure visible.'));
+
+    final archiveJson = jsonDecode(jsonText) as Map<String, Object?>;
+    final decodedCatalog =
+        (archiveJson['catalogItems'] as List).single as Map<String, Object?>;
+    final decodedFields = decodedCatalog['fields'] as Map<String, Object?>;
+    expect(decodedFields['voice'], 'Precise, dry, observant');
 
     final plainText = exporter.exportProject(
       project: project,

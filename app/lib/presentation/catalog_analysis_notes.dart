@@ -418,15 +418,15 @@ final class _CatalogWorkspace extends StatelessWidget {
                       const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final item = items[index];
+                    final tooltip = _catalogItemTooltipText(item, copy);
                     return ListTile(
                       leading: Icon(_catalogIcon(type), color: color.primary),
-                      title: Text(item.name),
-                      subtitle: Text(
+                      title: _TooltipText(item.name),
+                      subtitle: _TooltipText(
                         item.summary.isEmpty
                             ? copy.t('noSummary')
                             : item.summary,
                         maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       trailing: Wrap(
                         spacing: 8,
@@ -447,7 +447,20 @@ final class _CatalogWorkspace extends StatelessWidget {
                         ],
                       ),
                       onTap: () => onEditItem(item),
-                    );
+                      mouseCursor: SystemMouseCursors.click,
+                      dense: false,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      hoverColor: color.primary.withValues(alpha: 0.06),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      titleAlignment: ListTileTitleAlignment.center,
+                      enabled: true,
+                      isThreeLine: type == EntityType.character &&
+                          _characterProfileEntries(item, copy).isNotEmpty,
+                      minVerticalPadding: 10,
+                      subtitleTextStyle: Theme.of(context).textTheme.bodyMedium,
+                    ).withTooltip(tooltip);
                   },
                 ),
         ),
