@@ -47,6 +47,8 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
   late var _languageCode = WritellerCopy.normalizeLanguageCode(
     Localizations.localeOf(context).languageCode,
   );
+  String? _localBackupDirectory;
+  var _autoBackupDisabled = false;
 
   @override
   void dispose() {
@@ -170,6 +172,42 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
           ],
         ),
       ),
+      _ProjectWizardStep(
+        title: copy.t('projectWizardBackup'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              copy.t('localBackupWizardBody'),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            _BackupDirectoryPicker(
+              copy: copy,
+              directoryPath: _localBackupDirectory,
+              onChoose: () async {
+                final path = await FilePicker.getDirectoryPath(
+                  dialogTitle: copy.t('chooseBackupFolder'),
+                  lockParentWindow: true,
+                );
+                if (path == null || !mounted) return;
+                setState(() => _localBackupDirectory = path);
+              },
+              onClear: _localBackupDirectory == null
+                  ? null
+                  : () => setState(() => _localBackupDirectory = null),
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              value: _autoBackupDisabled,
+              contentPadding: EdgeInsets.zero,
+              title: Text(copy.t('disableAutoBackup')),
+              subtitle: Text(copy.t('disableAutoBackupHint')),
+              onChanged: (value) => setState(() => _autoBackupDisabled = value),
+            ),
+          ],
+        ),
+      ),
     ];
     final current = steps[_step];
 
@@ -240,6 +278,9 @@ final class _ProjectWizardDialogState extends State<_ProjectWizardDialog> {
           'pageTarget': targetValue,
         if (_targetUnit == _ProjectTargetUnit.pages)
           'wordsPerPageEstimate': _estimatedWordsPerPage,
+        if ((_localBackupDirectory ?? '').trim().isNotEmpty)
+          _localBackupDirectoryKey: _localBackupDirectory!.trim(),
+        if (_autoBackupDisabled) _autoBackupDisabledKey: true,
       },
     );
   }
@@ -303,6 +344,74 @@ final class _ProjectWizardProgress extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+final class _BackupDirectoryPicker extends StatelessWidget {
+  const _BackupDirectoryPicker({
+    required this.copy,
+    required this.directoryPath,
+    required this.onChoose,
+    required this.onClear,
+  });
+
+  final WritellerCopy copy;
+  final String? directoryPath;
+  final VoidCallback onChoose;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final path = directoryPath?.trim();
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.outlineVariant),
+        color: color.surfaceContainerLowest,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              copy.t('localBackupFolder'),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 6),
+            SelectableText(
+              path == null || path.isEmpty
+                  ? copy.t('noLocalBackupFolder')
+                  : path,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: path == null || path.isEmpty
+                        ? color.onSurfaceVariant
+                        : color.onSurface,
+                  ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: onChoose,
+                  icon: const Icon(Icons.folder_open_outlined),
+                  label: Text(copy.t('chooseBackupFolder')),
+                ),
+                if (onClear != null)
+                  TextButton.icon(
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close),
+                    label: Text(copy.t('clearBackupFolder')),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

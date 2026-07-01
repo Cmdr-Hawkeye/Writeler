@@ -179,6 +179,7 @@ final class WritellerCopy {
     'projectWizardBasics': 'Projekt benennen',
     'projectWizardAuthor': 'Autor und Form',
     'projectWizardScope': 'Umfang und Notiz',
+    'projectWizardBackup': 'Lokales Backup',
     'authorName': 'Autorenname',
     'projectType': 'Projektart',
     'projectTypeNovel': 'Roman',
@@ -204,6 +205,24 @@ final class WritellerCopy {
     'selectProjectForMetadata':
         'Wähle ein Projekt aus, um Projektangaben zu bearbeiten.',
     'saveProjectMetadata': 'Projektangaben speichern',
+    'localBackups': 'Lokale Backups',
+    'localBackupWizardBody':
+        'Writeller kann automatisch lokale Projektarchive anlegen. Wähle einen Ordner auf deinem Rechner, wenn du diese Sicherheitskopien nutzen möchtest.',
+    'localBackupSettingsBody':
+        'Writeller speichert alle fünf Minuten und beim Schließen bis zu drei lokale Projektarchive. Beim vierten Backup wird die älteste Datei ersetzt.',
+    'localBackupFolder': 'Backup-Ordner',
+    'chooseBackupFolder': 'Backup-Ordner wählen',
+    'clearBackupFolder': 'Ordner entfernen',
+    'noLocalBackupFolder': 'Kein Backup-Ordner gewählt',
+    'disableAutoBackup': 'Autobackup deaktivieren',
+    'disableAutoBackupHint':
+        'Der Ordner bleibt hinterlegt, aber Writeller erstellt keine automatischen Backups.',
+    'createBackupNow': 'Backup jetzt erstellen',
+    'lastLocalBackup': 'Letztes lokales Backup',
+    'localBackupCreated': 'Lokales Backup erstellt',
+    'localBackupFailed': 'Lokales Backup konnte nicht erstellt werden',
+    'localBackupUnsupported':
+        'Lokale Backups sind auf dieser Plattform nicht verfügbar.',
     'step': 'Schritt',
     'back': 'Zurück',
     'next': 'Weiter',
@@ -1142,6 +1161,7 @@ final class WritellerCopy {
     'projectWizardBasics': 'Name the project',
     'projectWizardAuthor': 'Author and form',
     'projectWizardScope': 'Scope and note',
+    'projectWizardBackup': 'Local backup',
     'authorName': 'Author name',
     'projectType': 'Project type',
     'projectTypeNovel': 'Novel',
@@ -1166,6 +1186,24 @@ final class WritellerCopy {
         'Project-specific details that export, self-publishing, and AI context can use.',
     'selectProjectForMetadata': 'Select a project to edit project details.',
     'saveProjectMetadata': 'Save project details',
+    'localBackups': 'Local backups',
+    'localBackupWizardBody':
+        'Writeller can create automatic local project archives. Choose a folder on this computer if you want to use these safety copies.',
+    'localBackupSettingsBody':
+        'Writeller saves up to three local project archives every five minutes and when the app closes. The fourth backup replaces the oldest file.',
+    'localBackupFolder': 'Backup folder',
+    'chooseBackupFolder': 'Choose backup folder',
+    'clearBackupFolder': 'Remove folder',
+    'noLocalBackupFolder': 'No backup folder selected',
+    'disableAutoBackup': 'Disable auto backup',
+    'disableAutoBackupHint':
+        'The folder stays saved, but Writeller will not create automatic backups.',
+    'createBackupNow': 'Create backup now',
+    'lastLocalBackup': 'Last local backup',
+    'localBackupCreated': 'Local backup created',
+    'localBackupFailed': 'Local backup could not be created',
+    'localBackupUnsupported':
+        'Local backups are not available on this platform.',
     'step': 'Step',
     'back': 'Back',
     'next': 'Next',

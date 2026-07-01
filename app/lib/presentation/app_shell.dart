@@ -20,6 +20,11 @@ final class _CommandPaletteEntry {
   final VoidCallback run;
 }
 
+const _localBackupDirectoryKey = 'localBackupDirectory';
+const _autoBackupDisabledKey = 'autoBackupDisabled';
+const _lastLocalBackupAtKey = 'lastLocalBackupAt';
+const _lastLocalBackupPathKey = 'lastLocalBackupPath';
+
 final class _CommandPaletteDialog extends StatefulWidget {
   const _CommandPaletteDialog({
     required this.copy,
@@ -179,7 +184,8 @@ final class WritellerShell extends StatefulWidget {
   State<WritellerShell> createState() => _WritellerShellState();
 }
 
-final class _WritellerShellState extends State<WritellerShell> {
+final class _WritellerShellState extends State<WritellerShell>
+    with WidgetsBindingObserver {
   late final CreateProject _createProject =
       CreateProject(widget.projectRepository);
   late final CreateChapter _createChapter =
@@ -257,6 +263,8 @@ final class _WritellerShellState extends State<WritellerShell> {
   bool _providerHasStoredApiKey = false;
   Timer? _loadTimer;
   Timer? _autosaveTimer;
+  Timer? _localBackupTimer;
+  bool _localBackupInProgress = false;
   bool _syncingSceneControllers = false;
   _SceneSaveState _sceneSaveState = _SceneSaveState.saved;
   DateTime? _lastSceneSavedAt;
@@ -413,7 +421,12 @@ final class _WritellerShellState extends State<WritellerShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _addSceneDraftListeners();
+    _localBackupTimer = Timer.periodic(
+      const Duration(minutes: 5),
+      (_) => unawaited(_createLocalBackup(trigger: 'interval')),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadTimer = Timer(const Duration(milliseconds: 250), _loadProjects);
     });
@@ -421,8 +434,11 @@ final class _WritellerShellState extends State<WritellerShell> {
 
   @override
   void dispose() {
+    unawaited(_createLocalBackup(trigger: 'app-close'));
+    WidgetsBinding.instance.removeObserver(this);
     _loadTimer?.cancel();
     _autosaveTimer?.cancel();
+    _localBackupTimer?.cancel();
     _manuscriptController.dispose();
     _summaryController.dispose();
     _goalController.dispose();
@@ -436,6 +452,14 @@ final class _WritellerShellState extends State<WritellerShell> {
     _apiKeyRefController.dispose();
     _importArchiveController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_createLocalBackup(trigger: 'lifecycle'));
+    }
   }
 
   void _addSceneDraftListeners() {
@@ -1341,11 +1365,22 @@ final class _WritellerShellState extends State<WritellerShell> {
     final project = _selectedProject;
     if (project == null) return;
     final authorName = update.authorName.trim();
+    final localBackupDirectory = update.localBackupDirectory.trim();
     final metadata = Map<String, Object?>.from(project.metadata);
     if (authorName.isEmpty) {
       metadata.remove('authorName');
     } else {
       metadata['authorName'] = authorName;
+    }
+    if (localBackupDirectory.isEmpty) {
+      metadata.remove(_localBackupDirectoryKey);
+    } else {
+      metadata[_localBackupDirectoryKey] = localBackupDirectory;
+    }
+    if (update.autoBackupDisabled) {
+      metadata[_autoBackupDisabledKey] = true;
+    } else {
+      metadata.remove(_autoBackupDisabledKey);
     }
     final targetValue = update.targetValue;
     final int? wordTarget = switch (update.targetUnit) {
@@ -1386,8 +1421,132 @@ final class _WritellerShellState extends State<WritellerShell> {
         'authorNameSet': authorName.isNotEmpty,
         'projectType': update.projectType,
         'targetUnit': targetValue == null ? null : update.targetUnit.name,
+        'localBackupConfigured': localBackupDirectory.isNotEmpty,
+        'autoBackupDisabled': update.autoBackupDisabled,
       },
     );
+  }
+
+  Future<void> _createLocalBackup({
+    required String trigger,
+    bool showFeedback = false,
+  }) async {
+    final project = _selectedProject;
+    if (project == null || _localBackupInProgress) return;
+    final directory = _projectLocalBackupDirectory(project);
+    if (directory == null || _projectAutoBackupDisabled(project)) return;
+
+    _localBackupInProgress = true;
+    try {
+      final artifact = _projectExporter.exportArtifact(
+        project: project,
+        chapters: _chapters
+            .where((chapter) => chapter.projectId == project.id)
+            .toList(),
+        scenes:
+            _scenes.where((scene) => scene.projectId == project.id).toList(),
+        catalogItems: _catalogItems
+            .where((item) => item.projectId == project.id)
+            .toList(),
+        relationships: _relationships
+            .where((relationship) => relationship.projectId == project.id)
+            .toList(),
+        notes: _notes.where((note) => note.projectId == project.id).toList(),
+        researchItems: _researchItems
+            .where((item) => item.projectId == project.id)
+            .toList(),
+        profile: ExportProfile(
+          id: 'local-backup',
+          projectId: project.id,
+          name: 'Local backup',
+          format: ExportFormat.json,
+          includeMetadata: true,
+          includeSceneTitles: true,
+        ),
+      );
+      final createdAt = DateTime.now();
+      final result = await writeRollingLocalBackup(
+        directoryPath: directory,
+        bytes: artifact.bytes,
+        now: createdAt,
+      );
+      if (!result.supported) {
+        if (showFeedback && mounted) {
+          final copy =
+              WritellerCopy(Localizations.localeOf(context).languageCode);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(copy.t('localBackupUnsupported'))),
+          );
+        }
+        return;
+      }
+      if (!result.succeeded || result.filePath == null) {
+        throw result.error ?? StateError('Local backup failed');
+      }
+      await _saveLocalBackupRuntimeMetadata(
+        project,
+        filePath: result.filePath!,
+        createdAt: createdAt,
+      );
+      if (mounted) {
+        await _recordProjectMetric(
+          eventType: 'project.backup.created',
+          metadata: {
+            'trigger': trigger,
+            'path': result.filePath,
+          },
+        );
+      }
+      if (showFeedback && mounted) {
+        final copy =
+            WritellerCopy(Localizations.localeOf(context).languageCode);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(copy.t('localBackupCreated'))),
+        );
+      }
+    } catch (_) {
+      if (showFeedback && mounted) {
+        final copy =
+            WritellerCopy(Localizations.localeOf(context).languageCode);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(copy.t('localBackupFailed'))),
+        );
+      }
+    } finally {
+      _localBackupInProgress = false;
+    }
+  }
+
+  Future<void> _saveLocalBackupRuntimeMetadata(
+    Project project, {
+    required String filePath,
+    required DateTime createdAt,
+  }) async {
+    final metadata = Map<String, Object?>.from(project.metadata)
+      ..[_lastLocalBackupPathKey] = filePath
+      ..[_lastLocalBackupAtKey] = createdAt.toIso8601String();
+    final updated = project.copyWith(metadata: metadata);
+    await widget.projectRepository.save(updated);
+    if (!mounted) return;
+    final projects = await widget.projectRepository.listActive();
+    if (!mounted) return;
+    setState(() {
+      _projects = projects;
+      if (_selectedProject?.id == project.id) {
+        _selectedProject = updated;
+      }
+    });
+  }
+
+  String? _projectLocalBackupDirectory(Project project) {
+    final rawValue = project.metadata[_localBackupDirectoryKey];
+    if (rawValue is! String) return null;
+    final directory = rawValue.trim();
+    return directory.isEmpty ? null : directory;
+  }
+
+  bool _projectAutoBackupDisabled(Project project) {
+    return project.metadata[_autoBackupDisabledKey] == true;
   }
 
   Future<void> _saveProjectContext(String value) async {
@@ -3437,6 +3596,8 @@ final class _WritellerShellState extends State<WritellerShell> {
           onSaveProviderConfig: () => _saveProviderConfig(copy),
           onDeleteProviderApiKey: () => _deleteProviderApiKey(copy),
           onSaveProjectMetadata: _saveProjectMetadata,
+          onCreateLocalBackup: () =>
+              _createLocalBackup(trigger: 'manual', showFeedback: true),
           onSaveProfileSettings: widget.onGlobalProfileSettingsChanged,
           spellCheckSettings: widget.spellCheckSettings,
           onSpellCheckSettingsChanged: widget.onSpellCheckSettingsChanged,

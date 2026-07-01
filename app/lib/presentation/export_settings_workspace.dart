@@ -1191,6 +1191,7 @@ final class _SettingsWorkspace extends StatelessWidget {
     required this.onSaveProviderConfig,
     required this.onDeleteProviderApiKey,
     required this.onSaveProjectMetadata,
+    required this.onCreateLocalBackup,
     required this.onSaveProfileSettings,
     required this.spellCheckSettings,
     required this.onSpellCheckSettingsChanged,
@@ -1216,7 +1217,8 @@ final class _SettingsWorkspace extends StatelessWidget {
   final ValueChanged<bool> onProviderEnabledChanged;
   final VoidCallback onSaveProviderConfig;
   final VoidCallback onDeleteProviderApiKey;
-  final ValueChanged<_ProjectMetadataUpdate> onSaveProjectMetadata;
+  final FutureOr<void> Function(_ProjectMetadataUpdate) onSaveProjectMetadata;
+  final Future<void> Function() onCreateLocalBackup;
   final SpellCheckSettings spellCheckSettings;
   final ValueChanged<SpellCheckSettings> onSpellCheckSettingsChanged;
   final String syncAdapterName;
@@ -1241,6 +1243,7 @@ final class _SettingsWorkspace extends StatelessWidget {
             copy: copy,
             project: project,
             onSave: onSaveProjectMetadata,
+            onCreateLocalBackup: onCreateLocalBackup,
           ),
         ),
       ),
@@ -1683,12 +1686,16 @@ final class _ProjectMetadataUpdate {
     required this.projectType,
     required this.targetUnit,
     required this.targetValue,
+    required this.localBackupDirectory,
+    required this.autoBackupDisabled,
   });
 
   final String authorName;
   final String projectType;
   final _ProjectTargetUnit targetUnit;
   final int? targetValue;
+  final String localBackupDirectory;
+  final bool autoBackupDisabled;
 }
 
 final class _ProjectMetadataSettings extends StatefulWidget {
@@ -1696,11 +1703,13 @@ final class _ProjectMetadataSettings extends StatefulWidget {
     required this.copy,
     required this.project,
     required this.onSave,
+    required this.onCreateLocalBackup,
   });
 
   final WritellerCopy copy;
   final Project? project;
-  final ValueChanged<_ProjectMetadataUpdate> onSave;
+  final FutureOr<void> Function(_ProjectMetadataUpdate) onSave;
+  final Future<void> Function() onCreateLocalBackup;
 
   @override
   State<_ProjectMetadataSettings> createState() =>
@@ -1717,9 +1726,17 @@ final class _ProjectMetadataSettingsState
   );
   late var _projectType = widget.project?.projectType ?? 'novel';
   late var _targetUnit = _initialTargetUnit;
+  late var _localBackupDirectory = _initialLocalBackupDirectory;
+  late var _autoBackupDisabled = _initialAutoBackupDisabled;
 
   String get _authorName =>
       widget.project?.metadata['authorName'] as String? ?? '';
+
+  String get _initialLocalBackupDirectory =>
+      widget.project?.metadata[_localBackupDirectoryKey] as String? ?? '';
+
+  bool get _initialAutoBackupDisabled =>
+      widget.project?.metadata[_autoBackupDisabledKey] == true;
 
   _ProjectTargetUnit get _initialTargetUnit {
     return widget.project?.metadata['targetUnit'] == 'pages'
@@ -1746,6 +1763,8 @@ final class _ProjectMetadataSettingsState
       _targetController.text = _targetText;
       _projectType = widget.project?.projectType ?? 'novel';
       _targetUnit = _initialTargetUnit;
+      _localBackupDirectory = _initialLocalBackupDirectory;
+      _autoBackupDisabled = _initialAutoBackupDisabled;
     }
   }
 
@@ -1773,7 +1792,7 @@ final class _ProjectMetadataSettingsState
             border: const OutlineInputBorder(),
           ),
           textInputAction: TextInputAction.done,
-          onSubmitted: (_) => _save(),
+          onSubmitted: (_) => unawaited(_save()),
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
@@ -1829,28 +1848,115 @@ final class _ProjectMetadataSettingsState
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           textInputAction: TextInputAction.done,
-          onSubmitted: (_) => _save(),
+          onSubmitted: (_) => unawaited(_save()),
         ),
         const SizedBox(height: 12),
-        FilledButton.icon(
-          onPressed: _save,
-          icon: const Icon(Icons.save_outlined),
-          label: Text(widget.copy.t('saveProjectMetadata')),
+        Divider(color: Theme.of(context).colorScheme.outlineVariant),
+        const SizedBox(height: 12),
+        Text(
+          widget.copy.t('localBackups'),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          widget.copy.t('localBackupSettingsBody'),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 12),
+        _BackupDirectoryPicker(
+          copy: widget.copy,
+          directoryPath: _localBackupDirectory,
+          onChoose: () async {
+            final path = await FilePicker.getDirectoryPath(
+              dialogTitle: widget.copy.t('chooseBackupFolder'),
+              lockParentWindow: true,
+            );
+            if (path == null || !mounted) return;
+            setState(() => _localBackupDirectory = path);
+          },
+          onClear: _localBackupDirectory.trim().isEmpty
+              ? null
+              : () => setState(() => _localBackupDirectory = ''),
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          value: _autoBackupDisabled,
+          contentPadding: EdgeInsets.zero,
+          title: Text(widget.copy.t('disableAutoBackup')),
+          subtitle: Text(widget.copy.t('disableAutoBackupHint')),
+          onChanged: (value) => setState(() => _autoBackupDisabled = value),
+        ),
+        if (_lastBackupText(project).isNotEmpty) ...[
+          const SizedBox(height: 4),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.history_outlined),
+            title: Text(widget.copy.t('lastLocalBackup')),
+            subtitle: SelectableText(_lastBackupText(project)),
+          ),
+        ],
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton.icon(
+              onPressed: () => unawaited(_save()),
+              icon: const Icon(Icons.save_outlined),
+              label: Text(widget.copy.t('saveProjectMetadata')),
+            ),
+            OutlinedButton.icon(
+              onPressed:
+                  _localBackupDirectory.trim().isEmpty || _autoBackupDisabled
+                      ? null
+                      : () => unawaited(_saveAndCreateBackup()),
+              icon: const Icon(Icons.backup_outlined),
+              label: Text(widget.copy.t('createBackupNow')),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  void _save() {
+  Future<void> _save() async {
     final targetText = _targetController.text.trim();
-    widget.onSave(
+    await widget.onSave(
       _ProjectMetadataUpdate(
         authorName: _authorController.text,
         projectType: _projectType,
         targetUnit: _targetUnit,
         targetValue: targetText.isEmpty ? null : int.tryParse(targetText),
+        localBackupDirectory: _localBackupDirectory,
+        autoBackupDisabled: _autoBackupDisabled,
       ),
     );
+  }
+
+  Future<void> _saveAndCreateBackup() async {
+    await _save();
+    await widget.onCreateLocalBackup();
+  }
+
+  String _lastBackupText(Project project) {
+    final path = project.metadata[_lastLocalBackupPathKey] as String? ?? '';
+    final rawCreatedAt =
+        project.metadata[_lastLocalBackupAtKey] as String? ?? '';
+    final createdAt = DateTime.tryParse(rawCreatedAt)?.toLocal();
+    if (path.isEmpty && createdAt == null) return '';
+    final dateText = createdAt == null
+        ? ''
+        : MaterialLocalizations.of(context).formatShortDate(createdAt);
+    final timeText = createdAt == null
+        ? ''
+        : TimeOfDay.fromDateTime(createdAt).format(context);
+    final timestamp = [dateText, timeText].where((value) => value.isNotEmpty);
+    return [
+      if (timestamp.isNotEmpty) timestamp.join(', '),
+      if (path.isNotEmpty) path,
+    ].join('\n');
   }
 
   void _changeTargetUnit(_ProjectTargetUnit unit) {
