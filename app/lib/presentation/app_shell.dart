@@ -1000,6 +1000,7 @@ final class _WritellerShellState extends State<WritellerShell>
       copy: copy,
       title: copy.t('deleteProject'),
       body: copy.t('deleteProjectBody'),
+      itemName: project.title,
     );
     if (!confirmed) return;
 

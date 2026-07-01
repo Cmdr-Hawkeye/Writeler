@@ -121,6 +121,50 @@ void main() {
     expect(find.text('Author cockpit'), findsOneWidget);
   });
 
+  testWidgets('project menu deletes the selected project after confirmation',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appPreferenceRepository = InMemoryAppPreferenceRepository();
+    final projectRepository = InMemoryProjectRepository();
+    await appPreferenceRepository.write('app.language', 'en');
+    await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Delete Candidate'),
+    );
+
+    await tester.pumpWidget(
+      WritellerApp(
+        projectRepository: projectRepository,
+        chapterRepository: InMemoryChapterRepository(),
+        sceneRepository: InMemorySceneRepository(),
+        sceneSnapshotRepository: InMemorySceneSnapshotRepository(),
+        catalogItemRepository: InMemoryCatalogItemRepository(),
+        relationshipRepository: InMemoryRelationshipRepository(),
+        metricRepository: InMemoryMetricRepository(),
+        aiSuggestionRepository: InMemoryAISuggestionRepository(),
+        projectNoteRepository: InMemoryProjectNoteRepository(),
+        aiProviderConfigRepository: InMemoryAIProviderConfigRepository(),
+        appPreferenceRepository: appPreferenceRepository,
+        secretVault: InMemorySecretVault(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Delete Candidate'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete project'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete project'), findsOneWidget);
+    expect(find.text('Delete Candidate'), findsWidgets);
+
+    await tester.tap(find.text('Delete permanently'));
+    await tester.pumpAndSettle();
+
+    expect(await projectRepository.listActive(), isEmpty);
+    expect(find.text('Project deleted'), findsOneWidget);
+  });
+
   testWidgets('research library creates a linked source', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

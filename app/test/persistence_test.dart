@@ -110,6 +110,44 @@ void main() {
     expect(activeProjects, isEmpty);
   });
 
+  test('project repository deletes dependent snapshots and research', () async {
+    final project = await CreateProject(projectRepository)(
+      const CreateProjectCommand(title: 'Disposable Book'),
+    );
+    final scene = await CreateScene(sceneRepository)(
+      CreateSceneCommand(projectId: project.id, title: 'Temporary Scene'),
+    );
+    final now = DateTime.utc(2026, 1, 2, 3, 4);
+    await sceneSnapshotRepository.save(
+      SceneSnapshot(
+        id: 'snapshot-delete-test',
+        projectId: project.id,
+        sceneId: scene.id,
+        sceneTitle: scene.title,
+        reason: SceneSnapshotReason.manual,
+        scene: scene.withAuthorText('A draft worth preserving.'),
+        createdAt: now,
+      ),
+    );
+    await researchRepository.save(
+      ResearchItem(
+        id: 'research-delete-test',
+        projectId: project.id,
+        kind: ResearchItemKind.source,
+        title: 'Archive note',
+        body: 'Temporary source material.',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await projectRepository.delete(project.id);
+
+    expect(await projectRepository.findById(project.id), isNull);
+    expect(await sceneSnapshotRepository.listByProject(project.id), isEmpty);
+    expect(await researchRepository.listForProject(project.id), isEmpty);
+  });
+
   test('scene repository persists manuscript text and returns project order',
       () async {
     final project = await CreateProject(projectRepository)(

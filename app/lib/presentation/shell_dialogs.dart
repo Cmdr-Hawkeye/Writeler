@@ -1160,13 +1160,45 @@ extension _WritellerShellDialogs on _WritellerShellState {
     required WritellerCopy copy,
     required String title,
     required String body,
+    String? itemName,
   }) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
+        final color = Theme.of(context).colorScheme;
         return AlertDialog(
           title: Text(title),
-          content: Text(body),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(body),
+              if (itemName != null && itemName.trim().isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.errorContainer.withValues(alpha: 0.36),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: color.error.withValues(alpha: 0.24),
+                    ),
+                  ),
+                  child: Text(
+                    itemName,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: color.onErrorContainer,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+              ],
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
