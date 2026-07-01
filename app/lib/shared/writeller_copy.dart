@@ -636,17 +636,37 @@ final class WritellerCopy {
     'editorAiHelpInput': 'Frage oder Auftrag zur aktuellen Szene',
     'helpEditorAiHelp':
         'Nutzt den Kontext der aktuellen Szene und speichert die Antwort als KI-Vorschlag.',
+    'editorAiWorkflowHint':
+        'Ablauf: Vorlage wählen oder selbst schreiben, Auftrag prüfen, KI fragen, Antwort in der KI-Inbox weiterverarbeiten.',
     'sendAiHelp': 'KI fragen',
     'latestAiHelpAnswer': 'Letzte Antwort',
     'defaultEditorAiHelpPrompt':
         'Analysiere die aktuelle Szene und nenne die hilfreichsten nächsten Entscheidungen.',
     'requestSceneIdeas': 'Szenenideen',
     'requestStructure': 'Ziel/Konflikt/Ausgang',
-    'moreAiChecks': 'Weitere Prüfungen',
+    'moreAiChecks': 'Weitere Vorlagen',
     'submitAiPrompt': 'Auftrag senden',
     'aiPromptSubmitHint': 'Strg+Enter sendet den Auftrag',
-    'promptTemplates': 'Prompt-Vorlagen',
+    'promptTemplates': 'Vorlagen für Arbeitsanweisungen',
     'promptPreview': 'Exakter Prompt an das LLM',
+    'aiWorkflowContext': 'Kontext',
+    'aiWorkflowInstruction': 'Arbeitsanweisung',
+    'aiWorkflowPrompt': 'Prompt prüfen',
+    'aiWorkflowSend': 'Absenden',
+    'aiWorkflowResult': 'Ergebnis lesen',
+    'aiWorkflowApply': 'Verarbeiten',
+    'aiStepContextTitle': 'Kontext wählen',
+    'aiStepContextBody':
+        'Lege fest, worüber die KI nachdenken darf: Projekt, Szene und optional einzelne Figuren, Orte, Objekte oder Beziehungen.',
+    'aiStepInstructionTitle': 'Arbeitsanweisung schreiben',
+    'aiStepInstructionBody':
+        'Vorlagen füllen nur den Auftragstext. Du kannst ihn danach ändern. Gesendet wird erst mit „Auftrag senden“.',
+    'aiStepPromptTitle': 'Prompt vor dem Senden prüfen',
+    'aiStepPromptBody':
+        'Hier siehst du den vollständigen Text, der aus Kontext, Vorlage und Auftrag erzeugt wird.',
+    'aiStepSendTitle': 'Auftrag absenden',
+    'aiStepSendBody':
+        'Die KI schreibt nicht ins Manuskript. Die Antwort landet zuerst als Vorschlag in der KI-Inbox.',
     'additionalAiContext': 'Zusätzlicher KI-Kontext',
     'additionalAiContextBody':
         'Optional: Figuren, Orte, Objekte und Beziehungen gezielt mitsenden.',
@@ -707,6 +727,8 @@ final class WritellerCopy {
     'aiInboxTitle': 'KI-Inbox',
     'aiInboxBody':
         'Zentrale Prüfstelle für KI-Antworten: sichten, übernehmen, als Notiz sichern oder verwerfen.',
+    'aiResultProcessingHint':
+        'Lies die Antwort wie einen Vorschlag. Annehmen übernimmt nur erkannte Strukturfelder oder markiert sie als geprüft, „Als Notiz“ sichert die Antwort, Ablehnen entfernt sie.',
     'aiInboxOpen': 'Offen',
     'aiInboxAccepted': 'Angenommen',
     'aiInboxNoted': 'Notizen',
@@ -901,11 +923,11 @@ final class WritellerCopy {
     'helpAiContext':
         'Der Kontext bestimmt, ob die KI über das ganze Projekt oder nur über eine ausgewählte Szene nachdenkt.',
     'helpPromptTemplates':
-        'Füllt den Auftrag mit einem passenden Startprompt. Du kannst den Text vor dem Senden frei ändern.',
+        'Vorlagen sind nur vorbereitete Arbeitsanweisungen. Sie ändern kein Manuskript und senden noch nichts.',
     'helpSubmitAiPrompt':
         'Sendet den sichtbaren Auftrag mit dem gewählten Kontext an den aktiven KI-Provider und speichert die Antwort als Vorschlag.',
     'helpAiQuickActions':
-        'Diese Aktionen senden sofort spezialisierte Prüf- oder Ideenaufträge an die KI.',
+        'Öffnet weitere Vorlagen. Eine Vorlage füllt nur den Auftragstext; gesendet wird erst mit „Auftrag senden“.',
     'helpAiInbox':
         'Bündelt alle KI-Antworten des Projekts. Annehmen wendet erkannte Struktur an, Notiz sichert die Antwort, Ablehnen entfernt sie.',
     'helpPromptPreview':
@@ -1540,17 +1562,37 @@ final class WritellerCopy {
     'editorAiHelpInput': 'Question or task for the current scene',
     'helpEditorAiHelp':
         'Uses the current scene context and stores the answer as an AI suggestion.',
+    'editorAiWorkflowHint':
+        'Flow: choose a template or write your own instruction, review the task, ask AI, then process the answer in the AI inbox.',
     'sendAiHelp': 'Ask AI',
     'latestAiHelpAnswer': 'Latest answer',
     'defaultEditorAiHelpPrompt':
         'Analyze the current scene and name the most useful next decisions.',
     'requestSceneIdeas': 'Scene ideas',
     'requestStructure': 'Goal/conflict/outcome',
-    'moreAiChecks': 'More checks',
+    'moreAiChecks': 'More templates',
     'submitAiPrompt': 'Send task',
     'aiPromptSubmitHint': 'Ctrl+Enter sends the task',
-    'promptTemplates': 'Prompt templates',
+    'promptTemplates': 'Instruction templates',
     'promptPreview': 'Exact prompt sent to the LLM',
+    'aiWorkflowContext': 'Context',
+    'aiWorkflowInstruction': 'Instruction',
+    'aiWorkflowPrompt': 'Review prompt',
+    'aiWorkflowSend': 'Send',
+    'aiWorkflowResult': 'Read result',
+    'aiWorkflowApply': 'Process',
+    'aiStepContextTitle': 'Choose context',
+    'aiStepContextBody':
+        'Decide what the AI may reason about: project, scene, and optionally selected characters, locations, objects, or relationships.',
+    'aiStepInstructionTitle': 'Write the instruction',
+    'aiStepInstructionBody':
+        'Templates only fill the instruction text. You can edit it. Nothing is sent until you press “Send task”.',
+    'aiStepPromptTitle': 'Review the prompt before sending',
+    'aiStepPromptBody':
+        'This shows the full text generated from context, template, and instruction.',
+    'aiStepSendTitle': 'Send the task',
+    'aiStepSendBody':
+        'AI does not write into the manuscript. The answer is saved first as a suggestion in the AI inbox.',
     'additionalAiContext': 'Additional AI context',
     'additionalAiContextBody':
         'Optional: send selected characters, locations, objects, and relationships.',
@@ -1611,6 +1653,8 @@ final class WritellerCopy {
     'aiInboxTitle': 'AI inbox',
     'aiInboxBody':
         'Central review desk for AI answers: inspect, accept, save as a note, or discard.',
+    'aiResultProcessingHint':
+        'Read the answer as a suggestion. Accept applies only recognized structure fields or marks it as reviewed, note saves the answer, reject removes it.',
     'aiInboxOpen': 'Open',
     'aiInboxAccepted': 'Accepted',
     'aiInboxNoted': 'Notes',
@@ -1800,11 +1844,11 @@ final class WritellerCopy {
     'helpAiContext':
         'The context decides whether AI reasons about the whole project or only about the selected scene.',
     'helpPromptTemplates':
-        'Fills the instruction with a useful starter prompt. You can edit the text before sending.',
+        'Templates are prepared instructions only. They do not change the manuscript and do not send anything yet.',
     'helpSubmitAiPrompt':
         'Sends the visible instruction with the selected context to the active AI provider and stores the answer as a suggestion.',
     'helpAiQuickActions':
-        'These actions immediately send specialized idea or review requests to AI.',
+        'Opens more templates. A template only fills the instruction text; sending happens with “Send task”.',
     'helpAiInbox':
         'Collects all AI answers for this project. Accept applies recognized structure, note stores the answer, reject removes it.',
     'helpPromptPreview':

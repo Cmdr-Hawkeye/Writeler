@@ -3955,24 +3955,40 @@ final class _SceneAiHelpBoxState extends State<_SceneAiHelpBox> {
                     color: color.onSurfaceVariant,
                   ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              copy.t('editorAiWorkflowHint'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
+                  ),
+            ),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                OutlinedButton.icon(
-                  onPressed: widget.isRequesting
-                      ? null
-                      : () => _send(AITaskKind.authorQuestions),
-                  icon: const Icon(Icons.help_outline),
-                  label: Text(copy.t('aiTaskAuthorQuestions')),
+                _ActionHelp(
+                  message: _aiTaskHelp(AITaskKind.authorQuestions, copy),
+                  child: OutlinedButton.icon(
+                    onPressed: widget.isRequesting
+                        ? null
+                        : () => _useTemplate(AITaskKind.authorQuestions),
+                    icon: const Icon(Icons.help_outline),
+                    label: Text(copy.t('aiTaskAuthorQuestions')),
+                  ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: widget.isRequesting
-                      ? null
-                      : () => _send(AITaskKind.sceneGoalConflictOutcome),
-                  icon: const Icon(Icons.account_tree_outlined),
-                  label: Text(copy.t('requestStructure')),
+                _ActionHelp(
+                  message:
+                      _aiTaskHelp(AITaskKind.sceneGoalConflictOutcome, copy),
+                  child: OutlinedButton.icon(
+                    onPressed: widget.isRequesting
+                        ? null
+                        : () => _useTemplate(
+                              AITaskKind.sceneGoalConflictOutcome,
+                            ),
+                    icon: const Icon(Icons.account_tree_outlined),
+                    label: Text(copy.t('requestStructure')),
+                  ),
                 ),
               ],
             ),
@@ -4029,6 +4045,13 @@ final class _SceneAiHelpBoxState extends State<_SceneAiHelpBox> {
     if (task == AITaskKind.customScenePrompt) {
       _promptController.clear();
     }
+  }
+
+  void _useTemplate(AITaskKind task) {
+    _promptController.text = _promptTemplateFor(task, widget.copy);
+    _promptController.selection = TextSelection.collapsed(
+      offset: _promptController.text.length,
+    );
   }
 }
 
