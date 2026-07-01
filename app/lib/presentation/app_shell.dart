@@ -3131,7 +3131,11 @@ final class _WritellerShellState extends State<WritellerShell>
                               workspaceTitle: _workspaceTitle(copy),
                               workspaceGroupLabel: _workspaceGroupTitle(copy),
                               workspaceIcon: _workspaceIcon(),
+                              projects: _projects,
                               project: _selectedProject,
+                              onSelectProject: _selectProject,
+                              onDeleteProject: (project) =>
+                                  _deleteProject(project, copy),
                               languageCode: widget.languageCode,
                               onLanguageChanged: widget.onLanguageChanged,
                               globalAiEnabled: widget.globalAiEnabled,
@@ -3143,8 +3147,7 @@ final class _WritellerShellState extends State<WritellerShell>
                                 noAiNoCloud:
                                     enabled ? false : widget.globalNoAiNoCloud,
                               ),
-                              showCreateProject:
-                                  _selectedRailIndex == 0 || _projects.isEmpty,
+                              showCreateProject: true,
                               onCreateProject: () =>
                                   _showCreateProjectDialog(copy),
                               onOpenCommandPalette: () =>
@@ -3176,7 +3179,6 @@ final class _WritellerShellState extends State<WritellerShell>
     return switch (_selectedRailIndex) {
       0 => _ProjectOverview(
           copy: copy,
-          projects: _projects,
           selectedProject: _selectedProject,
           chapters: _chapters,
           scenes: _scenes,
@@ -3185,8 +3187,6 @@ final class _WritellerShellState extends State<WritellerShell>
           relationships: _relationships,
           metrics: _metrics,
           suggestions: _suggestions,
-          onSelectProject: _selectProject,
-          onDeleteProject: (project) => _deleteProject(project, copy),
           onOpenEditor: () => setState(() => _selectedRailIndex = 1),
           onOpenStructure: () => setState(() => _selectedRailIndex = 2),
           onOpenNotes: () => setState(() => _selectedRailIndex = 7),
@@ -3199,7 +3199,6 @@ final class _WritellerShellState extends State<WritellerShell>
         ),
       1 => _WorkspaceView(
           copy: copy,
-          projects: _projects,
           selectedProject: _selectedProject,
           scenes: _scenes,
           chapters: _chapters,
@@ -3221,8 +3220,6 @@ final class _WritellerShellState extends State<WritellerShell>
           sceneSnapshots: _sceneSnapshots,
           spellCheckSettings: widget.spellCheckSettings,
           spellChecker: widget.spellChecker,
-          onSelectProject: _selectProject,
-          onDeleteProject: (project) => _deleteProject(project, copy),
           onSelectScene: _selectScene,
           onDeleteScene: (scene) => _deleteScene(scene, copy),
           onSceneChapterChanged: (chapterId) => setState(

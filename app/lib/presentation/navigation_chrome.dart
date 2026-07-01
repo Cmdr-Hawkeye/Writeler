@@ -338,7 +338,10 @@ final class _StudioTopBar extends StatelessWidget {
     required this.workspaceTitle,
     required this.workspaceGroupLabel,
     required this.workspaceIcon,
+    required this.projects,
     required this.project,
+    required this.onSelectProject,
+    required this.onDeleteProject,
     required this.languageCode,
     required this.onLanguageChanged,
     required this.globalAiEnabled,
@@ -353,7 +356,10 @@ final class _StudioTopBar extends StatelessWidget {
   final String workspaceTitle;
   final String workspaceGroupLabel;
   final IconData workspaceIcon;
+  final List<Project> projects;
   final Project? project;
+  final ValueChanged<Project> onSelectProject;
+  final ValueChanged<Project> onDeleteProject;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
   final bool globalAiEnabled;
@@ -366,12 +372,11 @@ final class _StudioTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    final projectTitle = project?.title ?? copy.t('selectProject');
-    final contextLabel = '$workspaceGroupLabel · $projectTitle';
+    final contextLabel = workspaceGroupLabel;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 720;
+        final compact = constraints.maxWidth < 900;
         return Container(
           height: 72,
           padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 24),
@@ -423,6 +428,15 @@ final class _StudioTopBar extends StatelessWidget {
                   ],
                 ),
               ),
+              _TopBarProjectMenu(
+                copy: copy,
+                projects: projects,
+                selectedProject: project,
+                compact: compact,
+                onSelectProject: onSelectProject,
+                onDeleteProject: onDeleteProject,
+              ),
+              const SizedBox(width: 8),
               PopupMenuButton<String>(
                 tooltip: copy.t('language'),
                 onSelected: onLanguageChanged,
@@ -492,6 +506,193 @@ final class _StudioTopBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+final class _TopBarProjectMenu extends StatelessWidget {
+  const _TopBarProjectMenu({
+    required this.copy,
+    required this.projects,
+    required this.selectedProject,
+    required this.compact,
+    required this.onSelectProject,
+    required this.onDeleteProject,
+  });
+
+  static const _deleteCurrentValue = '__delete_current_project__';
+  static const _selectPrefix = 'select:';
+
+  final WritellerCopy copy;
+  final List<Project> projects;
+  final Project? selectedProject;
+  final bool compact;
+  final ValueChanged<Project> onSelectProject;
+  final ValueChanged<Project> onDeleteProject;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = projects.isNotEmpty;
+    return PopupMenuButton<String>(
+      enabled: enabled,
+      tooltip: copy.t('projectMenu'),
+      onSelected: (value) {
+        if (value == _deleteCurrentValue) {
+          final project = selectedProject;
+          if (project != null) onDeleteProject(project);
+          return;
+        }
+        if (!value.startsWith(_selectPrefix)) return;
+        final projectId = value.substring(_selectPrefix.length);
+        final project =
+            projects.where((project) => project.id == projectId).firstOrNull;
+        if (project == null || project.id == selectedProject?.id) return;
+        onSelectProject(project);
+      },
+      itemBuilder: (context) => [
+        for (final project in projects)
+          PopupMenuItem(
+            value: '$_selectPrefix${project.id}',
+            child: _TopBarProjectMenuItem(
+              copy: copy,
+              project: project,
+              selected: selectedProject?.id == project.id,
+            ),
+          ),
+        if (selectedProject != null) ...[
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: _deleteCurrentValue,
+            child: Row(
+              children: [
+                const Icon(Icons.delete_outline, size: 18),
+                const SizedBox(width: 10),
+                Text(copy.t('deleteProject')),
+              ],
+            ),
+          ),
+        ],
+      ],
+      child: _TopBarProjectButton(
+        copy: copy,
+        project: selectedProject,
+        compact: compact,
+        enabled: enabled,
+      ),
+    );
+  }
+}
+
+final class _TopBarProjectButton extends StatelessWidget {
+  const _TopBarProjectButton({
+    required this.copy,
+    required this.project,
+    required this.compact,
+    required this.enabled,
+  });
+
+  final WritellerCopy copy;
+  final Project? project;
+  final bool compact;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final label = project?.title ?? copy.t('selectProject');
+    if (compact) {
+      return Tooltip(
+        message: label,
+        child: SizedBox.square(
+          dimension: 40,
+          child: Icon(
+            Icons.menu_book_outlined,
+            color: enabled ? color.onSurface : color.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 260),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.outlineVariant),
+          color: enabled ? color.surfaceContainerLow : color.surfaceContainer,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.menu_book_outlined, size: 18, color: color.primary),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color:
+                            enabled ? color.onSurface : color.onSurfaceVariant,
+                      ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 18,
+                color: color.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _TopBarProjectMenuItem extends StatelessWidget {
+  const _TopBarProjectMenuItem({
+    required this.copy,
+    required this.project,
+    required this.selected,
+  });
+
+  final WritellerCopy copy;
+  final Project project;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          selected ? Icons.check : Icons.menu_book_outlined,
+          size: 18,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                project.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                _projectTypeLabel(project.projectType, copy),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

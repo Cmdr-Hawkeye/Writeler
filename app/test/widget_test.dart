@@ -69,7 +69,8 @@ void main() {
     expect(find.byType(Switch), findsOneWidget);
   });
 
-  testWidgets('new project action creates a local project row', (tester) async {
+  testWidgets('new project action appears in the top bar project menu',
+      (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final appPreferenceRepository = InMemoryAppPreferenceRepository();
@@ -101,7 +102,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Draft Atlas'), findsWidgets);
-    expect(find.text('Local - Novel'), findsOneWidget);
+    await tester.tap(find.text('Draft Atlas').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Novel'), findsOneWidget);
+    await tester.tapAt(const Offset(20, 20));
+    await tester.pumpAndSettle();
     expect(find.text('Project created'), findsOneWidget);
     expect(find.text('Activity'), findsNothing);
 

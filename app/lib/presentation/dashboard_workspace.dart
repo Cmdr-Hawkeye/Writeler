@@ -5,7 +5,6 @@ part of '../main.dart';
 final class _WorkspaceView extends StatelessWidget {
   const _WorkspaceView({
     required this.copy,
-    required this.projects,
     required this.selectedProject,
     required this.chapters,
     required this.catalogItems,
@@ -27,8 +26,6 @@ final class _WorkspaceView extends StatelessWidget {
     required this.sceneSnapshots,
     required this.spellCheckSettings,
     required this.spellChecker,
-    required this.onSelectProject,
-    required this.onDeleteProject,
     required this.onSelectScene,
     required this.onDeleteScene,
     required this.onSceneChapterChanged,
@@ -50,7 +47,6 @@ final class _WorkspaceView extends StatelessWidget {
   });
 
   final WritellerCopy copy;
-  final List<Project> projects;
   final Project? selectedProject;
   final List<Chapter> chapters;
   final List<CatalogItem> catalogItems;
@@ -72,8 +68,6 @@ final class _WorkspaceView extends StatelessWidget {
   final List<SceneSnapshot> sceneSnapshots;
   final SpellCheckSettings spellCheckSettings;
   final SpellChecker spellChecker;
-  final ValueChanged<Project> onSelectProject;
-  final ValueChanged<Project> onDeleteProject;
   final ValueChanged<Scene> onSelectScene;
   final ValueChanged<Scene> onDeleteScene;
   final ValueChanged<String?> onSceneChapterChanged;
@@ -99,13 +93,6 @@ final class _WorkspaceView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final library = _ProjectLibrary(
-      copy: copy,
-      projects: projects,
-      selectedProject: selectedProject,
-      onSelect: onSelectProject,
-      onDelete: onDeleteProject,
-    );
     final workspace = _ProjectWorkspace(
       copy: copy,
       project: selectedProject,
@@ -149,21 +136,7 @@ final class _WorkspaceView extends StatelessWidget {
       onOpenContext: onOpenContext,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 980) {
-          return workspace;
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(width: 300, child: library),
-            const VerticalDivider(width: 1),
-            Expanded(child: workspace),
-          ],
-        );
-      },
-    );
+    return workspace;
   }
 }
 
@@ -226,7 +199,6 @@ final class _EmptyWorkspace extends StatelessWidget {
 final class _ProjectOverview extends StatelessWidget {
   const _ProjectOverview({
     required this.copy,
-    required this.projects,
     required this.selectedProject,
     required this.chapters,
     required this.scenes,
@@ -235,8 +207,6 @@ final class _ProjectOverview extends StatelessWidget {
     required this.relationships,
     required this.metrics,
     required this.suggestions,
-    required this.onSelectProject,
-    required this.onDeleteProject,
     required this.onOpenEditor,
     required this.onOpenStructure,
     required this.onOpenNotes,
@@ -246,7 +216,6 @@ final class _ProjectOverview extends StatelessWidget {
   });
 
   final WritellerCopy copy;
-  final List<Project> projects;
   final Project? selectedProject;
   final List<Chapter> chapters;
   final List<Scene> scenes;
@@ -255,8 +224,6 @@ final class _ProjectOverview extends StatelessWidget {
   final List<Relationship> relationships;
   final List<MetricEvent> metrics;
   final List<AISuggestion> suggestions;
-  final ValueChanged<Project> onSelectProject;
-  final ValueChanged<Project> onDeleteProject;
   final VoidCallback onOpenEditor;
   final VoidCallback onOpenStructure;
   final VoidCallback onOpenNotes;
@@ -387,7 +354,7 @@ final class _ProjectOverview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      project?.title ?? copy.t('projects'),
+                      copy.t('dashboard'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.headlineSmall,
@@ -570,29 +537,7 @@ final class _ProjectOverview extends StatelessWidget {
       ),
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 980) {
-          return dashboard;
-        }
-        return Row(
-          children: [
-            SizedBox(
-              width: 320,
-              child: _ProjectLibrary(
-                copy: copy,
-                projects: projects,
-                selectedProject: selectedProject,
-                onSelect: onSelectProject,
-                onDelete: onDeleteProject,
-              ),
-            ),
-            const VerticalDivider(width: 1),
-            Expanded(child: dashboard),
-          ],
-        );
-      },
-    );
+    return dashboard;
   }
 }
 
